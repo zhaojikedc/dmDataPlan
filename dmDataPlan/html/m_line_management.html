@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M线模型管理 - 数据仓库规划管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            font-weight: 300;
+        }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .overview-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .overview-section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .overview-section p {
+            color: #6c757d;
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        
+        .feature-card h3 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-card p {
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .icon {
+            font-size: 1.5em;
+        }
+        
+        .stats-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-section h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>M线模型管理</h1>
+            <a href="dm_planning.html" class="back-btn">返回主页</a>
+        </div>
+        
+        <div class="content">
+            <div class="overview-section">
+                <h2>M线业务模型概览</h2>
+                <p>M线（Management Line）模型主要管理管理相关的业务模型，包括财务管理、人力资源、项目管理等管理业务流程。通过统一的模型管理，确保管理数据的准确性和决策支持的有效性。</p>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3><span class="icon">🔗</span>M线ER模型</h3>
+                    <p>查看和管理M线业务模型的实体关系图，了解各管理实体之间的关联关系和依赖关系。</p>
+                    <a href="m_erGenHtml.html" class="btn btn-primary" target="_blank">查看ER模型</a>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><span class="icon">📊</span>模型监控</h3>
+                    <p>实时监控M线模型的运行状态，包括数据质量、性能指标、异常告警等信息。</p>
+                    <button class="btn btn-success">启动监控</button>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><span class="icon">⚙️</span>模型配置</h3>
+                    <p>配置M线模型的参数设置，包括数据源配置、调度策略、权限管理等。</p>
+                    <button class="btn btn-warning">配置管理</button>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><span class="icon">📈</span>性能分析</h3>
+                    <p>分析M线模型的性能表现，识别性能瓶颈，优化模型结构和查询效率。</p>
+                    <button class="btn btn-primary">性能报告</button>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><span class="icon">🔄</span>模型同步</h3>
+                    <p>管理M线模型与其他业务系统的数据同步，确保数据的一致性和实时性。</p>
+                    <button class="btn btn-success">同步管理</button>
+                </div>
+                
+                <div class="feature-card">
+                    <h3><span class="icon">📋</span>变更管理</h3>
+                    <p>管理M线模型的变更流程，包括版本控制、变更审批、回滚机制等。</p>
+                    <button class="btn btn-warning">变更申请</button>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <h3>M线模型统计信息</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">98</div>
+                        <div class="stat-label">管理实体</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">67</div>
+                        <div class="stat-label">关系映射</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">18</div>
+                        <div class="stat-label">数据源</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">99.2%</div>
+                        <div class="stat-label">数据质量</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">活跃用户</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">运行状态</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

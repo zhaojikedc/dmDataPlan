@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据规范 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #fafafa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            min-width: 600px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .constraint-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .constraint-strong {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .constraint-weak {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .text-truncate {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">数据规范管理</h1>
+                <p class="page-desc">管理数据建模规范，包括序号、分类、规范项、是否强约束、规范校验逻辑等信息</p>
+            </div>
+            
+            <div class="content-card">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="ant-input" placeholder="搜索分类或规范项...">
+                        <button class="ant-btn" onclick="searchSpecifications()">搜索</button>
+                        <button class="ant-btn" onclick="resetSearch()">重置</button>
+                    </div>
+                    <button class="ant-btn ant-btn-primary" onclick="showAddModal()">新增规范</button>
+                </div>
+                
+                <table class="ant-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>分类</th>
+                            <th>规范项</th>
+                            <th>是否强约束</th>
+                            <th>规范校验逻辑</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specificationsTableBody">
+                        <tr>
+                            <td>1</td>
+                            <td>命名规范</td>
+                            <td>表名必须使用下划线分隔的小写字母</td>
+                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
+                            <td class="text-truncate" title="表名必须符合正则表达式：^[a-z][a-z0-9_]*$">表名必须符合正则表达式：^[a-z][a-z0-9_]*$</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="ant-btn" onclick="editSpecification(1)">编辑</button>
+                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(1)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>字段规范</td>
+                            <td>主键字段必须命名为id</td>
+                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
+                            <td class="text-truncate" title="主键字段名称必须为'id'，类型为bigint">主键字段名称必须为'id'，类型为bigint</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="ant-btn" onclick="editSpecification(2)">编辑</button>
+                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(2)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>数据类型规范</td>
+                            <td>金额字段必须使用decimal类型</td>
+                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
+                            <td class="text-truncate" title="金额相关字段必须使用decimal(18,2)类型">金额相关字段必须使用decimal(18,2)类型</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="ant-btn" onclick="editSpecification(3)">编辑</button>
+                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(3)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>索引规范</td>
+                            <td>外键字段建议创建索引</td>
+                            <td><span class="constraint-tag constraint-weak">建议约束</span></td>
+                            <td class="text-truncate" title="外键字段建议创建索引以提高查询性能">外键字段建议创建索引以提高查询性能</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="ant-btn" onclick="editSpecification(4)">编辑</button>
+                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(4)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>注释规范</td>
+                            <td>所有字段必须添加中文注释</td>
+                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
+                            <td class="text-truncate" title="每个字段必须添加COMMENT注释，说明字段含义">每个字段必须添加COMMENT注释，说明字段含义</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="ant-btn" onclick="editSpecification(5)">编辑</button>
+                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(5)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新增/编辑数据规范模态框 -->
+    <div id="specificationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增数据规范</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="specificationForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">序号 *</label>
+                        <input type="number" id="sequenceNumber" class="form-input" placeholder="请输入序号" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">分类 *</label>
+                        <select id="category" class="form-input" required>
+                            <option value="">请选择分类</option>
+                            <option value="命名规范">命名规范</option>
+                            <option value="字段规范">字段规范</option>
+                            <option value="数据类型规范">数据类型规范</option>
+                            <option value="索引规范">索引规范</option>
+                            <option value="注释规范">注释规范</option>
+                            <option value="安全规范">安全规范</option>
+                            <option value="性能规范">性能规范</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">规范项 *</label>
+                    <input type="text" id="specificationItem" class="form-input" placeholder="请输入规范项描述" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">是否强约束 *</label>
+                        <select id="isStrongConstraint" class="form-input" required>
+                            <option value="">请选择约束类型</option>
+                            <option value="强约束">强约束</option>
+                            <option value="建议约束">建议约束</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">规范校验逻辑 *</label>
+                        <textarea id="validationLogic" class="form-textarea" placeholder="请输入规范校验逻辑" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 数据规范存储
+        let specifications = [];
+        let currentEditId = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSpecifications();
+            setupEventListeners();
+        });
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            document.getElementById('specificationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveSpecification();
+            });
+            
+            // 搜索框回车事件
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchSpecifications();
+                }
+            });
+        }
+        
+        // 加载数据规范
+        function loadSpecifications() {
+            // 从localStorage加载数据，如果没有则使用默认数据
+            const savedSpecifications = localStorage.getItem('dmDataPlan_specifications');
+            if (savedSpecifications) {
+                specifications = JSON.parse(savedSpecifications);
+            } else {
+                // 默认数据规范
+                specifications = [
+                    {
+                        id: 1,
+                        sequenceNumber: 1,
+                        category: '命名规范',
+                        specificationItem: '表名必须使用下划线分隔的小写字母',
+                        isStrongConstraint: '强约束',
+                        validationLogic: '表名必须符合正则表达式：^[a-z][a-z0-9_]*$'
+                    },
+                    {
+                        id: 2,
+                        sequenceNumber: 2,
+                        category: '字段规范',
+                        specificationItem: '主键字段必须命名为id',
+                        isStrongConstraint: '强约束',
+                        validationLogic: '主键字段名称必须为\'id\'，类型为bigint'
+                    },
+                    {
+                        id: 3,
+                        sequenceNumber: 3,
+                        category: '数据类型规范',
+                        specificationItem: '金额字段必须使用decimal类型',
+                        isStrongConstraint: '强约束',
+                        validationLogic: '金额相关字段必须使用decimal(18,2)类型'
+                    },
+                    {
+                        id: 4,
+                        sequenceNumber: 4,
+                        category: '索引规范',
+                        specificationItem: '外键字段建议创建索引',
+                        isStrongConstraint: '建议约束',
+                        validationLogic: '外键字段建议创建索引以提高查询性能'
+                    },
+                    {
+                        id: 5,
+                        sequenceNumber: 5,
+                        category: '注释规范',
+                        specificationItem: '所有字段必须添加中文注释',
+                        isStrongConstraint: '强约束',
+                        validationLogic: '每个字段必须添加COMMENT注释，说明字段含义'
+                    }
+                ];
+                saveSpecificationsToStorage();
+            }
+            renderSpecificationsTable();
+        }
+        
+        // 保存数据规范到localStorage
+        function saveSpecificationsToStorage() {
+            localStorage.setItem('dmDataPlan_specifications', JSON.stringify(specifications));
+        }
+        
+        // 渲染数据规范表格
+        function renderSpecificationsTable(data = null) {
+            const tableBody = document.getElementById('specificationsTableBody');
+            const displayData = data || specifications;
+            
+            tableBody.innerHTML = displayData.map(spec => `
+                <tr>
+                    <td>${spec.sequenceNumber}</td>
+                    <td>${spec.category}</td>
+                    <td>${spec.specificationItem}</td>
+                    <td><span class="constraint-tag constraint-${spec.isStrongConstraint === '强约束' ? 'strong' : 'weak'}">${spec.isStrongConstraint}</span></td>
+                    <td class="text-truncate" title="${spec.validationLogic}">${spec.validationLogic}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editSpecification(${spec.id})">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(${spec.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 搜索数据规范
+        function searchSpecifications() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderSpecificationsTable();
+                return;
+            }
+            
+            const filteredSpecifications = specifications.filter(spec => 
+                spec.category.toLowerCase().includes(searchTerm) ||
+                spec.specificationItem.toLowerCase().includes(searchTerm) ||
+                spec.validationLogic.toLowerCase().includes(searchTerm)
+            );
+            
+            renderSpecificationsTable(filteredSpecifications);
+        }
+        
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            renderSpecificationsTable();
+        }
+        
+        // 显示新增模态框
+        function showAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '新增数据规范';
+            document.getElementById('specificationForm').reset();
+            document.getElementById('version').value = '1.0';
+            document.getElementById('specificationModal').style.display = 'block';
+        }
+        
+        // 显示编辑模态框
+        function editSpecification(id) {
+            const spec = specifications.find(s => s.id === id);
+            if (!spec) return;
+            
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '编辑数据规范';
+            document.getElementById('sequenceNumber').value = spec.sequenceNumber;
+            document.getElementById('category').value = spec.category;
+            document.getElementById('specificationItem').value = spec.specificationItem;
+            document.getElementById('isStrongConstraint').value = spec.isStrongConstraint;
+            document.getElementById('validationLogic').value = spec.validationLogic;
+            
+            document.getElementById('specificationModal').style.display = 'block';
+        }
+        
+        // 保存数据规范
+        function saveSpecification() {
+            const sequenceNumber = parseInt(document.getElementById('sequenceNumber').value);
+            const category = document.getElementById('category').value;
+            const specificationItem = document.getElementById('specificationItem').value.trim();
+            const isStrongConstraint = document.getElementById('isStrongConstraint').value;
+            const validationLogic = document.getElementById('validationLogic').value.trim();
+            
+            if (!sequenceNumber || !category || !specificationItem || !isStrongConstraint || !validationLogic) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            if (currentEditId) {
+                // 编辑模式
+                const index = specifications.findIndex(s => s.id === currentEditId);
+                if (index !== -1) {
+                    specifications[index] = {
+                        ...specifications[index],
+                        sequenceNumber,
+                        category,
+                        specificationItem,
+                        isStrongConstraint,
+                        validationLogic
+                    };
+                }
+            } else {
+                // 新增模式
+                const newId = Math.max(...specifications.map(s => s.id), 0) + 1;
+                specifications.push({
+                    id: newId,
+                    sequenceNumber,
+                    category,
+                    specificationItem,
+                    isStrongConstraint,
+                    validationLogic
+                });
+            }
+            
+            saveSpecificationsToStorage();
+            renderSpecificationsTable();
+            closeModal();
+            
+            // 显示成功消息
+            const message = currentEditId ? '数据规范更新成功' : '数据规范创建成功';
+            alert(message);
+        }
+        
+        // 删除数据规范
+        function deleteSpecification(id) {
+            if (!confirm('确定要删除这个数据规范吗？')) return;
+            
+            specifications = specifications.filter(s => s.id !== id);
+            saveSpecificationsToStorage();
+            renderSpecificationsTable();
+            alert('数据规范删除成功');
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('specificationModal').style.display = 'none';
+            currentEditId = null;
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('specificationModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

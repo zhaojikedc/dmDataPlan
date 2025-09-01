@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产表管理 - 数据仓库资产规划管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+        
+        .ant-btn-success:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #fafafa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-warning {
+            background: #faad14;
+            border-color: #faad14;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #ffc53d;
+            border-color: #ffc53d;
+        }
+        
+        .btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            min-width: 700px;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .status-maintenance {
+            background: #fff7e6;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: #f0f0f0;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row,
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库资产规划管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">资产表管理</h1>
+                <p class="page-desc">管理数据仓库资产表信息，包括表基本信息、主题分类、应用归属、用途类型、生命周期等</p>
+            </div>
+            
+            <div class="content-card">
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="ant-input" placeholder="搜索表名、中文名或负责人...">
+                        <button class="ant-btn ant-btn-primary" onclick="searchData()">搜索</button>
+                        <button class="ant-btn" onclick="resetSearch()">重置</button>
+                    </div>
+                    <button class="ant-btn ant-btn-success" onclick="openAddModal()">新增资产表</button>
+                </div>
+                
+                <table class="ant-table">
+                    <thead>
+                        <tr>
+                            <th>表名</th>
+                            <th>表中文名</th>
+                            <th>一级主题</th>
+                            <th>二级主题</th>
+                            <th>三级主题</th>
+                            <th>归属应用</th>
+                            <th>用途类型</th>
+                            <th>数据使用场景</th>
+                            <th>数据生命周期</th>
+                            <th>表的负责人</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 数据将通过JavaScript动态加载 -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 新增/编辑资产表模态框 -->
+    <div id="tableModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增资产表</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="tableForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">表名 *</label>
+                        <input type="text" id="tableName" class="form-input" placeholder="请输入表名" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">表中文名 *</label>
+                        <input type="text" id="tableChineseName" class="form-input" placeholder="请输入表中文名" required>
+                    </div>
+                </div>
+                
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label class="form-label">一级主题 *</label>
+                        <select id="firstTheme" class="form-select" required>
+                            <option value="">请选择一级主题</option>
+                            <option value="客户管理">客户管理</option>
+                            <option value="订单管理">订单管理</option>
+                            <option value="财务管理">财务管理</option>
+                            <option value="库存管理">库存管理</option>
+                            <option value="物流管理">物流管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">二级主题</label>
+                        <select id="secondTheme" class="form-select">
+                            <option value="">请选择二级主题</option>
+                            <option value="客户信息">客户信息</option>
+                            <option value="客户关系">客户关系</option>
+                            <option value="订单处理">订单处理</option>
+                            <option value="订单跟踪">订单跟踪</option>
+                            <option value="财务核算">财务核算</option>
+                            <option value="成本管理">成本管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">三级主题</label>
+                        <select id="thirdTheme" class="form-select">
+                            <option value="">请选择三级主题</option>
+                            <option value="基础信息">基础信息</option>
+                            <option value="扩展信息">扩展信息</option>
+                            <option value="交易记录">交易记录</option>
+                            <option value="服务记录">服务记录</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">归属应用 *</label>
+                        <select id="belongApp" class="form-select" required>
+                            <option value="">请选择归属应用</option>
+                            <option value="CRM系统">CRM系统</option>
+                            <option value="订单系统">订单系统</option>
+                            <option value="财务系统">财务系统</option>
+                            <option value="库存系统">库存系统</option>
+                            <option value="物流系统">物流系统</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">表的用途类型 *</label>
+                        <select id="usageType" class="form-select" required>
+                            <option value="">请选择用途类型</option>
+                            <option value="事实表">事实表</option>
+                            <option value="维度表">维度表</option>
+                            <option value="汇总表">汇总表</option>
+                            <option value="配置表">配置表</option>
+                            <option value="日志表">日志表</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据使用场景 *</label>
+                        <select id="usageScenario" class="form-select" required>
+                            <option value="">请选择数据使用场景</option>
+                            <option value="业务分析">业务分析</option>
+                            <option value="报表统计">报表统计</option>
+                            <option value="数据挖掘">数据挖掘</option>
+                            <option value="实时监控">实时监控</option>
+                            <option value="决策支持">决策支持</option>
+                            <option value="风险控制">风险控制</option>
+                            <option value="客户画像">客户画像</option>
+                            <option value="产品推荐">产品推荐</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据生命周期 *</label>
+                        <select id="lifecycle" class="form-select" required>
+                            <option value="">请选择数据生命周期</option>
+                            <option value="永久保存">永久保存</option>
+                            <option value="1年">1年</option>
+                            <option value="3年">3年</option>
+                            <option value="5年">5年</option>
+                            <option value="7年">7年</option>
+                            <option value="10年">10年</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">表的负责人 *</label>
+                        <input type="text" id="tableOwner" class="form-input" placeholder="请输入表的负责人" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 模拟数据
+        let tableData = [
+            {
+                id: 1,
+                tableName: "customer_info",
+                tableChineseName: "客户信息表",
+                firstTheme: "客户管理",
+                secondTheme: "客户信息",
+                thirdTheme: "基础信息",
+                belongApp: "CRM系统",
+                usageType: "维度表",
+                usageScenario: "客户画像",
+                lifecycle: "永久保存",
+                tableOwner: "张三"
+            },
+            {
+                id: 2,
+                tableName: "order_detail",
+                tableChineseName: "订单明细表",
+                firstTheme: "订单管理",
+                secondTheme: "订单处理",
+                thirdTheme: "交易记录",
+                belongApp: "订单系统",
+                usageType: "事实表",
+                usageScenario: "业务分析",
+                lifecycle: "7年",
+                tableOwner: "李四"
+            },
+            {
+                id: 3,
+                tableName: "financial_transaction",
+                tableChineseName: "财务交易表",
+                firstTheme: "财务管理",
+                secondTheme: "财务核算",
+                thirdTheme: "交易记录",
+                belongApp: "财务系统",
+                usageType: "事实表",
+                usageScenario: "报表统计",
+                lifecycle: "10年",
+                tableOwner: "王五"
+            }
+        ];
+        
+        let currentEditId = null;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable();
+        });
+        
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            tableData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.tableName}</td>
+                    <td>${item.tableChineseName}</td>
+                    <td><span class="tag">${item.firstTheme}</span></td>
+                    <td>${item.secondTheme || '-'}</td>
+                    <td>${item.thirdTheme || '-'}</td>
+                    <td><span class="tag">${item.belongApp}</span></td>
+                    <td><span class="tag">${item.usageType}</span></td>
+                    <td><span class="tag">${item.usageScenario}</span></td>
+                    <td>${item.lifecycle}</td>
+                    <td>${item.tableOwner}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn btn-warning" onclick="editTable(${item.id})">编辑</button>
+                            <button class="ant-btn btn-danger" onclick="deleteTable(${item.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 搜索功能
+        function searchData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filteredData = tableData.filter(item => 
+                item.tableName.toLowerCase().includes(searchTerm) ||
+                item.tableChineseName.toLowerCase().includes(searchTerm) ||
+                item.tableOwner.toLowerCase().includes(searchTerm) ||
+                item.firstTheme.toLowerCase().includes(searchTerm) ||
+                item.belongApp.toLowerCase().includes(searchTerm)
+            );
+            
+            renderFilteredTable(filteredData);
+        }
+        
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            renderTable();
+        }
+        
+        // 渲染过滤后的表格
+        function renderFilteredTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.tableName}</td>
+                    <td>${item.tableChineseName}</td>
+                    <td><span class="tag">${item.firstTheme}</span></td>
+                    <td>${item.secondTheme || '-'}</td>
+                    <td>${item.thirdTheme || '-'}</td>
+                    <td><span class="tag">${item.belongApp}</span></td>
+                    <td><span class="tag">${item.usageType}</span></td>
+                    <td><span class="tag">${item.usageScenario}</span></td>
+                    <td>${item.lifecycle}</td>
+                    <td>${item.tableOwner}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn btn-warning" onclick="editTable(${item.id})">编辑</button>
+                            <button class="ant-btn btn-danger" onclick="deleteTable(${item.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 打开新增模态框
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '新增资产表';
+            document.getElementById('tableForm').reset();
+            document.getElementById('tableModal').style.display = 'block';
+        }
+        
+        // 编辑资产表
+        function editTable(id) {
+            const item = tableData.find(item => item.id === id);
+            if (item) {
+                currentEditId = id;
+                document.getElementById('modalTitle').textContent = '编辑资产表';
+                document.getElementById('tableName').value = item.tableName;
+                document.getElementById('tableChineseName').value = item.tableChineseName;
+                document.getElementById('firstTheme').value = item.firstTheme;
+                document.getElementById('secondTheme').value = item.secondTheme || '';
+                document.getElementById('thirdTheme').value = item.thirdTheme || '';
+                document.getElementById('belongApp').value = item.belongApp;
+                document.getElementById('usageType').value = item.usageType;
+                document.getElementById('usageScenario').value = item.usageScenario;
+                document.getElementById('lifecycle').value = item.lifecycle;
+                document.getElementById('tableOwner').value = item.tableOwner;
+                document.getElementById('tableModal').style.display = 'block';
+            }
+        }
+        
+        // 删除资产表
+        function deleteTable(id) {
+            if (confirm('确定要删除这个资产表吗？')) {
+                tableData = tableData.filter(item => item.id !== id);
+                renderTable();
+            }
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('tableModal').style.display = 'none';
+        }
+        
+        // 表单提交
+        document.getElementById('tableForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tableItem = {
+                id: currentEditId || Date.now(),
+                tableName: document.getElementById('tableName').value.trim(),
+                tableChineseName: document.getElementById('tableChineseName').value.trim(),
+                firstTheme: document.getElementById('firstTheme').value,
+                secondTheme: document.getElementById('secondTheme').value,
+                thirdTheme: document.getElementById('thirdTheme').value,
+                belongApp: document.getElementById('belongApp').value,
+                usageType: document.getElementById('usageType').value,
+                usageScenario: document.getElementById('usageScenario').value,
+                lifecycle: document.getElementById('lifecycle').value,
+                tableOwner: document.getElementById('tableOwner').value.trim()
+            };
+            
+            if (!tableItem.tableName || !tableItem.tableChineseName || !tableItem.firstTheme || 
+                !tableItem.belongApp || !tableItem.usageType || !tableItem.usageScenario || !tableItem.lifecycle || !tableItem.tableOwner) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            if (currentEditId) {
+                // 编辑现有数据
+                const index = tableData.findIndex(item => item.id === currentEditId);
+                if (index !== -1) {
+                    tableData[index] = tableItem;
+                }
+            } else {
+                // 新增数据
+                tableData.push(tableItem);
+            }
+            
+            renderTable();
+            closeModal();
+            
+            // 显示成功消息
+            const message = currentEditId ? '资产表更新成功' : '资产表创建成功';
+            alert(message);
+        });
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('tableModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

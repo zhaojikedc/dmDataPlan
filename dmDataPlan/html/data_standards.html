@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据标准管理 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #262626;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ant-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .ant-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .security-level {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .security-high {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .security-medium {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .security-low {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .privacy-tag {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .privacy-yes {
+            background: #fff1f0;
+            color: #f5222d;
+            border: 1px solid #ffa39e;
+        }
+        
+        .privacy-no {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+        
+        .form-textarea:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .text-truncate {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">数据仓库数据模型管理系统</div>
+        <a href="index.html" class="back-btn">返回首页</a>
+    </div>
+    
+    <div class="app-content">
+        <div class="page-header">
+            <h1 class="page-title">数据标准管理</h1>
+            <p class="page-desc">维护数据标准规范，包括标准编码、业务线、主题、安全等级、校验公式等信息</p>
+        </div>
+        
+        <div class="content-card">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" class="ant-input" placeholder="搜索标准编码或名称..." id="searchInput">
+                    <button class="ant-btn" onclick="searchStandards()">搜索</button>
+                </div>
+                <button class="ant-btn ant-btn-primary" onclick="showAddModal()">
+                    <span>+</span> 新增标准
+                </button>
+            </div>
+            
+            <table class="ant-table">
+                <thead>
+                    <tr>
+                        <th>标准编码</th>
+                        <th>业务线</th>
+                        <th>一级主题</th>
+                        <th>二级主题</th>
+                        <th>安全等级</th>
+                        <th>标准英文名</th>
+                        <th>存储数据校验公式</th>
+                        <th>数据BP工号</th>
+                        <th>数据BP名称</th>
+                        <th>审批策略</th>
+                        <th>个人隐私标签</th>
+                        <th>说明</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="standardsTableBody">
+                    <tr>
+                        <td>STD001</td>
+                        <td>客户管理</td>
+                        <td>客户管理</td>
+                        <td>客户基础信息</td>
+                        <td><span class="security-level security-high">高</span></td>
+                        <td>customer_id</td>
+                        <td class="text-truncate" title="^[A-Z]{2}[0-9]{8}$">^[A-Z]{2}[0-9]{8}$</td>
+                        <td>BP001</td>
+                        <td>张三</td>
+                        <td>三级审批</td>
+                        <td><span class="privacy-tag privacy-yes">是</span></td>
+                        <td class="text-truncate" title="客户唯一标识符，用于关联客户相关数据">客户唯一标识符，用于关联客户相关数据</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editStandard(1)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(1)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>STD002</td>
+                        <td>产品管理</td>
+                        <td>产品管理</td>
+                        <td>产品分类</td>
+                        <td><span class="security-level security-medium">中</span></td>
+                        <td>product_category</td>
+                        <td class="text-truncate" title="^[A-Z]{2,4}$">^[A-Z]{2,4}$</td>
+                        <td>BP002</td>
+                        <td>李四</td>
+                        <td>二级审批</td>
+                        <td><span class="privacy-tag privacy-no">否</span></td>
+                        <td class="text-truncate" title="产品分类编码，用于产品分类管理">产品分类编码，用于产品分类管理</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editStandard(2)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(2)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>STD003</td>
+                        <td>订单管理</td>
+                        <td>订单管理</td>
+                        <td>订单信息</td>
+                        <td><span class="security-level security-high">高</span></td>
+                        <td>order_amount</td>
+                        <td class="text-truncate" title="^[0-9]+(\.[0-9]{1,2})?$">^[0-9]+(\.[0-9]{1,2})?$</td>
+                        <td>BP003</td>
+                        <td>王五</td>
+                        <td>三级审批</td>
+                        <td><span class="privacy-tag privacy-yes">是</span></td>
+                        <td class="text-truncate" title="订单金额，精确到分，必须为正数">订单金额，精确到分，必须为正数</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editStandard(3)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(3)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>STD004</td>
+                        <td>风控管理</td>
+                        <td>风控管理</td>
+                        <td>风险评估</td>
+                        <td><span class="security-level security-high">高</span></td>
+                        <td>risk_score</td>
+                        <td class="text-truncate" title="^[0-9]{1,3}$">^[0-9]{1,3}$</td>
+                        <td>BP004</td>
+                        <td>赵六</td>
+                        <td>四级审批</td>
+                        <td><span class="privacy-tag privacy-yes">是</span></td>
+                        <td class="text-truncate" title="风险评分，范围0-999，数值越大风险越高">风险评分，范围0-999，数值越大风险越高</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editStandard(4)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(4)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>STD005</td>
+                        <td>财务管理</td>
+                        <td>财务管理</td>
+                        <td>账户信息</td>
+                        <td><span class="security-level security-high">高</span></td>
+                        <td>account_balance</td>
+                        <td class="text-truncate" title="^-?[0-9]+(\.[0-9]{1,2})?$">^-?[0-9]+(\.[0-9]{1,2})?$</td>
+                        <td>BP005</td>
+                        <td>钱七</td>
+                        <td>三级审批</td>
+                        <td><span class="privacy-tag privacy-yes">是</span></td>
+                        <td class="text-truncate" title="账户余额，可正可负，精确到分">账户余额，可正可负，精确到分</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editStandard(5)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(5)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑标准模态框 -->
+    <div class="modal-overlay" id="standardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增数据标准</h3>
+                <button class="close-btn" onclick="hideModal()">&times;</button>
+            </div>
+            
+            <form id="standardForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">标准编码 *</label>
+                        <input type="text" class="form-input" id="standardCode" placeholder="请输入标准编码" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">业务线 *</label>
+                        <input type="text" class="form-input" id="businessLine" placeholder="请输入业务线" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">一级主题 *</label>
+                        <input type="text" class="form-input" id="level1Theme" placeholder="请输入一级主题" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">二级主题</label>
+                        <input type="text" class="form-input" id="level2Theme" placeholder="请输入二级主题">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">安全等级 *</label>
+                        <select class="form-input" id="securityLevel" required>
+                            <option value="">请选择安全等级</option>
+                            <option value="high">高</option>
+                            <option value="medium">中</option>
+                            <option value="low">低</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">标准英文名 *</label>
+                        <input type="text" class="form-input" id="englishName" placeholder="请输入标准英文名" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">存储数据校验公式 *</label>
+                    <input type="text" class="form-input" id="validationFormula" placeholder="请输入校验公式（正则表达式）" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">数据BP工号 *</label>
+                        <input type="text" class="form-input" id="bpId" placeholder="请输入BP工号" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">数据BP名称 *</label>
+                        <input type="text" class="form-input" id="bpName" placeholder="请输入BP名称" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">审批策略 *</label>
+                        <select class="form-input" id="approvalStrategy" required>
+                            <option value="">请选择审批策略</option>
+                            <option value="一级审批">一级审批</option>
+                            <option value="二级审批">二级审批</option>
+                            <option value="三级审批">三级审批</option>
+                            <option value="四级审批">四级审批</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">个人隐私标签 *</label>
+                        <select class="form-input" id="privacyTag" required>
+                            <option value="">请选择隐私标签</option>
+                            <option value="是">是</option>
+                            <option value="否">否</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">说明</label>
+                    <textarea class="form-textarea" id="description" placeholder="请输入标准说明"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="hideModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let standards = [
+            {
+                id: 1,
+                standardCode: 'STD001',
+                businessLine: '客户管理',
+                level1Theme: '客户管理',
+                level2Theme: '客户基础信息',
+                securityLevel: 'high',
+                englishName: 'customer_id',
+                validationFormula: '^[A-Z]{2}[0-9]{8}$',
+                bpId: 'BP001',
+                bpName: '张三',
+                approvalStrategy: '三级审批',
+                privacyTag: '是',
+                description: '客户唯一标识符，用于关联客户相关数据'
+            },
+            {
+                id: 2,
+                standardCode: 'STD002',
+                businessLine: '产品管理',
+                level1Theme: '产品管理',
+                level2Theme: '产品分类',
+                securityLevel: 'medium',
+                englishName: 'product_category',
+                validationFormula: '^[A-Z]{2,4}$',
+                bpId: 'BP002',
+                bpName: '李四',
+                approvalStrategy: '二级审批',
+                privacyTag: '否',
+                description: '产品分类编码，用于产品分类管理'
+            },
+            {
+                id: 3,
+                standardCode: 'STD003',
+                businessLine: '订单管理',
+                level1Theme: '订单管理',
+                level2Theme: '订单信息',
+                securityLevel: 'high',
+                englishName: 'order_amount',
+                validationFormula: '^[0-9]+(\.[0-9]{1,2})?$',
+                bpId: 'BP003',
+                bpName: '王五',
+                approvalStrategy: '三级审批',
+                privacyTag: '是',
+                description: '订单金额，精确到分，必须为正数'
+            },
+            {
+                id: 4,
+                standardCode: 'STD004',
+                businessLine: '风控管理',
+                level1Theme: '风控管理',
+                level2Theme: '风险评估',
+                securityLevel: 'high',
+                englishName: 'risk_score',
+                validationFormula: '^[0-9]{1,3}$',
+                bpId: 'BP004',
+                bpName: '赵六',
+                approvalStrategy: '四级审批',
+                privacyTag: '是',
+                description: '风险评分，范围0-999，数值越大风险越高'
+            },
+            {
+                id: 5,
+                standardCode: 'STD005',
+                businessLine: '财务管理',
+                level1Theme: '财务管理',
+                level2Theme: '账户信息',
+                securityLevel: 'high',
+                englishName: 'account_balance',
+                validationFormula: '^-?[0-9]+(\.[0-9]{1,2})?$',
+                bpId: 'BP005',
+                bpName: '钱七',
+                approvalStrategy: '三级审批',
+                privacyTag: '是',
+                description: '账户余额，可正可负，精确到分'
+            }
+        ];
+        
+        let editingId = null;
+        
+        function searchStandards() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredStandards = standards.filter(standard => 
+                standard.standardCode.toLowerCase().includes(searchTerm) ||
+                standard.englishName.toLowerCase().includes(searchTerm) ||
+                standard.businessLine.toLowerCase().includes(searchTerm) ||
+                standard.level1Theme.toLowerCase().includes(searchTerm)
+            );
+            renderStandards(filteredStandards);
+        }
+        
+        function renderStandards(standardsToRender = standards) {
+            const tbody = document.getElementById('standardsTableBody');
+            tbody.innerHTML = '';
+            
+            standardsToRender.forEach(standard => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${standard.standardCode}</td>
+                    <td>${standard.businessLine}</td>
+                    <td>${standard.level1Theme}</td>
+                    <td>${standard.level2Theme || '-'}</td>
+                    <td><span class="security-level security-${standard.securityLevel}">${standard.securityLevel === 'high' ? '高' : standard.securityLevel === 'medium' ? '中' : '低'}</span></td>
+                    <td>${standard.englishName}</td>
+                    <td class="text-truncate" title="${standard.validationFormula}">${standard.validationFormula}</td>
+                    <td>${standard.bpId}</td>
+                    <td>${standard.bpName}</td>
+                    <td>${standard.approvalStrategy}</td>
+                    <td><span class="privacy-tag privacy-${standard.privacyTag === '是' ? 'yes' : 'no'}">${standard.privacyTag}</span></td>
+                    <td class="text-truncate" title="${standard.description}">${standard.description}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editStandard(${standard.id})">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteStandard(${standard.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function showAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增数据标准';
+            document.getElementById('standardForm').reset();
+            document.getElementById('standardModal').classList.add('show');
+        }
+        
+        function editStandard(id) {
+            const standard = standards.find(s => s.id === id);
+            if (standard) {
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑数据标准';
+                document.getElementById('standardCode').value = standard.standardCode;
+                document.getElementById('businessLine').value = standard.businessLine;
+                document.getElementById('level1Theme').value = standard.level1Theme;
+                document.getElementById('level2Theme').value = standard.level2Theme;
+                document.getElementById('securityLevel').value = standard.securityLevel;
+                document.getElementById('englishName').value = standard.englishName;
+                document.getElementById('validationFormula').value = standard.validationFormula;
+                document.getElementById('bpId').value = standard.bpId;
+                document.getElementById('bpName').value = standard.bpName;
+                document.getElementById('approvalStrategy').value = standard.approvalStrategy;
+                document.getElementById('privacyTag').value = standard.privacyTag;
+                document.getElementById('description').value = standard.description;
+                document.getElementById('standardModal').classList.add('show');
+            }
+        }
+        
+        function hideModal() {
+            document.getElementById('standardModal').classList.remove('show');
+        }
+        
+        function deleteStandard(id) {
+            if (confirm('确定要删除这个数据标准吗？')) {
+                standards = standards.filter(s => s.id !== id);
+                renderStandards();
+                saveToLocalStorage();
+            }
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('dmDataPlan_standards', JSON.stringify(standards));
+        }
+        
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('dmDataPlan_standards');
+            if (saved) {
+                standards = JSON.parse(saved);
+                renderStandards();
+            }
+        }
+        
+        // 表单提交处理
+        document.getElementById('standardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                standardCode: document.getElementById('standardCode').value,
+                businessLine: document.getElementById('businessLine').value,
+                level1Theme: document.getElementById('level1Theme').value,
+                level2Theme: document.getElementById('level2Theme').value,
+                securityLevel: document.getElementById('securityLevel').value,
+                englishName: document.getElementById('englishName').value,
+                validationFormula: document.getElementById('validationFormula').value,
+                bpId: document.getElementById('bpId').value,
+                bpName: document.getElementById('bpName').value,
+                approvalStrategy: document.getElementById('approvalStrategy').value,
+                privacyTag: document.getElementById('privacyTag').value,
+                description: document.getElementById('description').value
+            };
+            
+            if (editingId) {
+                // 编辑现有标准
+                const index = standards.findIndex(s => s.id === editingId);
+                if (index !== -1) {
+                    standards[index] = { ...standards[index], ...formData };
+                }
+            } else {
+                // 新增标准
+                const newId = Math.max(...standards.map(s => s.id), 0) + 1;
+                standards.push({ id: newId, ...formData });
+            }
+            
+            renderStandards();
+            saveToLocalStorage();
+            hideModal();
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+        });
+    </script>
+</body>
+</html>

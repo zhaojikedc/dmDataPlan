@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题管理 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #262626;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ant-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+        
+        .ant-btn-success:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .ant-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .status-draft {
+            background: #f0f0f0;
+            color: #666;
+            border: 1px solid #d9d9d9;
+        }
+        
+        .level-tag {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .level-1 {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .level-2 {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .level-3 {
+            background: #fff7e6;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">数据仓库数据模型管理系统</div>
+        <a href="index.html" class="back-btn">返回首页</a>
+    </div>
+    
+    <div class="app-content">
+        <div class="page-header">
+            <h1 class="page-title">主题管理</h1>
+            <p class="page-desc">管理数据仓库主题域，包括层级、应用、一级主题、二级主题、三级主题等信息</p>
+        </div>
+        
+        <div class="content-card">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" class="ant-input" placeholder="搜索主题名称..." id="searchInput">
+                    <button class="ant-btn" onclick="searchThemes()">搜索</button>
+                </div>
+                <button class="ant-btn ant-btn-primary" onclick="showAddModal()">
+                    <span>+</span> 新增主题
+                </button>
+            </div>
+            
+            <table class="ant-table">
+                <thead>
+                    <tr>
+                        <th>层级</th>
+                        <th>应用ID</th>
+                        <th>应用名称</th>
+                        <th>一级主题</th>
+                        <th>一级主题缩写</th>
+                        <th>二级主题</th>
+                        <th>二级主题缩写</th>
+                        <th>三级主题</th>
+                        <th>三级主题缩写</th>
+                        <th>主题对应模型库</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="themeTableBody">
+                    <tr>
+                        <td><span class="level-tag level-1">一级</span></td>
+                        <td>APP001</td>
+                        <td>客户管理系统</td>
+                        <td>客户管理</td>
+                        <td>KHGL</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>customer_db</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editTheme(1)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteTheme(1)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-tag level-2">二级</span></td>
+                        <td>APP001</td>
+                        <td>客户管理系统</td>
+                        <td>客户管理</td>
+                        <td>KHGL</td>
+                        <td>客户基础信息</td>
+                        <td>KHJCXX</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>customer_basic_db</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editTheme(2)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteTheme(2)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-tag level-3">三级</span></td>
+                        <td>APP001</td>
+                        <td>客户管理系统</td>
+                        <td>客户管理</td>
+                        <td>KHGL</td>
+                        <td>客户基础信息</td>
+                        <td>KHJCXX</td>
+                        <td>客户联系方式</td>
+                        <td>KHLXFS</td>
+                        <td>customer_contact_db</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editTheme(3)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteTheme(3)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-tag level-1">一级</span></td>
+                        <td>APP002</td>
+                        <td>产品管理系统</td>
+                        <td>产品管理</td>
+                        <td>CPGL</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>product_db</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editTheme(4)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteTheme(4)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-tag level-2">二级</td>
+                        <td>APP002</td>
+                        <td>产品管理系统</td>
+                        <td>产品管理</td>
+                        <td>CPGL</td>
+                        <td>产品分类</td>
+                        <td>CPFL</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>product_category_db</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editTheme(5)">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteTheme(5)">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑主题模态框 -->
+    <div class="modal-overlay" id="themeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增主题</h3>
+                <button class="close-btn" onclick="hideModal()">&times;</button>
+            </div>
+            
+            <form id="themeForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">层级 *</label>
+                        <select class="form-input" id="level" required>
+                            <option value="">请选择层级</option>
+                            <option value="1">一级</option>
+                            <option value="2">二级</option>
+                            <option value="3">三级</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">应用ID *</label>
+                        <input type="text" class="form-input" id="appId" placeholder="请输入应用ID" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">应用名称 *</label>
+                        <input type="text" class="form-input" id="appName" placeholder="请输入应用名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">一级主题 *</label>
+                        <input type="text" class="form-input" id="level1Theme" placeholder="请输入一级主题" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">一级主题缩写 *</label>
+                        <input type="text" class="form-input" id="level1Abbr" placeholder="请输入一级主题缩写" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">二级主题</label>
+                        <input type="text" class="form-input" id="level2Theme" placeholder="请输入二级主题">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">二级主题缩写</label>
+                        <input type="text" class="form-input" id="level2Abbr" placeholder="请输入二级主题缩写">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">三级主题</label>
+                        <input type="text" class="form-input" id="level3Theme" placeholder="请输入三级主题">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">三级主题缩写</label>
+                        <input type="text" class="form-input" id="level3Abbr" placeholder="请输入三级主题缩写">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">主题对应模型库 *</label>
+                        <input type="text" class="form-input" id="modelLibrary" placeholder="请输入模型库名称" required>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="hideModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let themes = [
+            {
+                id: 1,
+                level: 1,
+                appId: 'APP001',
+                appName: '客户管理系统',
+                level1Theme: '客户管理',
+                level1Abbr: 'KHGL',
+                level2Theme: '',
+                level2Abbr: '',
+                level3Theme: '',
+                level3Abbr: '',
+                modelLibrary: 'customer_db'
+            },
+            {
+                id: 2,
+                level: 2,
+                appId: 'APP001',
+                appName: '客户管理系统',
+                level1Theme: '客户管理',
+                level1Abbr: 'KHGL',
+                level2Theme: '客户基础信息',
+                level2Abbr: 'KHJCXX',
+                level3Theme: '',
+                level3Abbr: '',
+                modelLibrary: 'customer_basic_db'
+            },
+            {
+                id: 3,
+                level: 3,
+                appId: 'APP001',
+                appName: '客户管理系统',
+                level1Theme: '客户管理',
+                level1Abbr: 'KHGL',
+                level2Theme: '客户基础信息',
+                level2Abbr: 'KHJCXX',
+                level3Theme: '客户联系方式',
+                level3Abbr: 'KHLXFS',
+                modelLibrary: 'customer_contact_db'
+            },
+            {
+                id: 4,
+                level: 1,
+                appId: 'APP002',
+                appName: '产品管理系统',
+                level1Theme: '产品管理',
+                level1Abbr: 'CPGL',
+                level2Theme: '',
+                level2Abbr: '',
+                level3Theme: '',
+                level3Abbr: '',
+                modelLibrary: 'product_db'
+            },
+            {
+                id: 5,
+                level: 2,
+                appId: 'APP002',
+                appName: '产品管理系统',
+                level1Theme: '产品管理',
+                level1Abbr: 'CPGL',
+                level2Theme: '产品分类',
+                level2Abbr: 'CPFL',
+                level3Theme: '',
+                level3Abbr: '',
+                modelLibrary: 'product_category_db'
+            }
+        ];
+        
+        let editingId = null;
+        
+        function searchThemes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredThemes = themes.filter(theme => 
+                theme.appName.toLowerCase().includes(searchTerm) ||
+                theme.level1Theme.toLowerCase().includes(searchTerm) ||
+                theme.level2Theme.toLowerCase().includes(searchTerm) ||
+                theme.level3Theme.toLowerCase().includes(searchTerm)
+            );
+            renderThemes(filteredThemes);
+        }
+        
+        function renderThemes(themesToRender = themes) {
+            const tbody = document.getElementById('themeTableBody');
+            tbody.innerHTML = '';
+            
+            themesToRender.forEach(theme => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="level-tag level-${theme.level}">${theme.level === 1 ? '一级' : theme.level === 2 ? '二级' : '三级'}</span></td>
+                    <td>${theme.appId}</td>
+                    <td>${theme.appName}</td>
+                    <td>${theme.level1Theme}</td>
+                    <td>${theme.level1Abbr}</td>
+                    <td>${theme.level2Theme || '-'}</td>
+                    <td>${theme.level2Abbr || '-'}</td>
+                    <td>${theme.level3Theme || '-'}</td>
+                    <td>${theme.level3Abbr || '-'}</td>
+                    <td>${theme.modelLibrary}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editTheme(${theme.id})">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteTheme(${theme.id})">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function showAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '新增主题';
+            document.getElementById('themeForm').reset();
+            document.getElementById('themeModal').classList.add('show');
+        }
+        
+        function editTheme(id) {
+            const theme = themes.find(t => t.id === id);
+            if (theme) {
+                editingId = id;
+                document.getElementById('modalTitle').textContent = '编辑主题';
+                document.getElementById('level').value = theme.level;
+                document.getElementById('appId').value = theme.appId;
+                document.getElementById('appName').value = theme.appName;
+                document.getElementById('level1Theme').value = theme.level1Theme;
+                document.getElementById('level1Abbr').value = theme.level1Abbr;
+                document.getElementById('level2Theme').value = theme.level2Theme;
+                document.getElementById('level2Abbr').value = theme.level2Abbr;
+                document.getElementById('level3Theme').value = theme.level3Theme;
+                document.getElementById('level3Abbr').value = theme.level3Abbr;
+                document.getElementById('modelLibrary').value = theme.modelLibrary;
+                document.getElementById('themeModal').classList.add('show');
+            }
+        }
+        
+        function hideModal() {
+            document.getElementById('themeModal').classList.remove('show');
+        }
+        
+        function deleteTheme(id) {
+            if (confirm('确定要删除这个主题吗？')) {
+                themes = themes.filter(t => t.id !== id);
+                renderThemes();
+                saveToLocalStorage();
+            }
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('dmDataPlan_themes', JSON.stringify(themes));
+        }
+        
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('dmDataPlan_themes');
+            if (saved) {
+                themes = JSON.parse(saved);
+                renderThemes();
+            }
+        }
+        
+        // 表单提交处理
+        document.getElementById('themeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                level: parseInt(document.getElementById('level').value),
+                appId: document.getElementById('appId').value,
+                appName: document.getElementById('appName').value,
+                level1Theme: document.getElementById('level1Theme').value,
+                level1Abbr: document.getElementById('level1Abbr').value,
+                level2Theme: document.getElementById('level2Theme').value,
+                level2Abbr: document.getElementById('level2Abbr').value,
+                level3Theme: document.getElementById('level3Theme').value,
+                level3Abbr: document.getElementById('level3Abbr').value,
+                modelLibrary: document.getElementById('modelLibrary').value
+            };
+            
+            if (editingId) {
+                // 编辑现有主题
+                const index = themes.findIndex(t => t.id === editingId);
+                if (index !== -1) {
+                    themes[index] = { ...themes[index], ...formData };
+                }
+            } else {
+                // 新增主题
+                const newId = Math.max(...themes.map(t => t.id), 0) + 1;
+                themes.push({ id: newId, ...formData });
+            }
+            
+            renderThemes();
+            saveToLocalStorage();
+            hideModal();
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+        });
+    </script>
+</body>
+</html>
+
+
+
+

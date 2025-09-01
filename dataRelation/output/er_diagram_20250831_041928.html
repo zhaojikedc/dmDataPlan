@@ -1,0 +1,3786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>增强型ER关系图</title>
+<!-- 直接在head中引入html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js "></script>
+<style>
+  * {margin:0;padding:0;box-sizing:border-box;}
+  body {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:#f5f7fa;color:#333;overflow:hidden;}
+  .container {display:flex;width:100vw;height:100vh;overflow:hidden;}
+  .sidebar {width:280px;background:#2c3e50;color:#ecf0f1;padding:15px;overflow-y:auto;}
+  .main-content {flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+  
+  /* 标题区域样式 */
+  .header-area {background:#fff;padding:15px 20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);z-index:10;}
+  .title-input {width:100%;font-size:24px;font-weight:bold;border:none;outline:none;padding:5px;background:transparent;color:#2c3e50;text-align:center;}
+  .title-input:focus {background:#f8f9fa;border-radius:4px;}
+  .description-input {width:100%;font-size:14px;border:1px solid #e0e0e0;outline:none;padding:8px;margin-top:10px;border-radius:4px;resize:none;min-height:60px;font-family:inherit;}
+  .description-input:focus {border-color:#3498db;}
+  
+  /* 画布区域 - 修改为支持滚动 */
+  .canvas-area {
+    flex:1;
+    position:relative;
+    overflow:auto; /* 改为auto支持滚动 */
+    background:#f5f7fa;
+  }
+  
+  /* 画布内容容器 - 新增 */
+  .canvas-content {
+    position:relative;
+    min-width:100%;
+    min-height:100%;
+    width:max-content;
+    height:max-content;
+  }
+  
+  #svg-container {
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:3; /* 提高SVG容器的z-index，确保线条显示在表格之上 */
+    pointer-events:none;
+    min-width:5000px; /* 增大SVG容器尺寸 */
+    min-height:4000px;
+  }
+  #svg-container * {pointer-events:auto;}
+  
+  #tables-container {
+    position:absolute;
+    top:0;
+    left:0;
+    z-index:2;
+    pointer-events:none;
+    min-width:5000px; /* 增大表格容器尺寸 */
+    min-height:4000px;
+  }
+  #tables-container > div {pointer-events:auto;}
+  
+  h1 {font-size:1.5rem;margin-bottom:20px;color:#3498db;}
+  h2 {font-size:1.2rem;margin:15px 0 10px;color:#1abc9c;}
+  .legend {margin-top:20px;padding:10px;background:#34495e;border-radius:5px;}
+  .legend-item {display:flex;align-items:center;margin:8px 0;}
+  .legend-color {width:20px;height:4px;margin-right:10px;}
+  .controls {margin:15px 0;}
+  button {width:100%;padding:8px;margin:5px 0;background:#3498db;color:white;border:none;border-radius:4px;cursor:pointer;font-size:13px;}
+  button:hover {background:#2980b9;}
+  button.export-btn {background:#27ae60;}
+  button.export-btn:hover {background:#229954;}
+  button:disabled {background:#95a5a6;cursor:not-allowed;}
+  
+  /* 表格样式 */
+  .er-wrapper {position:absolute;transform-origin:left top;cursor:move;border:2px solid #95a5a6;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:6px;overflow:visible;transition:box-shadow 0.3s;}
+  .er-wrapper:hover {box-shadow:0 6px 16px rgba(0,0,0,0.2);}
+  .er-wrapper.fact-table {border:3px solid #e74c3c;background:#fff5f5;}
+  .er-wrapper.dim-table {border:3px solid #3498db;background:#f0f8ff;}
+  .er-table {border-collapse:collapse;font-size:var(--fs,12px);width:100%;}
+  .er-table th {
+    background:#95a5a6;
+    color:white;
+    padding:8px 10px;
+    user-select:none;
+    text-align:left;
+    font-weight:500;
+    position:relative;
+    cursor:pointer;
+  }
+  .fact-table .er-table th {background:#e74c3c;}
+  .dim-table .er-table th {background:#3498db;}
+  .er-table td {border-top:1px solid #e0e0e0;padding:4px 8px;white-space:nowrap;}
+  .pk {color:#e74c3c;font-weight:600;}
+  .fk {color:#2980b9;font-weight:600;}
+  .pk-fk {color:#9b59b6;font-weight:600;}
+  
+  /* 折叠展开按钮样式 */
+  .collapse-btn {
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:16px;
+    height:16px;
+    background:rgba(255,255,255,0.3);
+    border:1px solid rgba(255,255,255,0.5);
+    border-radius:3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:12px;
+    color:white;
+    transition:all 0.3s;
+  }
+  
+  .collapse-btn:hover {
+    background:rgba(255,255,255,0.5);
+  }
+  
+  .collapse-btn::before {
+    content:'−';
+    font-weight:bold;
+  }
+  
+  .er-wrapper.collapsed .collapse-btn::before {
+    content:'+';
+  }
+  
+  /* 折叠状态下显示前三个字段 */
+  .er-wrapper.collapsed .er-table tbody tr:nth-child(n+4) {
+    display:none;
+  }
+  
+  /* 折叠状态下第一列宽度优化 - 缩短主外键标识列宽度 */
+  .er-wrapper.collapsed .er-table tbody tr td:first-child {
+    width: 40px; /* 缩短第一列宽度，与字段类型列保持一致 */
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    padding: 4px 2px;
+  }
+  
+  /* 折叠状态下的提示文字 - 不显示隐藏字段个数 */
+  .er-wrapper.collapsed .er-table tbody::after {
+    content: '';
+    display: none;
+  }
+  
+  /* 折叠状态下的表格样式优化 */
+  .er-wrapper.collapsed .er-table {
+    border-radius: 6px 6px 0 0;
+  }
+  
+  .er-wrapper.collapsed .er-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  
+  /* 工具栏样式 - 固定在右上角 */
+  .toolbar {
+    position:fixed; /* 改为fixed */
+    top:120px;
+    right:15px;
+    background:rgba(255,255,255,0.9);
+    padding:10px;
+    border-radius:5px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    z-index:100;
+  }
+  
+  .table-type-badge {position:absolute;top:-10px;right:10px;background:#e74c3c;color:white;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;z-index:10;}
+  .dim-badge {background:#3498db;}
+  
+  /* SVG样式 - 优化版 */
+  /* 新增功能：
+   * 1. 关系线选中后的水流效果（动画+滤镜）
+   * 2. 表格折叠时显示前3个字段
+   * 3. 智能折叠信息显示
+   */
+  .relation-line {
+    fill:none;
+    stroke-width:2;
+    stroke:#3498db; /* 添加默认stroke颜色 */
+    cursor:pointer;
+    transition:stroke 0.3s, opacity 0.3s;
+    opacity:0.8;
+  }
+  
+  .relation-line:hover {
+    stroke:#ff0000 !important;
+    opacity:1;
+  }
+  
+  /* 选中状态的关系线 - 水流效果 */
+  .relation-line.selected {
+    opacity:1;
+    filter: drop-shadow(0 0 4px rgba(255,0,0,0.5)) url(#flowFilter);
+    stroke-dasharray: 10,5;
+    animation: flowAnimation 2s linear infinite;
+    stroke-width: 3;
+  }
+  
+  /* 水流动画效果 */
+  @keyframes flowAnimation {
+    0% {
+      stroke-dashoffset: 0;
+      filter: hue-rotate(0deg) brightness(1);
+    }
+    25% {
+      filter: hue-rotate(5deg) brightness(1.1);
+    }
+    50% {
+      stroke-dashoffset: -7.5;
+      filter: hue-rotate(10deg) brightness(1.2);
+    }
+    75% {
+      filter: hue-rotate(5deg) brightness(1.1);
+    }
+    100% {
+      stroke-dashoffset: -15;
+      filter: hue-rotate(0deg) brightness(1);
+    }
+  }
+  
+  /* 波浪效果 */
+  .relation-line.selected {
+    position: relative;
+  }
+  
+  .relation-line.selected::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(90deg, transparent, rgba(255,0,0,0.3), transparent);
+    border-radius: 50%;
+    animation: waveEffect 2s ease-in-out infinite;
+  }
+  
+  @keyframes waveEffect {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.6;
+    }
+  }
+  
+  /* 水流粒子效果 */
+  .relation-line.selected::before {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #ff0000;
+    border-radius: 50%;
+    animation: particleFlow 3s linear infinite;
+  }
+  
+  /* 粒子流动画 */
+  @keyframes particleFlow {
+    0% {
+      transform: translateX(0) translateY(0);
+      opacity: 1;
+    }
+    50% {
+      transform: translateX(20px) translateY(-10px);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateX(40px) translateY(0);
+      opacity: 0;
+    }
+  }
+  
+  .relation-line.fact-dim {stroke:#3498db;}
+  .relation-line.one-to-one {stroke:#e74c3c;}
+  .relation-line.one-to-many {stroke:#3498db;}
+  .relation-line.many-to-many {stroke:#9b59b6;stroke-dasharray:5,5;}
+  .relation-line.self {stroke:#2ecc71;}
+  
+  /* 选中状态下的特殊效果 - 事实表到事实表保持蓝色 */
+  .relation-line.selected.fact-dim {
+    stroke:#3498db !important; /* 事实表到事实表保持蓝色 */
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(52,152,219,0.6));
+  }
+  
+  .relation-line.selected.one-to-one {
+    stroke:#ff0000 !important;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(255,0,0,0.6));
+  }
+  
+  .relation-line.selected.one-to-many {
+    stroke:#ff0000 !important;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(255,0,0,0.6));
+  }
+  
+  .relation-line.selected.many-to-many {
+    stroke:#ff0000 !important;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(255,0,0,0.6));
+  }
+  
+  .relation-line.selected.self {
+    stroke:#ff0000 !important;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(255,0,0,0.6));
+  }
+  
+  /* 线条拖动时的样式 */
+  .relation-line.dragging {
+    stroke:#ff6666 !important;
+    opacity:0.8;
+  }
+  
+  /* 隐形的拖动区域 */
+  .line-drag-area {
+    fill:none;
+    stroke:transparent;
+    stroke-width:20;
+    cursor:pointer;
+  }
+  
+  /* 关系标签样式增强 */
+  .relation-label {
+    cursor:pointer;
+    user-select:none;
+    opacity:0.9;
+    transition:opacity 0.3s, transform 0.3s;
+  }
+  
+  .relation-label:hover {
+    opacity:1;
+    transform:scale(1.05);
+  }
+  
+  .relation-label.selected {
+    opacity:1;
+  }
+  
+  .relation-label rect {
+    fill:rgba(255,255,255,0.95);
+    stroke-width:1;
+    rx:4;
+    transition:fill 0.3s, stroke-width 0.3s;
+  }
+  
+  .relation-label.selected rect {
+    fill:rgba(255,255,255,1);
+    stroke:#ff0000;
+    stroke-width:2;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+  
+  .relation-label text {
+    font-size:11px;
+    font-weight:600;
+    text-anchor:middle;
+  }
+  
+  .relation-label tspan {font-size:10px;}
+  
+  /* 箭头标记增强 */
+  .arrow-marker {
+    fill:#3498db;
+    transition:transform 0.3s;
+  }
+  
+  .relation-group:hover .arrow-marker {
+    transform:scale(1.2);
+  }
+  
+  .control-point {
+    fill:#3498db;
+    stroke:white;
+    stroke-width:2;
+    cursor:move;
+    opacity:0;
+    transition:opacity 0.2s, transform 0.2s;
+  }
+  
+  .relation-group:hover .control-point {opacity:1;}
+  .control-point:hover {transform:scale(1.2);}
+  
+  /* 自由文本输入框样式 - 优化为透明背景 */
+  .free-text-input {
+    position:absolute;
+    background:transparent;
+    border:2px dashed rgba(52, 152, 219, 0.3);
+    border-radius:4px;
+    padding:8px 12px;
+    font-size:14px;
+    color:#333;
+    min-width:20px;
+    max-width:300px;
+    z-index:1000;
+    cursor:move;
+    transition:all 0.3s;
+    font-weight:500;
+  }
+  
+  .free-text-input:hover {
+    border-color:rgba(52, 152, 219, 0.6);
+    background:rgba(255,255,255,0.1);
+  }
+  
+  .free-text-input:focus {
+    outline:none;
+    border-style:solid;
+    border-color:#2980b9;
+    background:rgba(255,255,255,0.8);
+    box-shadow:0 0 0 3px rgba(52,152,219,0.2);
+  }
+  
+  .free-text-input.editing {
+    cursor:text;
+    background:rgba(255,255,255,0.95);
+  }
+  
+  /* 只有文字时隐藏边框 */
+  .free-text-input:not(.editing):not(:hover) {
+    border-color:transparent;
+  }
+  
+  /* 删除按钮 */
+  .text-delete-btn {
+    position:absolute;
+    top:-8px;
+    right:-8px;
+    width:20px;
+    height:20px;
+    background:#e74c3c;
+    color:white;
+    border:none;
+    border-radius:50%;
+    cursor:pointer;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    line-height:1;
+  }
+  
+  .free-text-wrapper:hover .text-delete-btn {
+    display:flex;
+  }
+  
+  .free-text-wrapper {
+    position:absolute;
+  }
+  
+  /* JSON输入区域 */
+  .json-input-area {margin-top:20px;}
+  .json-textarea {width:100%;height:150px;font-family:monospace;font-size:11px;padding:5px;border:1px solid #34495e;background:#1e2329;color:#ecf0f1;border-radius:4px;}
+  .json-buttons {display:flex;gap:5px;margin-top:5px;}
+  .json-buttons button {flex:1;font-size:12px;padding:5px;}
+  
+  /* 导出进度提示 */
+  .export-loading {position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);background:rgba(0,0,0,0.8);color:white;padding:20px 40px;border-radius:8px;z-index:10000;font-size:16px;}
+  
+  /* 滚动条样式 */
+  .canvas-area::-webkit-scrollbar {width:10px;height:10px;}
+  .canvas-area::-webkit-scrollbar-track {background:#f1f1f1;}
+  .canvas-area::-webkit-scrollbar-thumb {background:#888;border-radius:5px;}
+  .canvas-area::-webkit-scrollbar-thumb:hover {background:#555;}
+  
+  /* 关系信息面板 */
+  .relation-info {
+    position:fixed;
+    bottom:20px;
+    left:300px;
+    background:rgba(255,255,255,0.95);
+    padding:15px;
+    border-radius:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    display:none;
+    z-index:1000;
+    min-width:200px;
+  }
+  
+  .relation-info.show {display:block;}
+  .relation-info h3 {margin:0 0 10px;font-size:14px;color:#2c3e50;}
+  .relation-info p {margin:5px 0;font-size:12px;color:#666;}
+  .relation-info .close-btn {
+    position:absolute;
+    top:5px;
+    right:5px;
+    cursor:pointer;
+    font-size:18px;
+    color:#999;
+  }
+    .relation-info .close-btn:hover {color:#333;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h1>ER关系图设计器</h1>
+    
+    <div class="controls">
+      <button id="resetView">重置视图</button>
+      <button id="saveView">保存当前视图</button>
+      <button id="toggleLineType">切换线条类型</button>
+      <button id="toggleAllTables">展开/折叠所有表</button>
+      <button id="addTextBox">添加文本框</button>
+      <button id="clearSelection">清除选中</button>
+      <button id="exportJSON">导出JSON数据</button>
+      <button id="exportImage" class="export-btn">生成图片</button>
+    </div>
+    
+    <h2>JSON数据导入</h2>
+    <div class="json-input-area">
+      <textarea id="jsonInput" class="json-textarea" placeholder="粘贴JSON数据..."></textarea>
+      <div class="json-buttons">
+        <button id="importJSON">导入数据</button>
+        <button id="clearJSON">清空</button>
+      </div>
+    </div>
+    
+    <h2>使用说明</h2>
+    <ul style="padding-left:20px;margin-top:10px;font-size:12px;">
+      <li>点击表头折叠/展开表格</li>
+      <li>拖动表格调整位置</li>
+      <li>Ctrl+滚轮缩放表格</li>
+      <li>点击关系线查看详情</li>
+      <li>点击"添加文本框"添加注释</li>
+      <li>双击文本框编辑内容</li>
+      <li>拖动线条调整曲线形状</li>
+    </ul>
+  </div>
+  
+  <div class="main-content">
+    <div class="header-area">
+      <input type="text" id="titleInput" class="title-input" placeholder="请输入ER图标题..." value="数据库ER关系图">
+      <textarea id="descriptionInput" class="description-input" placeholder="请输入ER图说明...">本图展示了系统数据库的实体关系模型，包括事实表和维度表及其关联关系。</textarea>
+    </div>
+    <div class="canvas-area">
+      <div class="toolbar">
+        <span>缩放: <span id="zoomLevel">100%</span></span>
+        <span style="margin-left:10px">线条类型: <span id="lineType">曲线</span></span>
+      </div>
+      <div class="canvas-content">
+        <svg id="svg-container"></svg>
+        <div id="tables-container"></div>
+        <div id="text-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 关系信息面板 -->
+<div id="relationInfo" class="relation-info">
+  <span class="close-btn" onclick="hideRelationInfo()">&times;</span>
+  <h3>关系详情</h3>
+  <p><strong>源表:</strong> <span id="infoSource"></span></p>
+  <p><strong>目标表:</strong> <span id="infoTarget"></span></p>
+  <p><strong>关系类型:</strong> <span id="infoType"></span></p>
+  <p><strong>源字段:</strong> <span id="infoSourceField"></span></p>
+  <p><strong>目标字段:</strong> <span id="infoTargetField"></span></p>
+  <p><strong>描述:</strong> <span id="infoDescription"></span></p>
+</div>
+
+<script>
+/***********************************************************************
+ * 配置和数据定义 - 统一的JSON数据格式
+ **********************************************************************/
+let lineType = 'curve'; // 'curve' 或 'polyline'
+let selectedRelation = null; // 当前选中的关系
+let freeTextBoxes = []; // 存储所有的文本框
+let nextTextBoxId = 1; // 文本框ID计数器
+let tableCollapseStates = {}; // 存储表格折叠状态
+
+// 统一的数据结构
+const defaultERData = {
+  "title": "O线ER关系图",
+  "description": "本图展示了系统数据库的实体关系模型，包括事实表和维度表及其关联关系。",
+  "tables": [
+    {
+      "name": "dim.dim_tp_air_full_cargo_di",
+      "type": "dim",
+      "cnName": "dim.dim_tp_air_full_cargo_di",
+      "fields": [
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "schedule",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "星期几"
+        },
+        {
+          "key": "cpct_name",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "运力名称"
+        },
+        {
+          "key": "deprt_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发地城市code"
+        },
+        {
+          "key": "arrive_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的地城市code"
+        },
+        {
+          "key": "deprt_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地机场三字码"
+        },
+        {
+          "key": "arrive_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地机场三字码"
+        },
+        {
+          "key": "send_blng_net_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "发货归属网点代码"
+        },
+        {
+          "key": "get_blng_net_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "提货归属网点代码"
+        },
+        {
+          "key": "deprt_sta_types",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发货站分类"
+        },
+        {
+          "key": "deprt_sta_names",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发货站"
+        },
+        {
+          "key": "arrive_sta_types",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的货站分类"
+        },
+        {
+          "key": "arrive_sta_names",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的货站"
+        },
+        {
+          "key": "is_stop",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "经停标志:0 否(直飞)1 是(经停)"
+        },
+        {
+          "key": "sch_flight_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "时效性航班类型1早航班2午航班3晚航班"
+        },
+        {
+          "key": "cpct_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "运力类型:1 全货机 2 散航班"
+        },
+        {
+          "key": "flight_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型:1 国内2 国际3 港澳台"
+        },
+        {
+          "key": "dist",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "航班里程"
+        },
+        {
+          "key": "dist_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航距类型 1远程航线2中程航线3近程航线"
+        },
+        {
+          "key": "air_airln_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司代码"
+        },
+        {
+          "key": "cpct_state",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航班状态:1.起飞2.取消3.备降4.返航5.到达6.延误7.计划，-1.空"
+        },
+        {
+          "key": "plan_sch_days",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "班期"
+        },
+        {
+          "key": "plan_plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划机型"
+        },
+        {
+          "key": "plan_cargo_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "计划机型业载(kg)"
+        },
+        {
+          "key": "plan_mktbl_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "计划可销售业载(kg)"
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型"
+        },
+        {
+          "key": "cargo_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型业载(kg)"
+        },
+        {
+          "key": "mktbl_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型可销售业载(kg)"
+        },
+        {
+          "key": "valid_total",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "有效可获取舱位量(kg)"
+        },
+        {
+          "key": "prtcl_weight",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "协议量"
+        },
+        {
+          "key": "cross_day",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "跨越天数"
+        },
+        {
+          "key": "plan_deprt_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划起飞时间"
+        },
+        {
+          "key": "plan_arrive_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划到达时间"
+        },
+        {
+          "key": "actual_deprt_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际起飞时间"
+        },
+        {
+          "key": "actual_arrive_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际到达时间"
+        },
+        {
+          "key": "trans_time",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "货站最晚截载时长(min)"
+        },
+        {
+          "key": "prod_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "静态时效标签"
+        },
+        {
+          "key": "apply_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "动态时效标签"
+        },
+        {
+          "key": "is_delete",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "是否删除 0否 1是"
+        },
+        {
+          "key": "load_time",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "写入bdp时间"
+        }
+      ]
+    },
+    {
+      "name": "dm_pass_atp.tm_air_flow_config_wide",
+      "type": "dim",
+      "cnName": "dm_pass_atp.tm_air_flow_config_wide",
+      "fields": [
+        {
+          "key": "id",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "ID"
+        },
+        {
+          "key": "city_flow",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "城市流向"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件城市代码"
+        },
+        {
+          "key": "src_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件城市名称"
+        },
+        {
+          "key": "src_province_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件省名称"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "派件城市代码"
+        },
+        {
+          "key": "dest_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "派件城市名称"
+        },
+        {
+          "key": "dest_province_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "派件省名称"
+        },
+        {
+          "key": "distance",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "城市距离"
+        },
+        {
+          "key": "distance_range",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "距离归段"
+        },
+        {
+          "key": "city_rel",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "城市关系.1-同城,2-省内,3-邻省,4-经济圈,5-省外,6-港澳台"
+        },
+        {
+          "key": "is_express_config",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "是否特快排布.1-是,0-否"
+        },
+        {
+          "key": "is_3600_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "3600流向.1-是,0-否"
+        },
+        {
+          "key": "is_2686_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "2686流向.1-是,0-否"
+        },
+        {
+          "key": "is_7a_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "7A流向.1-是,0-否"
+        },
+        {
+          "key": "is_air_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "空网流向标识.1-是,0-否"
+        },
+        {
+          "key": "effective_dt",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "生效日期"
+        },
+        {
+          "key": "expiry_dt",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "失效日期"
+        },
+        {
+          "key": "creator",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "创建人"
+        },
+        {
+          "key": "created_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "创建时间"
+        },
+        {
+          "key": "modifier",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "修改人"
+        },
+        {
+          "key": "modified_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "修改时间"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "type": "fact",
+      "cnName": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "fields": [
+        {
+          "key": "flight_task_id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "飞行任务ID"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班号"
+        },
+        {
+          "key": "plane_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机号"
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机型"
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司"
+        },
+        {
+          "key": "transport_status",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "运力状态1、未执行，2、执行中，3、已执行"
+        },
+        {
+          "key": "flight_attribute",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型 1-大陆 2-国际 3-港台"
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班类型 1:自有 2:包机 3:国际 4:其他"
+        },
+        {
+          "key": "carrier_attr",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运属性(1-大陆，2-国际，3-港澳台)"
+        },
+        {
+          "key": "is_main_flight_segment",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主备用航段"
+        },
+        {
+          "key": "is_pivotal_flight_segment",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否枢纽航段"
+        },
+        {
+          "key": "planning_nature",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "规划性质"
+        },
+        {
+          "key": "adjust_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "调整类型:新增/机型调整/时刻调整"
+        },
+        {
+          "key": "src_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发归属网点"
+        },
+        {
+          "key": "src_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地代码"
+        },
+        {
+          "key": "src_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地三字码"
+        },
+        {
+          "key": "dest_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的归属网点"
+        },
+        {
+          "key": "dest_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地代码"
+        },
+        {
+          "key": "dest_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地三字码"
+        },
+        {
+          "key": "plan_start_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划起飞"
+        },
+        {
+          "key": "plan_end_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划到达"
+        },
+        {
+          "key": "actual_start_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际起飞"
+        },
+        {
+          "key": "actual_end_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际到达"
+        },
+        {
+          "key": "start_delay",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "起飞延误时长"
+        },
+        {
+          "key": "end_delay",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "落地延误时长"
+        },
+        {
+          "key": "flight_load",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "航班业载"
+        },
+        {
+          "key": "actual_space",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际舱位量"
+        },
+        {
+          "key": "plan_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划发货量"
+        },
+        {
+          "key": "actual_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际发货量"
+        },
+        {
+          "key": "plan_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划装载率"
+        },
+        {
+          "key": "actual_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际装载率"
+        },
+        {
+          "key": "box_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "板重装载率"
+        },
+        {
+          "key": "load_poll",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "装车票数"
+        },
+        {
+          "key": "carno",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "车标"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_full_flow_sum_di",
+      "type": "fact",
+      "cnName": "dm_tp.dm_tp_air_full_flow_sum_di",
+      "fields": [
+        {
+          "key": "send_flight_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "get_flight_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "send_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "flight_flow",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "plane_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "transport_status",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "flight_attribute",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "src_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "src_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "start_area",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "src_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_area",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "flight_load",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "actual_space",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "plan_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "actual_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "plan_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "actual_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "box_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "load_poll",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "pattern_number",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "actual_pattern_number",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "carno",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "type": "fact",
+      "cnName": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "fields": [
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": ""
+        },
+        {
+          "key": "src_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": ""
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": ""
+        },
+        {
+          "key": "dest_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": ""
+        },
+        {
+          "key": "cvy_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "运力类型:1-全货机,2-散航班"
+        },
+        {
+          "key": "airline_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航线类型:1-国内,2-国际,3-港澳台"
+        },
+        {
+          "key": "airline_type_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航线类型:国内、国际、港澳台"
+        },
+        {
+          "key": "air_dist",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "知道流向就知道航距？"
+        },
+        {
+          "key": "tml_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "时效类型, 1早航班, 2午航班, 3晚航班, 取最新的"
+        },
+        {
+          "key": "tml_type_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "时效类型, 1早航班, 2午航班, 3晚航班, 取最新的"
+        },
+        {
+          "key": "flight_flow",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": ""
+        },
+        {
+          "key": "last_cvy_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "last_cvy_src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "last_cvy_src_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "last_cvy_dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "last_cvy_dest_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "product_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "route_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "is_arrive_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "dest_belong_county_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "is_02d_distr",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "total_qty",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_2d12",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_2d18",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_2d",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_cvy_2d12",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_cvy_2d18",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "qty_cvy_2d",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": ""
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "type": "fact",
+      "cnName": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "fields": [
+        {
+          "key": "carrier_id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "主承运商id"
+        },
+        {
+          "key": "carrier_code",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "主承运商编码"
+        },
+        {
+          "key": "carrier_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主承运商名称"
+        },
+        {
+          "key": "carrier_id2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商id2"
+        },
+        {
+          "key": "carrier_code2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商编码2"
+        },
+        {
+          "key": "carrier_name2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商名称2"
+        },
+        {
+          "key": "carrier_id3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商id3"
+        },
+        {
+          "key": "carrier_code3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商编码3"
+        },
+        {
+          "key": "carrier_name3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商名称3"
+        },
+        {
+          "key": "contract_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "合同id"
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班"
+        },
+        {
+          "key": "goods_stowage_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "提货货物类型"
+        },
+        {
+          "key": "effective_date",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "生效日期"
+        },
+        {
+          "key": "expiration_date",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "失效日期"
+        },
+        {
+          "key": "dept_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "网点代码"
+        },
+        {
+          "key": "depart_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发机场三字码"
+        },
+        {
+          "key": "arrive_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的机场三字码"
+        },
+        {
+          "key": "depart_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地城市名称"
+        },
+        {
+          "key": "depart_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地城市代码"
+        },
+        {
+          "key": "depart_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地区代码"
+        },
+        {
+          "key": "depart_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地区名称"
+        },
+        {
+          "key": "arrive_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地城市代码"
+        },
+        {
+          "key": "arrive_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地城市名称"
+        },
+        {
+          "key": "arrive_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地区代码"
+        },
+        {
+          "key": "arrive_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地区名称"
+        },
+        {
+          "key": "supplier_low_charge",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主供应商总最低收费"
+        },
+        {
+          "key": "supplier_low_charge_2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "供应商2总最低收费"
+        },
+        {
+          "key": "supplier_low_charge_3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "供应商3总最低收费"
+        },
+        {
+          "key": "flight_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型:1国内2国际3港澳台"
+        },
+        {
+          "key": "serve_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "费用项代码"
+        },
+        {
+          "key": "unit_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计量单位编码"
+        },
+        {
+          "key": "is_range",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否按重量区间:0否1是"
+        },
+        {
+          "key": "start_value",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "起始时间"
+        },
+        {
+          "key": "end_value",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "结束时间"
+        },
+        {
+          "key": "price",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "单价"
+        },
+        {
+          "key": "sum_price",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "总单价"
+        },
+        {
+          "key": "low_charge",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "费用项最低收费"
+        },
+        {
+          "key": "settlement_org",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "服务组织小件-1大件-2"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "target": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "sourceField": "flight_no",
+      "targetField": "flight_no",
+      "type": "1-1",
+      "isFactDim": false
+    },
+    {
+      "source": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "target": "dim.dim_tp_air_full_cargo_di",
+      "sourceField": "flight_no",
+      "targetField": "cpct_name",
+      "type": "1-1",
+      "isFactDim": true
+    },
+    {
+      "source": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "target": "dim.dim_tp_air_full_cargo_di",
+      "sourceField": "flight_no",
+      "targetField": "cpct_name",
+      "type": "1-N",
+      "isFactDim": true
+    },
+    {
+      "source": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "target": "dm_pass_atp.tm_air_flow_config_wide",
+      "sourceField": "city_code",
+      "targetField": "src_city_code",
+      "type": "1-N",
+      "isFactDim": true
+    },
+    {
+      "source": "dm_tp.dm_tp_air_full_flow_sum_di",
+      "target": "dim.dim_tp_air_full_cargo_di",
+      "sourceField": "flight_no",
+      "targetField": "cpct_name",
+      "type": "1-N",
+      "isFactDim": true
+    },
+    {
+      "source": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "target": "dm_pass_atp.tm_air_flow_config_wide",
+      "sourceField": "city_code",
+      "targetField": "src_city_code",
+      "type": "1-N",
+      "isFactDim": true
+    }
+  ]
+};
+
+// 当前使用的数据
+let currentERData = JSON.parse(JSON.stringify(defaultERData));
+
+// 初始化标题和描述
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('titleInput').value = currentERData.title || '';
+  document.getElementById('descriptionInput').value = currentERData.description || '';
+  
+  // 更新页面标题
+  updatePageTitle();
+  
+  // 监听标题输入变化
+  document.getElementById('titleInput').addEventListener('input', updatePageTitle);
+});
+
+// 更新页面标题
+function updatePageTitle() {
+  const titleInput = document.getElementById('titleInput');
+  const title = titleInput.value || '增强型ER关系图';
+  document.title = title;
+}
+
+// 转换数据格式以兼容原有代码
+function convertDataFormat(data) {
+  const tables = {};
+  const factDimRelations = {};
+  
+  // 转换表格数据
+  data.tables.forEach(table => {
+    tables[table.name] = table.fields;
+    
+    // 构建事实表-维度表关系
+    if (table.type === 'fact') {
+      factDimRelations[table.name] = [];
+      // 查找所有与此事实表相关的维度表
+      data.relations.forEach(rel => {
+        if (rel.target === table.name && rel.isFactDim) {
+          const dimTable = data.tables.find(t => t.name === rel.source);
+          if (dimTable && dimTable.type === 'dim') {
+            factDimRelations[table.name].push(rel.source);
+          }
+        }
+      });
+    }
+  });
+  
+  // 转换关系数据
+  const customRelations = data.relations.map(rel => ({
+    source: rel.source,
+    target: rel.target,
+    label: rel.type,
+    description: rel.isFactDim ? '维度-事实' : 
+                 rel.type === '1-1' ? '一对一' :
+                 rel.type === '1-N' ? '一对多' :
+                 rel.type === 'N-N' ? '多对多' :
+                 rel.type === 'self' ? '自关联' : '关系',
+    sourceField: rel.sourceField,
+    targetField: rel.targetField,
+    relationType: rel.isFactDim ? 'fact-dim' : 'normal'
+  }));
+  
+  return { tables, customRelations, factDimRelations };
+}
+
+// 从当前数据格式转换回统一格式
+function convertToUnifiedFormat(tables, customRelations, factDimRelations) {
+  const unifiedTables = [];
+  const unifiedRelations = [];
+  
+  // 转换表格数据
+  Object.entries(tables).forEach(([tableName, fields]) => {
+    let tableType = 'normal';
+    
+    // 判断表类型
+    const table = currentERData.tables.find(t => t.name === tableName);
+    if (table) {
+      tableType = table.type;
+    }
+    
+    unifiedTables.push({
+      name: tableName,
+      type: tableType,
+      fields: fields.map(f => ({
+        key: f.key,
+        type: f.type,
+        pk: f.pk || false,
+        fk: f.fk || false,
+        cn: f.cn
+      }))
+    });
+  });
+  
+  // 转换关系数据
+  customRelations.forEach(rel => {
+    unifiedRelations.push({
+      source: rel.source,
+      target: rel.target,
+      sourceField: rel.sourceField,
+      targetField: rel.targetField,
+      type: rel.label,
+      isFactDim: rel.relationType === 'fact-dim'
+    });
+  });
+  
+  // 添加文本框数据
+  const textBoxes = freeTextBoxes.map(box => ({
+    id: box.id,
+    text: box.text,
+    x: box.x,
+    y: box.y
+  }));
+  
+  // 添加折叠状态
+  const collapseStates = {};
+  Object.keys(tableCollapseStates).forEach(tableName => {
+    collapseStates[tableName] = tableCollapseStates[tableName];
+  });
+  
+  return {
+    title: document.getElementById('titleInput').value,
+    description: document.getElementById('descriptionInput').value,
+    tables: unifiedTables,
+    relations: unifiedRelations,
+    textBoxes: textBoxes,
+    collapseStates: collapseStates
+  };
+}
+
+// 使用转换后的数据
+const convertedData = convertDataFormat(currentERData);
+let tables = convertedData.tables;
+let customRelations = convertedData.customRelations;
+let factDimRelations = convertedData.factDimRelations;
+
+/***********************************************************************
+ * 关系构建
+ **********************************************************************/
+function buildRelations() {
+  const map = new Map();
+  const list = [];
+
+  // 处理所有关系
+  customRelations.forEach(r => {
+    const key = `${r.source}-${r.target}`;
+    if (!map.has(key)) {
+      map.set(key, true);
+      list.push({
+        ...r,
+        id: `rel-${list.length}`,
+        controlPoint: null,
+        curvature: 0.3
+      });
+    }
+  });
+  
+  return list;
+}
+
+let relations = buildRelations();
+
+/***********************************************************************
+ * 缓存和全局变量
+ **********************************************************************/
+const cacheKey = 'er-cache';
+let cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+const wrappers = {};
+const tableRects = {};
+
+/***********************************************************************
+ * 文本框功能
+ **********************************************************************/
+function addTextBox(x, y, text = '双击编辑文本') {
+  const container = document.getElementById('text-container');
+  if (!container) {
+    const textContainer = document.createElement('div');
+      textContainer.id = 'text-container';
+    textContainer.style.position = 'absolute';
+    textContainer.style.top = '0';
+    textContainer.style.left = '0';
+    textContainer.style.width = '100%';
+    textContainer.style.height = '100%';
+    textContainer.style.pointerEvents = 'none';
+    document.querySelector('.canvas-content').appendChild(textContainer);
+  }
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = 'free-text-wrapper';
+  wrapper.style.left = x + 'px';
+  wrapper.style.top = y + 'px';
+  wrapper.style.pointerEvents = 'auto';
+  
+  const textBox = document.createElement('div');
+  textBox.className = 'free-text-input';
+  textBox.contentEditable = false;
+  textBox.textContent = text;
+  
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'text-delete-btn';
+  deleteBtn.innerHTML = '×';
+  deleteBtn.onclick = () => {
+    wrapper.remove();
+    freeTextBoxes = freeTextBoxes.filter(box => box.id !== textBoxId);
+  };
+  
+  wrapper.appendChild(textBox);
+  wrapper.appendChild(deleteBtn);
+  
+  const textBoxId = `text-${nextTextBoxId++}`;
+  const textBoxData = {
+    id: textBoxId,
+    text: text,
+    x: x,
+    y: y,
+    element: wrapper
+  };
+  
+  freeTextBoxes.push(textBoxData);
+  
+  // 拖拽功能
+  let isDragging = false;
+  let startX, startY, initialX, initialY;
+  
+  textBox.addEventListener('mousedown', (e) => {
+    if (!textBox.classList.contains('editing')) {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      initialX = wrapper.offsetLeft;
+      initialY = wrapper.offsetTop;
+      textBox.style.cursor = 'grabbing';
+    }
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      wrapper.style.left = (initialX + dx) + 'px';
+      wrapper.style.top = (initialY + dy) + 'px';
+      
+      // 更新数据
+      const boxData = freeTextBoxes.find(box => box.id === textBoxId);
+      if (boxData) {
+        boxData.x = initialX + dx;
+        boxData.y = initialY + dy;
+      }
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      textBox.style.cursor = 'move';
+    }
+  });
+  
+  // 双击编辑
+  textBox.addEventListener('dblclick', () => {
+    textBox.contentEditable = true;
+    textBox.classList.add('editing');
+    textBox.focus();
+    
+    // 选中所有文本
+    const range = document.createRange();
+    range.selectNodeContents(textBox);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+  
+  // 失去焦点时保存
+  textBox.addEventListener('blur', () => {
+    textBox.contentEditable = false;
+    textBox.classList.remove('editing');
+    
+    // 更新数据
+    const boxData = freeTextBoxes.find(box => box.id === textBoxId);
+    if (boxData) {
+      boxData.text = textBox.textContent;
+    }
+  });
+  
+  // 按Enter键完成编辑
+  textBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      textBox.blur();
+    }
+  });
+  
+  document.getElementById('text-container').appendChild(wrapper);
+  return textBoxData;
+}
+
+/***********************************************************************
+ * 工具函数
+ **********************************************************************/
+function getTableType(tableName) {
+  const table = currentERData.tables.find(t => t.name === tableName);
+  return table ? table.type : 'normal';
+}
+
+function getLineClass(relation) {
+  const classes = ['relation-line'];
+  if (relation.relationType === 'fact-dim') {
+    classes.push('fact-dim');
+  } else if (relation.label === '1-1') {
+    classes.push('one-to-one');
+  } else if (relation.label === '1-N') {
+    classes.push('one-to-many');
+  } else if (relation.label === 'N-N') {
+    classes.push('many-to-many');
+  } else if (relation.label === 'self') {
+    classes.push('self');
+  }
+  return classes.join(' ');
+}
+
+function getLineColor(relation) {
+  // 检查是否为事实表到事实表的关系
+  const sourceTable = currentERData.tables.find(t => t.name === relation.source);
+  const targetTable = currentERData.tables.find(t => t.name === relation.target);
+  
+  // 如果源表和目标表都是事实表，则显示蓝色
+  if (sourceTable && targetTable && sourceTable.type === 'fact' && targetTable.type === 'fact') {
+    return '#3498db';
+  }
+  
+  // 如果源表或目标表是事实表，也显示蓝色
+  if (sourceTable && sourceTable.type === 'fact') {
+    return '#3498db';
+  }
+  if (targetTable && targetTable.type === 'fact') {
+    return '#3498db';
+  }
+  
+  if (relation.relationType === 'fact-dim' || relation.label === '1-N') {
+    return '#3498db';
+  } else if (relation.label === '1-1') {
+    return '#e74c3c';
+  } else if (relation.label === 'N-N') {
+    return '#9b59b6';
+  } else if (relation.label === 'self') {
+    return '#2ecc71';
+  }
+  return '#7f8c8d';
+}
+
+// 选中关系线
+function selectRelation(relationId) {
+  // 清除之前的选中状态
+  clearSelection();
+  
+  // 设置新的选中状态
+  selectedRelation = relationId;
+  const relation = relations.find(r => r.id === relationId);
+  
+  if (relation) {
+    // 添加选中样式
+    const line = document.getElementById(`line-${relationId}`);
+    const labelG = document.querySelector(`[data-relation-id="${relationId}"] .relation-label`);
+    
+    if (line) {
+      line.classList.add('selected');
+    }
+    if (labelG) {
+      labelG.classList.add('selected');
+    }
+    
+    // 显示关系信息面板
+    showRelationInfo(relation);
+  }
+}
+
+// 清除选中状态
+function clearSelection() {
+  if (selectedRelation) {
+    const line = document.getElementById(`line-${selectedRelation}`);
+    const labelG = document.querySelector(`[data-relation-id="${selectedRelation}"] .relation-label`);
+    
+    if (line) {
+      line.classList.remove('selected');
+    }
+    if (labelG) {
+      labelG.classList.remove('selected');
+    }
+    
+    selectedRelation = null;
+    hideRelationInfo();
+  }
+}
+
+// 显示关系信息面板
+function showRelationInfo(relation) {
+  const infoPanel = document.getElementById('relationInfo');
+  document.getElementById('infoSource').textContent = relation.source;
+  document.getElementById('infoTarget').textContent = relation.target;
+  document.getElementById('infoType').textContent = relation.label;
+  document.getElementById('infoSourceField').textContent = relation.sourceField;
+  document.getElementById('infoTargetField').textContent = relation.targetField;
+  document.getElementById('infoDescription').textContent = relation.description;
+  
+  infoPanel.classList.add('show');
+}
+
+// 隐藏关系信息面板
+function hideRelationInfo() {
+  const infoPanel = document.getElementById('relationInfo');
+  infoPanel.classList.remove('show');
+}
+
+// 计算两个矩形之间的最佳连接点
+function getConnectionPoints(rect1, rect2) {
+  const c1 = {
+    x: rect1.x + rect1.width / 2,
+    y: rect1.y + rect1.height / 2
+  };
+  const c2 = {
+    x: rect2.x + rect2.width / 2,
+    y: rect2.y + rect2.height / 2
+  };
+  
+  // 计算角度
+  const angle = Math.atan2(c2.y - c1.y, c2.x - c1.x);
+  
+  // 计算rect1的出口点
+  let p1;
+  if (Math.abs(angle) < Math.PI / 4) { // 右侧
+    p1 = { x: rect1.x + rect1.width, y: c1.y };
+  } else if (Math.abs(angle) > 3 * Math.PI / 4) { // 左侧
+    p1 = { x: rect1.x, y: c1.y };
+  } else if (angle > 0) { // 下侧
+    p1 = { x: c1.x, y: rect1.y + rect1.height };
+  } else { // 上侧
+    p1 = { x: c1.x, y: rect1.y };
+  }
+  
+  // 计算rect2的入口点
+  let p2;
+  const reverseAngle = Math.atan2(c1.y - c2.y, c1.x - c2.x);
+  if (Math.abs(reverseAngle) < Math.PI / 4) { // 右侧
+    p2 = { x: rect2.x + rect2.width, y: c2.y };
+  } else if (Math.abs(reverseAngle) > 3 * Math.PI / 4) { // 左侧
+    p2 = { x: rect2.x, y: c2.y };
+  } else if (reverseAngle > 0) { // 下侧
+    p2 = { x: c2.x, y: rect2.y + rect2.height };
+  } else { // 上侧
+    p2 = { x: c2.x, y: rect2.y };
+  }
+  
+  return { p1, p2 };
+}
+
+// 生成贝塞尔曲线路径
+function generateCurvePath(p1, p2, curvature = 0.3) {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  
+  // 根据连接方向计算控制点
+  let cp1, cp2;
+  
+  if (Math.abs(dx) > Math.abs(dy)) {
+    // 水平连接
+    const offset = dx * curvature;
+    cp1 = { x: p1.x + offset, y: p1.y };
+    cp2 = { x: p2.x - offset, y: p2.y };
+  } else {
+    // 垂直连接
+    const offset = dy * curvature;
+    cp1 = { x: p1.x, y: p1.y + offset };
+    cp2 = { x: p2.x, y: p2.y - offset };
+  }
+  
+  return `M ${p1.x} ${p1.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${p2.x} ${p2.y}`;
+}
+
+// 生成折线路径
+function generatePolylinePath(p1, p2, controlPoint) {
+  if (controlPoint) {
+    return `M ${p1.x} ${p1.y} L ${controlPoint.x} ${controlPoint.y} L ${p2.x} ${p2.y}`;
+  }
+  
+  // 自动计算折线路径
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  
+  if (Math.abs(dx) > Math.abs(dy)) {
+    // 水平为主
+    const midX = p1.x + dx / 2;
+    return `M ${p1.x} ${p1.y} L ${midX} ${p1.y} L ${midX} ${p2.y} L ${p2.x} ${p2.y}`;
+  } else {
+    // 垂直为主
+    const midY = p1.y + dy / 2;
+    return `M ${p1.x} ${p1.y} L ${p1.x} ${midY} L ${p2.x} ${midY} L ${p2.x} ${p2.y}`;
+  }
+}
+
+// 切换表格折叠状态
+function toggleTableCollapse(tableName) {
+  const wrapper = wrappers[tableName];
+  if (!wrapper) return;
+  
+  const isCollapsed = wrapper.classList.contains('collapsed');
+  
+  if (isCollapsed) {
+    wrapper.classList.remove('collapsed');
+    tableCollapseStates[tableName] = false;
+    // 移除折叠信息
+    const tbody = wrapper.querySelector('tbody');
+    if (tbody) {
+      tbody.removeAttribute('data-collapsed-info');
+    }
+  } else {
+    wrapper.classList.add('collapsed');
+    tableCollapseStates[tableName] = true;
+    // 不再添加折叠信息
+  }
+  
+  // 更新表格矩形
+  setTimeout(() => {
+    updateTableRects();
+    updateSVGLines();
+  }, 10);
+}
+
+// 切换所有表格的折叠状态
+function toggleAllTables() {
+  const allCollapsed = Object.values(tableCollapseStates).every(state => state);
+  
+  Object.keys(tables).forEach(tableName => {
+    const wrapper = wrappers[tableName];
+    if (wrapper) {
+      if (allCollapsed) {
+        wrapper.classList.remove('collapsed');
+        tableCollapseStates[tableName] = false;
+        // 移除折叠信息
+        const tbody = wrapper.querySelector('tbody');
+        if (tbody) {
+          tbody.removeAttribute('data-collapsed-info');
+        }
+      } else {
+        wrapper.classList.add('collapsed');
+        tableCollapseStates[tableName] = true;
+        // 不再添加折叠信息
+      }
+    }
+  });
+  
+  // 更新所有表格矩形
+  setTimeout(() => {
+    updateTableRects();
+    updateSVGLines();
+  }, 10);
+}
+
+/***********************************************************************
+ * 创建表格节点
+ **********************************************************************/
+function createNode(name, fields) {
+  const wrap = document.createElement('div');
+  wrap.className = 'er-wrapper';
+  wrap.id = `wrap-${name}`;
+  
+  // 默认折叠状态
+  if (tableCollapseStates[name] === undefined) {
+    tableCollapseStates[name] = true; // 默认折叠
+  }
+  
+  if (tableCollapseStates[name]) {
+    wrap.classList.add('collapsed');
+  }
+  
+  const tableType = getTableType(name);
+  if (tableType === 'fact') {
+    wrap.classList.add('fact-table');
+  } else if (tableType === 'dim') {
+    wrap.classList.add('dim-table');
+  }
+
+  const tbl = document.createElement('table');
+  tbl.className = 'er-table';
+  const thead = tbl.createTHead();
+  const hRow = thead.insertRow();
+  const th = document.createElement('th');
+  th.colSpan = 4;
+  th.textContent = name;
+  
+  // 添加折叠按钮
+  const collapseBtn = document.createElement('span');
+  collapseBtn.className = 'collapse-btn';
+  th.appendChild(collapseBtn);
+  
+  // 点击表头切换折叠状态
+  th.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleTableCollapse(name);
+  });
+  
+  hRow.appendChild(th);
+
+  if (tableType !== 'normal') {
+    const badge = document.createElement('div');
+    badge.className = 'table-type-badge';
+    if (tableType === 'dim') {
+      badge.classList.add('dim-badge');
+    }
+    badge.textContent = tableType === 'fact' ? '事实表' : tableType === 'dim' ? '维度表' : '';
+    wrap.appendChild(badge);
+  }
+
+  const tbody = tbl.createTBody();
+  fields.forEach(f => {
+    const tr = tbody.insertRow();
+    
+    const typeCell = tr.insertCell();
+    if (f.pk && f.fk) {
+      typeCell.textContent = 'PK/FK';
+      typeCell.className = 'pk-fk';
+    } else if (f.pk) {
+      typeCell.textContent = 'PK';
+      typeCell.className = 'pk';
+    } else if (f.fk) {
+      typeCell.textContent = 'FK';
+      typeCell.className = 'fk';
+    } else {
+      typeCell.textContent = '';
+    }
+    
+    const keyCell = tr.insertCell();
+    keyCell.textContent = f.key;
+    
+    const typeFieldCell = tr.insertCell();
+    typeFieldCell.textContent = f.type;
+    
+    const cnCell = tr.insertCell();
+    cnCell.textContent = f.cn;
+  });
+
+  wrap.appendChild(tbl);
+  document.getElementById('tables-container').appendChild(wrap);
+  
+  // 不再添加折叠信息
+
+  const pos = cache[name]?.pos || getAutoLayoutPosition(name);
+  const scale = cache[name]?.scale || 1;
+  wrap.style.left   = pos.x + 'px';
+  wrap.style.top    = pos.y + 'px';
+  wrap.style.setProperty('--fs', (12*scale)+'px');
+  wrap.style.transform = `scale(${scale})`;
+
+  // 拖拽
+  let isDragging = false;
+  let mx0, my0;
+  
+  wrap.addEventListener('mousedown', e => {
+    if (e.button !== 0 || e.target.closest('th')) return; // 避免点击表头时触发拖拽
+    isDragging = true;
+    mx0 = e.clientX; 
+    my0 = e.clientY;
+    wrap.style.zIndex = 1000;
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+  });
+  
+  function move(e) {
+    if (!isDragging) return;
+    const dx = e.clientX - mx0;
+    const dy = e.clientY - my0;
+    
+    // 计算新的位置
+    let newLeft = wrap.offsetLeft + dx;
+    let newTop = wrap.offsetTop + dy;
+    
+    // 限制向上拖动，防止被上方文本输入框遮挡
+    // 上方文本输入框高度约为120px，加上一些边距
+    const minTop = 150; // 最小顶部位置
+    if (newTop < minTop) {
+      newTop = minTop;
+    }
+    
+    // 限制向下拖动，防止超出画布范围
+    const maxTop = 3500; // 最大底部位置
+    if (newTop > maxTop) {
+      newTop = maxTop;
+    }
+    
+    // 限制左右拖动范围
+    const minLeft = 50;
+    const maxLeft = 4500;
+    if (newLeft < minLeft) {
+      newLeft = minLeft;
+    }
+    if (newLeft > maxLeft) {
+      newLeft = maxLeft;
+    }
+    
+    wrap.style.left = newLeft + 'px';
+    wrap.style.top = newTop + 'px';
+    
+    mx0 = e.clientX; 
+    my0 = e.clientY;
+    updateTableRects();
+    updateSVGLines();
+  }
+  
+  function up() {
+    isDragging = false;
+    wrap.style.zIndex = '';
+    cache[name] = cache[name] || {};
+    cache[name].pos = {x: wrap.offsetLeft, y: wrap.offsetTop};
+    localStorage.setItem(cacheKey, JSON.stringify(cache));
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  }
+
+  // 缩放
+  wrap.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    let s = cache[name]?.scale || 1;
+    s *= e.deltaY < 0 ? 1.1 : 0.9;
+    s = Math.min(Math.max(0.5, s), 2);
+    cache[name] = cache[name] || {};
+    cache[name].scale = s;
+    localStorage.setItem(cacheKey, JSON.stringify(cache));
+    wrap.style.setProperty('--fs', (12*s)+'px');
+    wrap.style.transform = `scale(${s})`;
+    updateTableRects();
+    updateSVGLines();
+    updateZoomLevel();
+  }, {passive: false});
+
+  wrappers[name] = wrap;
+}
+
+function getAutoLayoutPosition(name) {
+  const tableType = getTableType(name);
+  const tableNames = Object.keys(tables);
+  const index = tableNames.indexOf(name);
+  
+  if (tableType === 'fact') {
+    const factTables = tableNames.filter(t => getTableType(t) === 'fact');
+    const factIndex = factTables.indexOf(name);
+    return {
+      x: 600, // 调整初始位置，避免被遮挡
+      y: 200 + factIndex * 200 // 增大垂直间距
+    };
+  } else if (tableType === 'dim') {
+    const dimTables = tableNames.filter(t => getTableType(t) === 'dim');
+    const dimIndex = dimTables.indexOf(name);
+    return {
+      x: 200, // 调整初始位置
+      y: 200 + dimIndex * 200 // 增大垂直间距
+    };
+  } else {
+    // 普通表使用更大的画布范围
+    const centerX = 2500; // 使用画布中心
+    const centerY = 2000;
+    const radius = 800; // 增大半径
+    const angle = (index / tableNames.length) * 2 * Math.PI;
+    return {
+      x: centerX + radius * Math.cos(angle),
+      y: centerY + radius * Math.sin(angle)
+    };
+  }
+}
+
+/***********************************************************************
+ * SVG线条管理
+ **********************************************************************/
+function updateTableRects() {
+  Object.keys(tables).forEach(name => {
+    const wrap = wrappers[name];
+    if (!wrap) return;
+    const scale = cache[name]?.scale || 1;
+    const rect = wrap.getBoundingClientRect();
+    const container = document.getElementById('tables-container').getBoundingClientRect();
+    
+    tableRects[name] = {
+      x: rect.left - container.left,
+      y: rect.top - container.top,
+      width: rect.width,
+      height: rect.height
+    };
+  });
+}
+
+function createSVGElements() {
+  const svg = document.getElementById('svg-container');
+  svg.innerHTML = '';
+  
+  console.log('创建SVG元素，关系数量:', relations.length);
+  console.log('关系数据:', relations);
+  
+  // 设置viewBox - 使用更大的尺寸以支持更大的移动范围
+  svg.setAttribute('viewBox', '0 0 5000 4000');
+  svg.setAttribute('width', '5000');
+  svg.setAttribute('height', '4000');
+  
+  // 创建箭头标记
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  
+  // 为每种颜色创建箭头（包括红色）
+  const colors = ['#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#ff0000'];
+  colors.forEach(color => {
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', `arrow-${color.substring(1)}`);
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '10');
+    marker.setAttribute('refX', '9');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    marker.setAttribute('markerUnits', 'strokeWidth');
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+    path.setAttribute('fill', color);
+    
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  });
+  
+  // 添加水流滤镜
+  const flowFilter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+  flowFilter.setAttribute('id', 'flowFilter');
+  flowFilter.setAttribute('x', '-50%');
+  flowFilter.setAttribute('y', '-50%');
+  flowFilter.setAttribute('width', '200%');
+  flowFilter.setAttribute('height', '200%');
+  
+  // 创建湍流效果
+  const turbulence = document.createElementNS('http://www.w3.org/2000/svg', 'feTurbulence');
+  turbulence.setAttribute('type', 'fractalNoise');
+  turbulence.setAttribute('baseFrequency', '0.01');
+  turbulence.setAttribute('numOctaves', '3');
+  turbulence.setAttribute('seed', '1');
+  turbulence.setAttribute('result', 'turbulence');
+  
+  // 创建位移映射
+  const displacement = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap');
+  displacement.setAttribute('in', 'SourceGraphic');
+  displacement.setAttribute('in2', 'turbulence');
+  displacement.setAttribute('scale', '5');
+  displacement.setAttribute('result', 'displacement');
+  
+  // 创建发光效果
+  const glow = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+  glow.setAttribute('in', 'SourceGraphic');
+  glow.setAttribute('stdDeviation', '2');
+  glow.setAttribute('result', 'glow');
+  
+  // 合并效果
+  const merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
+  const mergeNode1 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+  const mergeNode2 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+  
+  mergeNode1.setAttribute('in', 'glow');
+  mergeNode2.setAttribute('in', 'displacement');
+  
+  merge.appendChild(mergeNode1);
+  merge.appendChild(mergeNode2);
+  
+  flowFilter.appendChild(turbulence);
+  flowFilter.appendChild(displacement);
+  flowFilter.appendChild(glow);
+  flowFilter.appendChild(merge);
+  
+  defs.appendChild(flowFilter);
+  
+  svg.appendChild(defs);
+  
+  // 创建关系线
+  relations.forEach(rel => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'relation-group');
+    g.setAttribute('data-relation-id', rel.id);
+    
+    // 获取颜色
+    const color = getLineColor(rel);
+    
+    // 创建隐形的拖动区域
+    const dragArea = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    dragArea.setAttribute('class', 'line-drag-area');
+    dragArea.setAttribute('stroke', color); // 设置拖动区域的颜色
+    dragArea.setAttribute('id', `drag-area-${rel.id}`);
+    
+    // 创建线条
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    line.setAttribute('class', getLineClass(rel));
+    line.setAttribute('stroke', color); // 设置线条颜色
+    line.setAttribute('marker-end', `url(#arrow-${color.substring(1)})`);
+    line.setAttribute('id', `line-${rel.id}`);
+    
+    // 点击选中功能
+    const handleLineClick = (e) => {
+      e.stopPropagation();
+      selectRelation(rel.id);
+    };
+    
+    line.addEventListener('click', handleLineClick);
+    dragArea.addEventListener('click', handleLineClick);
+    
+    // 线条拖动功能 - 调整曲率
+    let isLineDragging = false;
+    let startY, startCurvature;
+    
+    const startLineDrag = (e) => {
+      if (e.button !== 0) return; // 只响应左键
+      e.stopPropagation();
+      isLineDragging = true;
+      startY = e.clientY;
+      startCurvature = rel.curvature;
+      line.classList.add('dragging');
+      document.addEventListener('mousemove', moveLineDrag);
+      document.addEventListener('mouseup', endLineDrag);
+    };
+    
+    const moveLineDrag = (e) => {
+      if (!isLineDragging) return;
+      const dy = e.clientY - startY;
+      // 根据鼠标垂直移动距离调整曲率，增大调整范围
+      rel.curvature = Math.max(-2, Math.min(2, startCurvature + dy / 100));
+      updateSVGLines();
+    };
+    
+    const endLineDrag = () => {
+      isLineDragging = false;
+      line.classList.remove('dragging');
+      document.removeEventListener('mousemove', moveLineDrag);
+      document.removeEventListener('mouseup', endLineDrag);
+    };
+    
+    dragArea.addEventListener('mousedown', startLineDrag);
+    line.addEventListener('mousedown', startLineDrag);
+    
+    // 创建控制点（用于折线模式）
+    const controlPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    controlPoint.setAttribute('class', 'control-point');
+    controlPoint.setAttribute('r', '6');
+    controlPoint.setAttribute('id', `control-${rel.id}`);
+    
+    // 控制点拖拽
+    let isDragging = false;
+    controlPoint.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      isDragging = true;
+      document.addEventListener('mousemove', moveControl);
+      document.addEventListener('mouseup', upControl);
+    });
+    
+    function moveControl(e) {
+      if (!isDragging) return;
+      const container = svg.getBoundingClientRect();
+      const canvasArea = document.querySelector('.canvas-area');
+      const scrollLeft = canvasArea.scrollLeft;
+      const scrollTop = canvasArea.scrollTop;
+      
+      // 计算控制点位置
+      let newX = e.clientX - container.left + scrollLeft;
+      let newY = e.clientY - container.top + scrollTop;
+      
+      // 增大控制点的可移动范围
+      const minX = 100;
+      const maxX = 4800;
+      const minY = 100;
+      const maxY = 3800;
+      
+      // 限制控制点移动范围
+      newX = Math.max(minX, Math.min(maxX, newX));
+      newY = Math.max(minY, Math.min(maxY, newY));
+      
+      rel.controlPoint = {
+        x: newX,
+        y: newY
+      };
+      updateSVGLines();
+    }
+    
+    function upControl() {
+      isDragging = false;
+      document.removeEventListener('mousemove', moveControl);
+      document.removeEventListener('mouseup', upControl);
+    }
+    
+    // 创建标签 - 包含关系类型
+    const labelG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    labelG.setAttribute('class', 'relation-label');
+    labelG.addEventListener('click', handleLineClick);
+    
+    const labelRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    labelRect.setAttribute('stroke', color);
+    
+    const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    labelText.setAttribute('fill', color);
+    
+    // 创建多行文本 - 包含关系类型
+    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    line1.textContent = rel.relationType === 'fact-dim' 
+      ? `${rel.description} (${rel.label})`
+      : rel.label;
+    line1.setAttribute('x', '0');
+    line1.setAttribute('dy', '0');
+    
+    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    line2.textContent = `${rel.sourceField} → ${rel.targetField}`;
+    line2.setAttribute('x', '0');
+    line2.setAttribute('dy', '14');
+    
+    labelText.appendChild(line1);
+    labelText.appendChild(line2);
+    
+    labelG.appendChild(labelRect);
+    labelG.appendChild(labelText);
+    
+    g.appendChild(dragArea);
+    g.appendChild(line);
+    g.appendChild(controlPoint);
+    g.appendChild(labelG);
+    svg.appendChild(g);
+  });
+}
+
+function updateSVGLines() {
+  console.log('更新SVG线条，关系数量:', relations.length);
+  console.log('表格矩形:', tableRects);
+  
+  relations.forEach(rel => {
+    const rect1 = tableRects[rel.source];
+    const rect2 = tableRects[rel.target];
+    
+    if (!rect1 || !rect2) {
+      console.log('跳过关系', rel.id, '因为缺少表格矩形:', { source: rel.source, target: rel.target });
+      return;
+    }
+    
+    const { p1, p2 } = getConnectionPoints(rect1, rect2);
+    
+    let pathData;
+    if (lineType === 'curve') {
+      pathData = generateCurvePath(p1, p2, rel.curvature);
+    } else {
+      pathData = generatePolylinePath(p1, p2, rel.controlPoint);
+    }
+    
+    // 更新线条路径
+    const line = document.getElementById(`line-${rel.id}`);
+    if (line) {
+      line.setAttribute('d', pathData);
+      // 如果是选中状态，根据关系类型更新箭头颜色
+      if (line.classList.contains('selected')) {
+        // 检查是否为事实表到事实表的关系
+        const sourceTable = currentERData.tables.find(t => t.name === rel.source);
+        const targetTable = currentERData.tables.find(t => t.name === rel.target);
+        
+        if (sourceTable && targetTable && sourceTable.type === 'fact' && targetTable.type === 'fact') {
+          // 事实表到事实表保持蓝色箭头
+          line.setAttribute('marker-end', 'url(#arrow-3498db)');
+        } else {
+          // 其他关系使用红色箭头
+          line.setAttribute('marker-end', 'url(#arrow-ff0000)');
+        }
+      }
+    }
+    
+    // 更新拖动区域路径
+    const dragArea = document.getElementById(`drag-area-${rel.id}`);
+    if (dragArea) {
+      dragArea.setAttribute('d', pathData);
+    }
+    
+    // 更新控制点位置（仅在折线模式下显示）
+    const control = document.getElementById(`control-${rel.id}`);
+    if (control) {
+      if (lineType === 'polyline') {
+        control.style.display = 'block';
+        if (rel.controlPoint) {
+          control.setAttribute('cx', rel.controlPoint.x);
+          control.setAttribute('cy', rel.controlPoint.y);
+        } else {
+          control.setAttribute('cx', (p1.x + p2.x) / 2);
+          control.setAttribute('cy', (p1.y + p2.y) / 2);
+        }
+      } else {
+        control.style.display = 'none';
+      }
+    }
+    
+    // 更新标签位置
+    const labelG = document.querySelector(`[data-relation-id="${rel.id}"] .relation-label`);
+    if (labelG) {
+            const midX = (p1.x + p2.x) / 2;
+      const midY = (p1.y + p2.y) / 2;
+      
+      const labelText = labelG.querySelector('text');
+      const tspans = labelText.querySelectorAll('tspan');
+      tspans.forEach(tspan => {
+        tspan.setAttribute('x', midX);
+      });
+      labelText.setAttribute('x', midX);
+      labelText.setAttribute('y', midY - 7);
+      
+      // 获取文本边界
+      setTimeout(() => {
+        const bbox = labelText.getBBox();
+        const padding = 4;
+        
+        const labelRect = labelG.querySelector('rect');
+        labelRect.setAttribute('x', bbox.x - padding);
+        labelRect.setAttribute('y', bbox.y - padding);
+        labelRect.setAttribute('width', bbox.width + padding * 2);
+        labelRect.setAttribute('height', bbox.height + padding * 2);
+      }, 0);
+    }
+  });
+}
+
+/***********************************************************************
+ * 工具函数
+ **********************************************************************/
+function updateZoomLevel() {
+  const zoomLevel = document.getElementById('zoomLevel');
+  const scales = Object.values(cache).map(item => item.scale || 1);
+  const avgScale = scales.length ? (scales.reduce((a, b) => a + b) / scales.length) : 1;
+  zoomLevel.textContent = Math.round(avgScale * 100) + '%';
+}
+
+function toggleLineType() {
+  lineType = lineType === 'curve' ? 'polyline' : 'curve';
+  document.getElementById('lineType').textContent = lineType === 'curve' ? '曲线' : '折线';
+  
+  updateSVGLines();
+}
+
+/***********************************************************************
+ * JSON导入导出功能
+ **********************************************************************/
+function exportJSON() {
+  // 导出统一格式的JSON
+  const exportData = convertToUnifiedFormat(tables, customRelations, factDimRelations);
+  
+  const jsonStr = JSON.stringify(exportData, null, 2);
+  
+  // 创建下载
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'er-diagram-data.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  // 同时显示在文本框中
+  document.getElementById('jsonInput').value = jsonStr;
+  alert('JSON数据已导出！');
+}
+
+function importJSON() {
+  const jsonInput = document.getElementById('jsonInput').value.trim();
+  
+  if (!jsonInput) {
+    alert('请输入JSON数据！');
+    return;
+  }
+  
+  try {
+    const importData = JSON.parse(jsonInput);
+    
+    // 验证数据结构
+    if (!importData.tables || !Array.isArray(importData.tables)) {
+      throw new Error('无效的数据结构：tables必须是数组');
+    }
+    
+    // 更新当前数据
+    currentERData = importData;
+    
+    // 更新标题和描述
+    if (importData.title) {
+      document.getElementById('titleInput').value = importData.title;
+      updatePageTitle();
+    }
+    if (importData.description) {
+      document.getElementById('descriptionInput').value = importData.description;
+    }
+    
+    // 转换数据格式
+    const convertedData = convertDataFormat(importData);
+    tables = convertedData.tables;
+    customRelations = convertedData.customRelations;
+    factDimRelations = convertedData.factDimRelations;
+    
+    // 清除现有的DOM元素
+    document.getElementById('tables-container').innerHTML = '';
+    document.getElementById('svg-container').innerHTML = '';
+    
+    // 清除文本框
+    const textContainer = document.getElementById('text-container');
+    if (textContainer) {
+      textContainer.innerHTML = '';
+    }
+    freeTextBoxes = [];
+    
+    // 导入文本框数据
+    if (importData.textBoxes && Array.isArray(importData.textBoxes)) {
+      importData.textBoxes.forEach(box => {
+        addTextBox(box.x, box.y, box.text);
+      });
+    }
+    
+    // 导入折叠状态
+    if (importData.collapseStates) {
+      tableCollapseStates = importData.collapseStates;
+    } else {
+      // 默认折叠状态
+      tableCollapseStates = {};
+      Object.keys(tables).forEach(tableName => {
+        tableCollapseStates[tableName] = true;
+      });
+    }
+    
+    // 清除缓存
+    Object.keys(wrappers).forEach(key => delete wrappers[key]);
+    Object.keys(tableRects).forEach(key => delete tableRects[key]);
+    
+    // 重新构建关系
+    relations = buildRelations();
+    
+    // 重新初始化
+    init();
+    
+    alert('JSON数据导入成功！');
+  } catch (error) {
+    alert('JSON数据解析失败：' + error.message);
+  }
+}
+
+function clearJSON() {
+  document.getElementById('jsonInput').value = '';
+}
+
+/***********************************************************************
+ * 图片导出功能 - 优化版
+ **********************************************************************/
+async function exportImage() {
+  try {
+    // 显示加载提示
+    const btn = document.getElementById('exportImage');
+    const originalText = btn.textContent;
+    btn.textContent = '生成中...';
+    btn.disabled = true;
+    
+    // 显示加载提示
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'export-loading';
+    loadingDiv.textContent = '正在生成图片，请稍候...';
+    document.body.appendChild(loadingDiv);
+    
+    // 等待一下让UI更新
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // 检查html2canvas是否加载
+    if (typeof html2canvas === 'undefined') {
+      throw new Error('html2canvas库未加载，请刷新页面重试');
+    }
+    
+    // 获取所有表格的边界
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    Object.keys(tableRects).forEach(name => {
+      const rect = tableRects[name];
+      minX = Math.min(minX, rect.x);
+      minY = Math.min(minY, rect.y);
+      maxX = Math.max(maxX, rect.x + rect.width);
+      maxY = Math.max(maxY, rect.y + rect.height);
+    });
+    
+    // 考虑文本框的边界
+    freeTextBoxes.forEach(box => {
+      if (box.element) {
+        const rect = box.element.getBoundingClientRect();
+        const container = document.getElementById('text-container').getBoundingClientRect();
+        minX = Math.min(minX, rect.left - container.left);
+        minY = Math.min(minY, rect.top - container.top);
+        maxX = Math.max(maxX, rect.right - container.left);
+        maxY = Math.max(maxY, rect.bottom - container.top);
+      }
+    });
+    
+    // 添加边距
+    const padding = 50;
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = maxX + padding;
+    maxY = maxY + padding;
+    
+    const exportWidth = Math.min(maxX - minX, 3000);
+    const exportHeight = Math.min(maxY - minY + 150, 2000); // 150为标题区域高度
+    
+    // 创建临时容器
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = exportWidth + 'px';
+    tempContainer.style.height = exportHeight + 'px';
+    tempContainer.style.background = 'white';
+    tempContainer.style.overflow = 'hidden';
+    document.body.appendChild(tempContainer);
+    
+    // 克隆标题区域
+    const headerArea = document.querySelector('.header-area');
+    const headerClone = headerArea.cloneNode(true);
+    headerClone.style.position = 'relative';
+    headerClone.style.width = '100%';
+    headerClone.style.boxShadow = 'none';
+    tempContainer.appendChild(headerClone);
+    
+    // 创建画布容器
+    const canvasContainer = document.createElement('div');
+    canvasContainer.style.position = 'relative';
+    canvasContainer.style.width = exportWidth + 'px';
+    canvasContainer.style.height = (exportHeight - 150) + 'px';
+    canvasContainer.style.background = '#f5f7fa';
+    canvasContainer.style.overflow = 'hidden';
+    
+    // 创建内容容器
+    const contentWrapper = document.createElement('div');
+    contentWrapper.style.position = 'absolute';
+    contentWrapper.style.left = -minX + 'px';
+    contentWrapper.style.top = -minY + 'px';
+    contentWrapper.style.width = '3000px';
+    contentWrapper.style.height = '2000px';
+    
+    // 克隆SVG
+    const svgOriginal = document.getElementById('svg-container');
+    const svgClone = svgOriginal.cloneNode(true);
+    svgClone.style.position = 'absolute';
+    svgClone.style.top = '0';
+    svgClone.style.left = '0';
+    svgClone.style.width = '3000px';
+    svgClone.style.height = '2000px';
+    
+    // 移除选中状态的样式
+    svgClone.querySelectorAll('.selected').forEach(elem => {
+      elem.classList.remove('selected');
+    });
+    
+    // 克隆表格
+    const tablesOriginal = document.getElementById('tables-container');
+    const tablesClone = tablesOriginal.cloneNode(true);
+    tablesClone.style.position = 'absolute';
+    tablesClone.style.top = '0';
+    tablesClone.style.left = '0';
+    tablesClone.style.width = '3000px';
+    tablesClone.style.height = '2000px';
+    
+    // 克隆文本框
+    const textOriginal = document.getElementById('text-container');
+    if (textOriginal) {
+      const textClone = textOriginal.cloneNode(true);
+      textClone.style.position = 'absolute';
+      textClone.style.top = '0';
+      textClone.style.left = '0';
+      textClone.style.width = '3000px';
+      textClone.style.height = '2000px';
+      
+      // 移除删除按钮
+      textClone.querySelectorAll('.text-delete-btn').forEach(btn => {
+        btn.style.display = 'none';
+      });
+      
+      // 移除文本框的边框
+      textClone.querySelectorAll('.free-text-input').forEach(input => {
+        input.style.border = 'none';
+        input.style.background = 'transparent';
+      });
+      
+      contentWrapper.appendChild(textClone);
+    }
+    
+    // 确保所有表格的transform-origin正确
+    const allTables = tablesClone.querySelectorAll('.er-wrapper');
+    allTables.forEach(table => {
+      table.style.transformOrigin = 'left top';
+    });
+    
+    contentWrapper.appendChild(svgClone);
+    contentWrapper.appendChild(tablesClone);
+    canvasContainer.appendChild(contentWrapper);
+    tempContainer.appendChild(canvasContainer);
+    
+    // 等待DOM更新
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 使用html2canvas生成图片
+    const canvas = await html2canvas(tempContainer, {
+      backgroundColor: '#ffffff',
+      scale: 2, // 提高清晰度
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      width: exportWidth,
+      height: exportHeight
+    });
+    
+    // 转换为Blob并下载
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error('生成图片失败');
+      }
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const title = document.getElementById('titleInput').value || 'ER图';
+      const timestamp = new Date().getTime();
+      a.download = `${title}_${timestamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // 清理
+      document.body.removeChild(tempContainer);
+      document.body.removeChild(loadingDiv);
+      
+      // 恢复按钮
+      btn.textContent = originalText;
+      btn.disabled = false;
+      
+      alert('图片已生成并下载！');
+    }, 'image/png');
+    
+  } catch (error) {
+    console.error('导出图片失败:', error);
+    
+    // 清理
+    const tempContainer = document.querySelector('div[style*="left: -9999px"]');
+    if (tempContainer) {
+      document.body.removeChild(tempContainer);
+    }
+    
+    const loadingDiv = document.querySelector('.export-loading');
+    if (loadingDiv) {
+      document.body.removeChild(loadingDiv);
+    }
+    
+    // 恢复按钮
+    const btn = document.getElementById('exportImage');
+    btn.textContent = '生成图片';
+    btn.disabled = false;
+    
+    alert('导出图片失败：' + error.message);
+  }
+}
+
+/***********************************************************************
+ * 初始化
+ **********************************************************************/
+function init() {
+  console.log('初始化开始');
+  console.log('表格数据:', tables);
+  console.log('关系数据:', relations);
+  
+  // 创建表格节点
+  Object.keys(tables).forEach(name => createNode(name, tables[name]));
+  
+  // 初始化SVG
+  setTimeout(() => {
+    console.log('开始初始化SVG');
+    updateTableRects();
+    createSVGElements();
+    updateSVGLines();
+    updateZoomLevel();
+    console.log('SVG初始化完成');
+  }, 100);
+}
+
+// DOM加载完成后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+// 窗口大小改变时更新
+window.addEventListener('resize', () => {
+  const svg = document.getElementById('svg-container');
+  if (svg) {
+    updateTableRects();
+    updateSVGLines();
+  }
+});
+
+// 点击空白处清除选中
+document.addEventListener('click', (e) => {
+  // 检查点击的是否是空白区域
+  if (e.target === document.querySelector('.canvas-area') || 
+      e.target === document.querySelector('.canvas-content') ||
+      e.target === document.getElementById('svg-container')) {
+    clearSelection();
+  }
+});
+
+// 按钮事件监听
+document.addEventListener('DOMContentLoaded', () => {
+  const resetViewBtn = document.getElementById('resetView');
+  if (resetViewBtn) {
+    resetViewBtn.addEventListener('click', () => {
+      if (confirm('确定要重置所有视图设置吗？')) {
+        localStorage.removeItem(cacheKey);
+        cache = {};
+        location.reload();
+      }
+    });
+  }
+
+  const saveViewBtn = document.getElementById('saveView');
+  if (saveViewBtn) {
+    saveViewBtn.addEventListener('click', () => {
+      localStorage.setItem(cacheKey, JSON.stringify(cache));
+      alert('当前视图已保存！');
+    });
+  }
+
+  const toggleLineTypeBtn = document.getElementById('toggleLineType');
+  if (toggleLineTypeBtn) {
+    toggleLineTypeBtn.addEventListener('click', toggleLineType);
+  }
+  
+  const toggleAllTablesBtn = document.getElementById('toggleAllTables');
+  if (toggleAllTablesBtn) {
+    toggleAllTablesBtn.addEventListener('click', toggleAllTables);
+  }
+  
+  const clearSelectionBtn = document.getElementById('clearSelection');
+  if (clearSelectionBtn) {
+    clearSelectionBtn.addEventListener('click', clearSelection);
+  }
+  
+  // 添加文本框按钮
+  const addTextBoxBtn = document.getElementById('addTextBox');
+  if (addTextBoxBtn) {
+    addTextBoxBtn.addEventListener('click', () => {
+      const canvasArea = document.querySelector('.canvas-area');
+      const rect = canvasArea.getBoundingClientRect();
+      const x = canvasArea.scrollLeft + rect.width / 2 - 75;
+      const y = canvasArea.scrollTop + rect.height / 2 - 20;
+      addTextBox(x, y, '双击编辑文本');
+    });
+  }
+  
+  // JSON导入导出按钮
+  const exportJSONBtn = document.getElementById('exportJSON');
+  if (exportJSONBtn) {
+    exportJSONBtn.addEventListener('click', exportJSON);
+  }
+  
+  const importJSONBtn = document.getElementById('importJSON');
+  if (importJSONBtn) {
+    importJSONBtn.addEventListener('click', importJSON);
+  }
+  
+  const clearJSONBtn = document.getElementById('clearJSON');
+  if (clearJSONBtn) {
+    clearJSONBtn.addEventListener('click', clearJSON);
+  }
+  
+  // 图片导出按钮
+  const exportImageBtn = document.getElementById('exportImage');
+  if (exportImageBtn) {
+    exportImageBtn.addEventListener('click', exportImage);
+  }
+  
+  // 标题和描述输入框事件
+  const titleInput = document.getElementById('titleInput');
+  if (titleInput) {
+    titleInput.addEventListener('input', () => {
+      currentERData.title = titleInput.value;
+      updatePageTitle();
+    });
+  }
+  
+  const descriptionInput = document.getElementById('descriptionInput');
+  if (descriptionInput) {
+    descriptionInput.addEventListener('input', () => {
+      currentERData.description = descriptionInput.value;
+    });
+  }
+  
+  // 键盘快捷键
+  document.addEventListener('keydown', (e) => {
+    // ESC键清除选中
+    if (e.key === 'Escape') {
+      clearSelection();
+    }
+    
+    // Ctrl+S 保存视图
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      localStorage.setItem(cacheKey, JSON.stringify(cache));
+      alert('当前视图已保存！');
+    }
+    
+    // Ctrl+E 导出图片
+    if (e.ctrlKey && e.key === 'e') {
+      e.preventDefault();
+      exportImage();
+    }
+    
+    // Ctrl+L 切换线条类型
+    if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault();
+      toggleLineType();
+    }
+    
+    // Ctrl+T 添加文本框
+    if (e.ctrlKey && e.key === 't') {
+      e.preventDefault();
+      const canvasArea = document.querySelector('.canvas-area');
+      const rect = canvasArea.getBoundingClientRect();
+      const x = canvasArea.scrollLeft + rect.width / 2 - 75;
+      const y = canvasArea.scrollTop + rect.height / 2 - 20;
+      addTextBox(x, y, '双击编辑文本');
+    }
+    
+    // Ctrl+A 展开/折叠所有表
+    if (e.ctrlKey && e.key === 'a') {
+      e.preventDefault();
+      toggleAllTables();
+    }
+  });
+});
+
+// 检查html2canvas是否加载成功
+window.addEventListener('load', () => {
+  if (typeof html2canvas === 'undefined') {
+    console.warn('html2canvas库加载失败，图片导出功能可能受限');
+  } else {
+    console.log('html2canvas库加载成功');
+  }
+});
+
+// 示例JSON数据格式（可以在控制台中查看）
+console.log('ER图设计器已加载');
+console.log('使用说明：');
+console.log('1. 点击表头折叠/展开表格');
+console.log('2. 拖动表格调整位置');
+console.log('3. Ctrl+滚轮缩放表格');
+console.log('4. 点击关系线查看详情（红色高亮）');
+console.log('5. 点击"添加文本框"添加注释');
+console.log('6. 双击文本框编辑内容');
+console.log('7. 拖动线条调整曲线形状');
+console.log('8. 支持导入/导出JSON数据');
+console.log('9. 点击生成图片导出ER图');
+console.log('\n快捷键：');
+console.log('ESC - 清除选中');
+console.log('Ctrl+S - 保存视图');
+console.log('Ctrl+E - 导出图片');
+console.log('Ctrl+L - 切换线条类型');
+console.log('Ctrl+T - 添加文本框');
+console.log('Ctrl+A - 展开/折叠所有表');
+</script>
+</body>
+</html>

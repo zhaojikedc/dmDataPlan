@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            margin-left: 24px;
+            white-space: nowrap;
+        }
+        
+        .app-content {
+            display: flex;
+            flex: 1;
+            margin-top: 64px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+            position: fixed;
+            left: 0;
+            top: 64px;
+            bottom: 0;
+            overflow-y: auto;
+            z-index: 999;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 24px;
+            background: #f0f2f5;
+            min-height: calc(100vh - 64px);
+        }
+        
+        .nav-menu {
+            padding: 16px 0;
+        }
+        
+        .nav-section {
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #8c8c8c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 12px 24px;
+            color: #262626;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-right: 3px solid transparent;
+            font-size: 14px;
+        }
+        
+        .nav-item:hover {
+            background: #f5f5f5;
+            color: #1890ff;
+            border-right-color: #1890ff;
+        }
+        
+        .nav-item.active {
+            background: #e6f7ff;
+            color: #1890ff;
+            border-right-color: #1890ff;
+        }
+        
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 8px;
+            padding: 48px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        
+        .welcome-title {
+            font-size: 32px;
+            color: #1890ff;
+            margin-bottom: 16px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 32px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .quick-actions {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .action-btn {
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #262626;
+        }
+        
+        .action-btn:hover {
+            background: #e6f7ff;
+            border-color: #1890ff;
+            color: #1890ff;
+            transform: translateY(-2px);
+        }
+        
+        .action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .action-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                margin-left: auto;
+                margin-right: 24px;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+            }
+        }
+        
+        .mobile-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 头部导航 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+        </header>
+        
+        <div class="app-content">
+            <!-- 左侧导航栏 -->
+            <nav class="sidebar" id="sidebar">
+                <div class="nav-menu">
+                    <div class="nav-section">
+                        <div class="nav-section-title">模型规划管理</div>
+                        <a href="dm_planning.html" class="nav-item" id="nav-planning">
+                            <span class="nav-icon">📊</span>
+                            模型规划管理
+                        </a>
+                        <a href="theme_management.html" class="nav-item" id="nav-theme">
+                            <span class="nav-icon">🏗️</span>
+                            主题管理
+                        </a>
+                        <a href="data_standards.html" class="nav-item" id="nav-standards">
+                            <span class="nav-icon">📋</span>
+                            数据标准管理
+                        </a>
+                        <a href="modeling_standards.html" class="nav-item" id="nav-specifications">
+                            <span class="nav-icon">📚</span>
+                            数据规范管理
+                        </a>
+                        <a href="standard_library.html" class="nav-item" id="nav-library">
+                            <span class="nav-icon">📖</span>
+                            标准库管理
+                        </a>
+                        <a href="app_management.html" class="nav-item" id="nav-app">
+                            <span class="nav-icon">📱</span>
+                            应用管理
+                        </a>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <div class="nav-section-title">模型表与ER关系</div>
+                        <a href="o_line_management.html" class="nav-item" id="nav-o-line">
+                            <span class="nav-icon">📈</span>
+                            O线模型管理
+                        </a>
+                        <a href="m_line_management.html" class="nav-item" id="nav-m-line">
+                            <span class="nav-icon">📊</span>
+                            M线模型管理
+                        </a>
+                        <a href="er_relationship_management.html" class="nav-item" id="nav-er">
+                            <span class="nav-icon">🔗</span>
+                            模型ER关系管理
+                        </a>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <div class="nav-section-title">资产表管理</div>
+                        <a href="asset_table_creation.html" class="nav-item" id="nav-asset">
+                            <span class="nav-icon">🆕</span>
+                            资产表新建
+                        </a>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- 主内容区域 -->
+            <main class="main-content">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">欢迎使用数据仓库数据模型管理系统</h1>
+                    <p class="welcome-subtitle">专业的数据库设计、建模和管理平台</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">主题总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">45</div>
+                        <div class="stat-label">数据标准</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">28</div>
+                        <div class="stat-label">建模规范</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">资产表</div>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3 class="section-title">
+                        <span>⚡</span>
+                        快速操作
+                    </h3>
+                    <div class="action-grid">
+                        <a href="theme_management.html" class="action-btn">
+                            <span class="action-icon">🏗️</span>
+                            <div class="action-text">主题管理</div>
+                        </a>
+                        <a href="data_standards.html" class="action-btn">
+                            <span class="action-icon">📋</span>
+                            <div class="action-text">数据标准</div>
+                        </a>
+                        <a href="modeling_standards.html" class="action-btn">
+                            <span class="action-icon">📚</span>
+                            <div class="action-text">数据规范</div>
+                        </a>
+                        <a href="asset_table_creation.html" class="action-btn">
+                            <span class="action-icon">🆕</span>
+                            <div class="action-text">新建资产表</div>
+                        </a>
+                        <a href="o_line_management.html" class="action-btn">
+                            <span class="action-icon">📈</span>
+                            <div class="action-text">O线模型</div>
+                        </a>
+                        <a href="m_line_management.html" class="action-btn">
+                            <span class="action-icon">📊</span>
+                            <div class="action-text">M线模型</div>
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // 设置当前页面的导航项为激活状态
+        function setActiveNav() {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPage) {
+                    item.classList.add('active');
+                }
+            });
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('数据仓库数据模型管理系统已加载');
+            setActiveNav();
+        });
+        
+        // 点击导航项时设置激活状态
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
+
+

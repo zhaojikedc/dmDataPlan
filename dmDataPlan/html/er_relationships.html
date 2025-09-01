@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型ER关系 - 数据仓库规划管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            font-weight: 300;
+        }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .overview-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .overview-section h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .overview-section p {
+            color: #6c757d;
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .model-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .model-content {
+            display: none;
+        }
+        
+        .model-content.active {
+            display: block;
+        }
+        
+        .er-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .er-preview h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .er-preview p {
+            color: #6c757d;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 10px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .relationship-info {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .relationship-info h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .info-item p {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .stats-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .stats-section h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .model-tabs {
+                flex-direction: column;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>模型ER关系</h1>
+            <a href="dm_planning.html" class="back-btn">返回主页</a>
+        </div>
+        
+        <div class="content">
+            <div class="overview-section">
+                <h2>模型ER关系概览</h2>
+                <p>模型ER关系页面提供O线和M线模型的统一管理和展示功能，帮助用户了解各业务模型之间的关联关系，支持数据血缘分析、影响分析等高级功能。</p>
+            </div>
+            
+            <div class="model-tabs">
+                <div class="tab active" onclick="switchTab('overview')">总览</div>
+                <div class="tab" onclick="switchTab('o-line')">O线模型</div>
+                <div class="tab" onclick="switchTab('m-line')">M线模型</div>
+                <div class="tab" onclick="switchTab('integration')">模型集成</div>
+            </div>
+            
+            <!-- 总览内容 -->
+            <div id="overview" class="model-content active">
+                <div class="er-preview">
+                    <h3>数据仓库模型总览</h3>
+                    <p>查看O线和M线模型的整体架构和关系映射，了解数据流向和业务依赖关系。</p>
+                    <a href="../erGenHtml.html" class="btn btn-primary" target="_blank">查看总览图</a>
+                    <button class="btn btn-success">生成报告</button>
+                </div>
+                
+                <div class="relationship-info">
+                    <h3>关键关系信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h4>数据血缘关系</h4>
+                            <p>追踪数据从源系统到目标系统的完整路径，支持数据质量分析和问题定位。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>业务依赖关系</h4>
+                            <p>分析各业务模型之间的依赖关系，识别关键路径和潜在风险点。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>数据一致性</h4>
+                            <p>检查跨模型的数据一致性，确保数据在不同业务场景下的一致性。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>变更影响分析</h4>
+                            <p>分析模型变更对其他模型的影响范围，支持变更风险评估。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- O线模型内容 -->
+            <div id="o-line" class="model-content">
+                <div class="er-preview">
+                    <h3>O线业务模型ER图</h3>
+                    <p>查看O线业务模型的详细实体关系图，包括客户管理、订单处理、库存管理等核心业务流程。</p>
+                    <a href="../o_erGenHtml.html" class="btn btn-primary" target="_blank">查看O线ER图</a>
+                    <button class="btn btn-warning">编辑模型</button>
+                </div>
+                
+                <div class="stats-section">
+                    <h3>O线模型统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">156</div>
+                            <div class="stat-label">业务实体</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">89</div>
+                            <div class="stat-label">关系映射</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">23</div>
+                            <div class="stat-label">数据源</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">98.5%</div>
+                            <div class="stat-label">数据质量</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- M线模型内容 -->
+            <div id="m-line" class="model-content">
+                <div class="er-preview">
+                    <h3>M线业务模型ER图</h3>
+                    <p>查看M线业务模型的详细实体关系图，包括财务管理、人力资源、项目管理等管理业务流程。</p>
+                    <a href="../m_erGenHtml.html" class="btn btn-primary" target="_blank">查看M线ER图</a>
+                    <button class="btn btn-warning">编辑模型</button>
+                </div>
+                
+                <div class="stats-section">
+                    <h3>M线模型统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">98</div>
+                            <div class="stat-label">管理实体</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">67</div>
+                            <div class="stat-label">关系映射</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">18</div>
+                            <div class="stat-label">数据源</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">99.2%</div>
+                            <div class="stat-label">数据质量</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 模型集成内容 -->
+            <div id="integration" class="model-content">
+                <div class="er-preview">
+                    <h3>模型集成管理</h3>
+                    <p>管理O线和M线模型的集成关系，配置跨模型的数据同步和一致性检查规则。</p>
+                    <button class="btn btn-primary">配置集成</button>
+                    <button class="btn btn-success">同步检查</button>
+                </div>
+                
+                <div class="relationship-info">
+                    <h3>集成配置信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h4>数据同步规则</h4>
+                            <p>配置O线和M线模型之间的数据同步规则，确保数据的一致性和实时性。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>一致性检查</h4>
+                            <p>设置跨模型的数据一致性检查规则，自动识别和报告数据不一致问题。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>冲突解决</h4>
+                            <p>定义数据冲突的解决策略，支持自动冲突检测和手动冲突解决。</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>性能优化</h4>
+                            <p>优化跨模型查询的性能，包括索引策略、查询优化等。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有内容
+            const contents = document.querySelectorAll('.model-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的active状态
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 设置选中标签的active状态
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

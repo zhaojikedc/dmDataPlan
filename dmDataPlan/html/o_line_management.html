@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O线模型管理 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .tab-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        
+        .tab-header {
+            display: flex;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .tab-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .tab-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            background: white;
+        }
+        
+        .tab-item:hover {
+            color: #1890ff;
+        }
+        
+        .tab-content {
+            padding: 24px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #fafafa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            min-width: 600px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .er-preview {
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 16px;
+            background: #fafafa;
+            margin-top: 16px;
+        }
+        
+        .er-preview h4 {
+            margin: 0 0 12px 0;
+            color: #262626;
+        }
+        
+        .er-preview p {
+            margin: 0 0 8px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">O线数据ER关系</h1>
+                <p class="page-desc">管理O线数据模型的ER关系</p>
+            </div>
+            
+            <div class="tab-container">
+                <div class="tab-header">
+                    <div class="tab-item active">O线模型ER关系</div>
+                </div>
+                
+                <!-- O线模型ER关系内容 -->
+                <div id="er-tab" class="tab-content active">
+                    <div class="content-card">
+                        <div class="toolbar">
+                            <div class="search-box">
+                                <input type="text" id="erSearchInput" class="ant-input" placeholder="搜索模型名称或描述...">
+                                <button class="ant-btn" onclick="searchER()">搜索</button>
+                                <button class="ant-btn" onclick="resetERSearch()">重置</button>
+                            </div>
+                            <button class="ant-btn ant-btn-primary" onclick="showAddERModal()">新增ER模型</button>
+                        </div>
+                        
+                        <table class="ant-table">
+                            <thead>
+                                <tr>
+                                    <th>模型编码</th>
+                                    <th>模型名称</th>
+                                    <th>业务域</th>
+                                    <th>表数量</th>
+                                    <th>关系数量</th>
+                                    <th>负责人</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="erTableBody">
+                                <!-- 数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+
+    <!-- 新增/编辑ER模型模态框 -->
+    <div id="erModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="erModalTitle">新增ER模型</h3>
+                <button class="close-btn" onclick="closeERModal()">&times;</button>
+            </div>
+            
+            <form id="erForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">模型编码 *</label>
+                        <input type="text" id="erCode" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">模型名称 *</label>
+                        <input type="text" id="erName" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">业务域 *</label>
+                        <select id="erBusinessDomain" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="customer">客户管理</option>
+                            <option value="product">产品管理</option>
+                            <option value="order">订单管理</option>
+                            <option value="finance">财务管理</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">负责人 *</label>
+                        <input type="text" id="erOwner" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">模型描述</label>
+                    <textarea id="erDescription" class="form-textarea" placeholder="请输入ER模型的详细描述..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select id="erStatus" class="form-input">
+                        <option value="draft">草稿</option>
+                        <option value="review">审核中</option>
+                        <option value="approved">已批准</option>
+                        <option value="implemented">已实施</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeERModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储
+        let erData = [];
+        let currentEREditId = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            setupEventListeners();
+        });
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            document.getElementById('erForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveER();
+            });
+            
+            // 搜索框回车事件
+            document.getElementById('erSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchER();
+                }
+            });
+        }
+        
+        // 加载数据
+        function loadData() {
+            loadERData();
+        }
+        
+        // 加载ER模型数据
+        function loadERData() {
+            const savedData = localStorage.getItem('dmDataPlan_o_line_er');
+            if (savedData) {
+                erData = JSON.parse(savedData);
+            } else {
+                erData = [
+                    {
+                        id: 1,
+                        code: 'O_ER_001',
+                        name: '客户订单ER模型',
+                        businessDomain: 'customer',
+                        tableCount: 5,
+                        relationCount: 8,
+                        owner: '李四',
+                        description: '客户与订单之间的实体关系模型',
+                        status: 'approved',
+                        createTime: '2024-01-01 10:00:00'
+                    }
+                ];
+                saveERDataToStorage();
+            }
+            renderERTable();
+        }
+        
+        // 保存数据到localStorage
+        function saveERDataToStorage() {
+            localStorage.setItem('dmDataPlan_o_line_er', JSON.stringify(erData));
+        }
+        
+
+        
+        // 渲染ER模型表格
+        function renderERTable(data = null) {
+            const tableBody = document.getElementById('erTableBody');
+            const displayData = data || erData;
+            
+            tableBody.innerHTML = displayData.map(er => `
+                <tr>
+                    <td>${er.code}</td>
+                    <td>${er.name}</td>
+                    <td>${getBusinessDomainName(er.businessDomain)}</td>
+                    <td>${er.tableCount}</td>
+                    <td>${er.relationCount}</td>
+                    <td>${er.owner}</td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(er.status)}">
+                            ${getStatusName(er.status)}
+                        </span>
+                    </td>
+                    <td>${er.createTime}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editER(${er.id})">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteER(${er.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 获取业务域名称
+        function getBusinessDomainName(domain) {
+            const domainMap = {
+                'customer': '客户管理',
+                'product': '产品管理',
+                'order': '订单管理',
+                'finance': '财务管理'
+            };
+            return domainMap[domain] || domain;
+        }
+        
+
+        
+        // 获取状态名称
+        function getStatusName(status) {
+            const statusMap = {
+                'planning': '规划中',
+                'in_progress': '进行中',
+                'completed': '已完成',
+                'cancelled': '已取消',
+                'draft': '草稿',
+                'review': '审核中',
+                'approved': '已批准',
+                'implemented': '已实施'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 获取状态样式类
+        function getStatusClass(status) {
+            if (['completed', 'approved', 'implemented'].includes(status)) {
+                return 'status-active';
+            } else if (['cancelled'].includes(status)) {
+                return 'status-inactive';
+            } else {
+                return 'status-active';
+            }
+        }
+        
+        // 搜索功能
+
+        
+        function searchER() {
+            const searchTerm = document.getElementById('erSearchInput').value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderERTable();
+                return;
+            }
+            
+            const filteredData = erData.filter(er => 
+                er.name.toLowerCase().includes(searchTerm) ||
+                er.description.toLowerCase().includes(searchTerm) ||
+                er.code.toLowerCase().includes(searchTerm)
+            );
+            
+            renderERTable(filteredData);
+        }
+        
+
+        
+        function resetERSearch() {
+            document.getElementById('erSearchInput').value = '';
+            renderERTable();
+        }
+        
+
+        
+        function showAddERModal() {
+            currentEREditId = null;
+            document.getElementById('erModalTitle').textContent = '新增ER模型';
+            document.getElementById('erForm').reset();
+            document.getElementById('erModal').style.display = 'block';
+        }
+        
+
+        
+        function editER(id) {
+            const er = erData.find(e => e.id === id);
+            if (!er) return;
+            
+            currentEREditId = id;
+            document.getElementById('erModalTitle').textContent = '编辑ER模型';
+            document.getElementById('erCode').value = er.code;
+            document.getElementById('erName').value = er.name;
+            document.getElementById('erBusinessDomain').value = er.businessDomain;
+            document.getElementById('erOwner').value = er.owner;
+            document.getElementById('erDescription').value = er.description || '';
+            document.getElementById('erStatus').value = er.status;
+            
+            document.getElementById('erModal').style.display = 'block';
+        }
+        
+
+        
+        function saveER() {
+            const code = document.getElementById('erCode').value.trim();
+            const name = document.getElementById('erName').value.trim();
+            const businessDomain = document.getElementById('erBusinessDomain').value;
+            const owner = document.getElementById('erOwner').value.trim();
+            const description = document.getElementById('erDescription').value.trim();
+            const status = document.getElementById('erStatus').value;
+            
+            if (!code || !name || !businessDomain || !owner) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            const now = new Date().toLocaleString('zh-CN');
+            
+            if (currentEREditId) {
+                const index = erData.findIndex(e => e.id === currentEREditId);
+                if (index !== -1) {
+                    erData[index] = {
+                        ...erData[index],
+                        code, name, businessDomain, owner, description, status
+                    };
+                }
+            } else {
+                const newId = Math.max(...erData.map(e => e.id), 0) + 1;
+                erData.push({
+                    id: newId, code, name, businessDomain, tableCount: 0, relationCount: 0, owner, description, status, createTime: now
+                });
+            }
+            
+            saveERDataToStorage();
+            renderERTable();
+            closeERModal();
+            alert(currentEREditId ? 'ER模型更新成功' : 'ER模型创建成功');
+        }
+        
+
+        
+        function deleteER(id) {
+            if (!confirm('确定要删除这个ER模型吗？')) return;
+            
+            erData = erData.filter(e => e.id !== id);
+            saveERDataToStorage();
+            renderERTable();
+            alert('ER模型删除成功');
+        }
+        
+
+        
+        function closeERModal() {
+            document.getElementById('erModal').style.display = 'none';
+            currentEREditId = null;
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const erModal = document.getElementById('erModal');
+            
+            if (event.target === erModal) {
+                closeERModal();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产表新建 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        
+        .page-desc {
+            color: #666;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+        
+        .ant-btn-success:hover {
+            background: #73d13d;
+            border-color: #73d13d;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            background: #fafafa;
+        }
+        
+        .field-row input,
+        .field-row select {
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .field-row input:focus,
+        .field-row select:focus {
+            border-color: #1890ff;
+            outline: none;
+        }
+        
+        .field-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto;
+            gap: 12px;
+            padding: 12px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .code-preview {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        
+        .code-preview h4 {
+            margin: 0 0 12px 0;
+            color: #262626;
+        }
+        
+        .code-preview pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .field-row,
+            .field-header {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">资产表新建</h1>
+                <p class="page-desc">创建新的数据表，支持字段定义、Hive DDL生成和JSON数据结构</p>
+            </div>
+            
+            <!-- 表基本信息 -->
+            <div class="content-card">
+                <h3>表基本信息</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">表名 *</label>
+                        <input type="text" id="tableName" class="form-input" placeholder="如: customer_info" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">中文名称 *</label>
+                        <input type="text" id="tableChineseName" class="form-input" placeholder="如: 客户信息表" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">表描述</label>
+                    <textarea id="tableDescription" class="form-textarea" placeholder="请输入表的详细描述..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">业务域</label>
+                        <select id="businessDomain" class="form-input">
+                            <option value="">请选择</option>
+                            <option value="customer">客户管理</option>
+                            <option value="product">产品管理</option>
+                            <option value="order">订单管理</option>
+                            <option value="finance">财务管理</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">表类型</label>
+                        <select id="tableType" class="form-input">
+                            <option value="dimension">维度表</option>
+                            <option value="fact">事实表</option>
+                            <option value="summary">汇总表</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 字段定义 -->
+            <div class="content-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3>字段定义</h3>
+                    <button class="ant-btn ant-btn-primary" onclick="addField()">添加字段</button>
+                </div>
+                
+                <div class="field-header">
+                    <div>字段名</div>
+                    <div>中文名</div>
+                    <div>字段类型</div>
+                    <div>数据类型</div>
+                    <div>长度/精度</div>
+                    <div>是否必填</div>
+                    <div>操作</div>
+                </div>
+                
+                <div id="fieldsContainer">
+                    <!-- 字段行将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            
+            <!-- 生成结果 -->
+            <div class="content-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3>生成结果</h3>
+                    <div>
+                        <button class="ant-btn ant-btn-success" onclick="generateDDL()">生成Hive DDL</button>
+                        <button class="ant-btn ant-btn-primary" onclick="generateJSON()">生成JSON</button>
+                        <button class="ant-btn" onclick="downloadFiles()">下载文件</button>
+                    </div>
+                </div>
+                
+                <div id="ddlPreview" class="code-preview" style="display: none;">
+                    <h4>Hive DDL</h4>
+                    <pre id="ddlContent"></pre>
+                </div>
+                
+                <div id="jsonPreview" class="code-preview" style="display: none;">
+                    <h4>JSON数据结构</h4>
+                    <pre id="jsonContent"></pre>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="content-card">
+                <div class="form-actions">
+                    <button class="ant-btn" onclick="resetForm()">重置</button>
+                    <button class="ant-btn ant-btn-primary" onclick="saveTable()">保存表结构</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let fields = [];
+        let fieldCounter = 0;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addField(); // 添加第一个字段
+        });
+        
+        // 添加字段
+        function addField() {
+            fieldCounter++;
+            const field = {
+                id: fieldCounter,
+                name: '',
+                chineseName: '',
+                fieldType: '',
+                dataType: 'VARCHAR',
+                lengthPrecision: '',
+                isRequired: false
+            };
+            
+            fields.push(field);
+            renderFields();
+        }
+        
+        // 删除字段
+        function removeField(fieldId) {
+            fields = fields.filter(f => f.id !== fieldId);
+            renderFields();
+        }
+        
+        // 渲染字段
+        function renderFields() {
+            const container = document.getElementById('fieldsContainer');
+            
+            if (fields.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">暂无字段，请添加字段</p>';
+                return;
+            }
+            
+            container.innerHTML = fields.map(field => `
+                <div class="field-row">
+                    <input type="text" 
+                           placeholder="字段名" 
+                           value="${field.name}" 
+                           onchange="updateField(${field.id}, 'name', this.value)">
+                    
+                    <input type="text" 
+                           placeholder="中文名" 
+                           value="${field.chineseName}" 
+                           onchange="updateField(${field.id}, 'chineseName', this.value)">
+                    
+                    <select onchange="updateField(${field.id}, 'fieldType', this.value)">
+                        <option value="">请选择</option>
+                        <option value="primary_key" ${field.fieldType === 'primary_key' ? 'selected' : ''}>主键</option>
+                        <option value="foreign_key" ${field.fieldType === 'foreign_key' ? 'selected' : ''}>外键</option>
+                        <option value="business_key" ${field.fieldType === 'business_key' ? 'selected' : ''}>业务键</option>
+                        <option value="attribute" ${field.fieldType === 'attribute' ? 'selected' : ''}>属性</option>
+                        <option value="measure" ${field.fieldType === 'measure' ? 'selected' : ''}>度量</option>
+                    </select>
+                    
+                    <select onchange="updateField(${field.id}, 'dataType', this.value)">
+                        <option value="VARCHAR" ${field.dataType === 'VARCHAR' ? 'selected' : ''}>VARCHAR</option>
+                        <option value="CHAR" ${field.dataType === 'CHAR' ? 'selected' : ''}>CHAR</option>
+                        <option value="INT" ${field.dataType === 'INT' ? 'selected' : ''}>INT</option>
+                        <option value="BIGINT" ${field.dataType === 'BIGINT' ? 'selected' : ''}>BIGINT</option>
+                        <option value="DECIMAL" ${field.dataType === 'DECIMAL' ? 'selected' : ''}>DECIMAL</option>
+                        <option value="DATE" ${field.dataType === 'DATE' ? 'selected' : ''}>DATE</option>
+                        <option value="TIMESTAMP" ${field.dataType === 'TIMESTAMP' ? 'selected' : ''}>TIMESTAMP</option>
+                        <option value="BOOLEAN" ${field.dataType === 'BOOLEAN' ? 'selected' : ''}>BOOLEAN</option>
+                    </select>
+                    
+                    <input type="text" 
+                           placeholder="如: 50 或 10,2" 
+                           value="${field.lengthPrecision}" 
+                           onchange="updateField(${field.id}, 'lengthPrecision', this.value)">
+                    
+                    <select onchange="updateField(${field.id}, 'isRequired', this.value === 'true')">
+                        <option value="false" ${!field.isRequired ? 'selected' : ''}>否</option>
+                        <option value="true" ${field.isRequired ? 'selected' : ''}>是</option>
+                    </select>
+                    
+                    <button class="ant-btn ant-btn-danger" onclick="removeField(${field.id})" style="padding: 4px 8px; font-size: 12px;">删除</button>
+                </div>
+            `).join('');
+        }
+        
+        // 更新字段
+        function updateField(fieldId, property, value) {
+            const field = fields.find(f => f.id === fieldId);
+            if (field) {
+                field[property] = value;
+            }
+        }
+        
+        // 验证表单
+        function validateForm() {
+            const tableName = document.getElementById('tableName').value.trim();
+            const tableChineseName = document.getElementById('tableChineseName').value.trim();
+            
+            if (!tableName) {
+                alert('请输入表名');
+                return false;
+            }
+            
+            if (!tableChineseName) {
+                alert('请输入中文名称');
+                return false;
+            }
+            
+            if (fields.length === 0) {
+                alert('请至少添加一个字段');
+                return false;
+            }
+            
+            for (const field of fields) {
+                if (!field.name.trim()) {
+                    alert('请填写所有字段名');
+                    return false;
+                }
+                if (!field.chineseName.trim()) {
+                    alert('请填写所有字段中文名');
+                    return false;
+                }
+                if (!field.fieldType) {
+                    alert('请选择所有字段类型');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // 生成Hive DDL
+        function generateDDL() {
+            if (!validateForm()) return;
+            
+            const tableName = document.getElementById('tableName').value.trim();
+            const tableDescription = document.getElementById('tableDescription').value.trim();
+            
+            let ddl = `-- 表名: ${tableName}\n`;
+            if (tableDescription) {
+                ddl += `-- 描述: ${tableDescription}\n`;
+            }
+            ddl += `CREATE TABLE IF NOT EXISTS ${tableName} (\n`;
+            
+            const fieldDefinitions = fields.map(field => {
+                let definition = `    ${field.name} ${field.dataType}`;
+                
+                if (field.dataType === 'VARCHAR' || field.dataType === 'CHAR') {
+                    if (field.lengthPrecision) {
+                        definition += `(${field.lengthPrecision})`;
+                    } else {
+                        definition += '(255)';
+                    }
+                } else if (field.dataType === 'DECIMAL') {
+                    if (field.lengthPrecision) {
+                        definition += `(${field.lengthPrecision})`;
+                    } else {
+                        definition += '(15,2)';
+                    }
+                }
+                
+                if (field.isRequired) {
+                    definition += ' NOT NULL';
+                }
+                
+                definition += ` COMMENT '${field.chineseName}'`;
+                
+                return definition;
+            });
+            
+            ddl += fieldDefinitions.join(',\n');
+            ddl += '\n) COMMENT \'' + (document.getElementById('tableChineseName').value.trim() || tableName) + '\'';
+            ddl += '\nPARTITIONED BY (dt STRING COMMENT \'分区日期\')';
+            ddl += '\nSTORED AS PARQUET';
+            ddl += '\nLOCATION \'/warehouse/tablespace/managed/hive/${database}.db/${tableName}\';';
+            
+            document.getElementById('ddlContent').textContent = ddl;
+            document.getElementById('ddlPreview').style.display = 'block';
+        }
+        
+        // 生成JSON
+        function generateJSON() {
+            if (!validateForm()) return;
+            
+            const tableData = {
+                tableName: document.getElementById('tableName').value.trim(),
+                chineseName: document.getElementById('tableChineseName').value.trim(),
+                description: document.getElementById('tableDescription').value.trim(),
+                businessDomain: document.getElementById('businessDomain').value,
+                tableType: document.getElementById('tableType').value,
+                fields: fields.map(field => ({
+                    name: field.name.trim(),
+                    chineseName: field.chineseName.trim(),
+                    fieldType: field.fieldType,
+                    dataType: field.dataType,
+                    lengthPrecision: field.lengthPrecision,
+                    isRequired: field.isRequired
+                })),
+                createTime: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const jsonStr = JSON.stringify(tableData, null, 2);
+            document.getElementById('jsonContent').textContent = jsonStr;
+            document.getElementById('jsonPreview').style.display = 'block';
+        }
+        
+        // 下载文件
+        function downloadFiles() {
+            if (!validateForm()) return;
+            
+            const tableName = document.getElementById('tableName').value.trim();
+            
+            // 下载DDL文件
+            if (document.getElementById('ddlPreview').style.display !== 'none') {
+                const ddlContent = document.getElementById('ddlContent').textContent;
+                downloadFile(ddlContent, `${tableName}.sql`, 'text/plain');
+            }
+            
+            // 下载JSON文件
+            if (document.getElementById('jsonPreview').style.display !== 'none') {
+                const jsonContent = document.getElementById('jsonContent').textContent;
+                downloadFile(jsonContent, `${tableName}.json`, 'application/json');
+            }
+        }
+        
+        // 下载文件辅助函数
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 保存表结构
+        function saveTable() {
+            if (!validateForm()) return;
+            
+            const tableData = {
+                tableName: document.getElementById('tableName').value.trim(),
+                chineseName: document.getElementById('tableChineseName').value.trim(),
+                description: document.getElementById('tableDescription').value.trim(),
+                businessDomain: document.getElementById('businessDomain').value,
+                tableType: document.getElementById('tableType').value,
+                fields: fields.map(field => ({
+                    name: field.name.trim(),
+                    chineseName: field.chineseName.trim(),
+                    fieldType: field.fieldType,
+                    dataType: field.dataType,
+                    lengthPrecision: field.lengthPrecision,
+                    isRequired: field.isRequired
+                })),
+                createTime: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            // 保存到localStorage
+            const savedTables = JSON.parse(localStorage.getItem('dmDataPlan_tables') || '[]');
+            savedTables.push(tableData);
+            localStorage.setItem('dmDataPlan_tables', JSON.stringify(savedTables));
+            
+            alert('表结构保存成功！');
+        }
+        
+        // 重置表单
+        function resetForm() {
+            if (confirm('确定要重置表单吗？所有数据将丢失。')) {
+                document.getElementById('tableName').value = '';
+                document.getElementById('tableChineseName').value = '';
+                document.getElementById('tableDescription').value = '';
+                document.getElementById('businessDomain').value = '';
+                document.getElementById('tableType').value = 'dimension';
+                
+                fields = [];
+                fieldCounter = 0;
+                
+                document.getElementById('ddlPreview').style.display = 'none';
+                document.getElementById('jsonPreview').style.display = 'none';
+                
+                addField(); // 添加第一个字段
+            }
+        }
+    </script>
+</body>
+</html>
