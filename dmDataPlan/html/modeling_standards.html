@@ -473,12 +473,14 @@
 
     <script>
         // 数据规范存储
+        const API_BASE = 'http://localhost:8000';
+        const CONFIG_NAME = 'specifications';
         let specifications = [];
         let currentEditId = null;
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadSpecifications();
+            loadSpecificationsFromServer();
             setupEventListeners();
         });
         
@@ -497,64 +499,32 @@
             });
         }
         
-        // 加载数据规范
-        function loadSpecifications() {
-            // 从localStorage加载数据，如果没有则使用默认数据
-            const savedSpecifications = localStorage.getItem('dmDataPlan_specifications');
-            if (savedSpecifications) {
-                specifications = JSON.parse(savedSpecifications);
-            } else {
-                // 默认数据规范
-                specifications = [
-                    {
-                        id: 1,
-                        sequenceNumber: 1,
-                        category: '命名规范',
-                        specificationItem: '表名必须使用下划线分隔的小写字母',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '表名必须符合正则表达式：^[a-z][a-z0-9_]*$'
-                    },
-                    {
-                        id: 2,
-                        sequenceNumber: 2,
-                        category: '字段规范',
-                        specificationItem: '主键字段必须命名为id',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '主键字段名称必须为\'id\'，类型为bigint'
-                    },
-                    {
-                        id: 3,
-                        sequenceNumber: 3,
-                        category: '数据类型规范',
-                        specificationItem: '金额字段必须使用decimal类型',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '金额相关字段必须使用decimal(18,2)类型'
-                    },
-                    {
-                        id: 4,
-                        sequenceNumber: 4,
-                        category: '索引规范',
-                        specificationItem: '外键字段建议创建索引',
-                        isStrongConstraint: '建议约束',
-                        validationLogic: '外键字段建议创建索引以提高查询性能'
-                    },
-                    {
-                        id: 5,
-                        sequenceNumber: 5,
-                        category: '注释规范',
-                        specificationItem: '所有字段必须添加中文注释',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '每个字段必须添加COMMENT注释，说明字段含义'
-                    }
-                ];
-                saveSpecificationsToStorage();
+        async function loadSpecificationsFromServer() {
+            try {
+                const res = await fetch(`${API_BASE}/config/${CONFIG_NAME}`);
+                if (res.ok) {
+                    specifications = await res.json();
+                } else if (res.status === 404) {
+                    specifications = [];
+                } else {
+                    console.error('加载数据规范失败', res.status);
+                }
+                renderSpecificationsTable();
+            } catch (e) {
+                console.error('请求失败', e);
             }
-            renderSpecificationsTable();
         }
         
-        // 保存数据规范到localStorage
-        function saveSpecificationsToStorage() {
-            localStorage.setItem('dmDataPlan_specifications', JSON.stringify(specifications));
+        async function saveSpecificationsToServer() {
+            try {
+                await fetch(`${API_BASE}/config/${CONFIG_NAME}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(specifications)
+                });
+            } catch (e) {
+                console.error('保存数据规范失败', e);
+            }
         }
         
         // 渲染数据规范表格
@@ -628,7 +598,7 @@
         }
         
         // 保存数据规范
-        function saveSpecification() {
+        async function saveSpecification() {
             const sequenceNumber = parseInt(document.getElementById('sequenceNumber').value);
             const category = document.getElementById('category').value;
             const specificationItem = document.getElementById('specificationItem').value.trim();
@@ -655,7 +625,7 @@
                 }
             } else {
                 // 新增模式
-                const newId = Math.max(...specifications.map(s => s.id), 0) + 1;
+                const newId = Math.max(...specifications.map(s => s.id || 0), 0) + 1;
                 specifications.push({
                     id: newId,
                     sequenceNumber,
@@ -666,7 +636,7 @@
                 });
             }
             
-            saveSpecificationsToStorage();
+            await saveSpecificationsToServer();
             renderSpecificationsTable();
             closeModal();
             
@@ -676,11 +646,11 @@
         }
         
         // 删除数据规范
-        function deleteSpecification(id) {
+        async function deleteSpecification(id) {
             if (!confirm('确定要删除这个数据规范吗？')) return;
             
             specifications = specifications.filter(s => s.id !== id);
-            saveSpecificationsToStorage();
+            await saveSpecificationsToServer();
             renderSpecificationsTable();
             alert('数据规范删除成功');
         }

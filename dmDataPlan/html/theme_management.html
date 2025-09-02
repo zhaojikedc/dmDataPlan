@@ -544,73 +544,37 @@
     </div>
     
     <script>
-        let themes = [
-            {
-                id: 1,
-                level: 1,
-                appId: 'APP001',
-                appName: '客户管理系统',
-                level1Theme: '客户管理',
-                level1Abbr: 'KHGL',
-                level2Theme: '',
-                level2Abbr: '',
-                level3Theme: '',
-                level3Abbr: '',
-                modelLibrary: 'customer_db'
-            },
-            {
-                id: 2,
-                level: 2,
-                appId: 'APP001',
-                appName: '客户管理系统',
-                level1Theme: '客户管理',
-                level1Abbr: 'KHGL',
-                level2Theme: '客户基础信息',
-                level2Abbr: 'KHJCXX',
-                level3Theme: '',
-                level3Abbr: '',
-                modelLibrary: 'customer_basic_db'
-            },
-            {
-                id: 3,
-                level: 3,
-                appId: 'APP001',
-                appName: '客户管理系统',
-                level1Theme: '客户管理',
-                level1Abbr: 'KHGL',
-                level2Theme: '客户基础信息',
-                level2Abbr: 'KHJCXX',
-                level3Theme: '客户联系方式',
-                level3Abbr: 'KHLXFS',
-                modelLibrary: 'customer_contact_db'
-            },
-            {
-                id: 4,
-                level: 1,
-                appId: 'APP002',
-                appName: '产品管理系统',
-                level1Theme: '产品管理',
-                level1Abbr: 'CPGL',
-                level2Theme: '',
-                level2Abbr: '',
-                level3Theme: '',
-                level3Abbr: '',
-                modelLibrary: 'product_db'
-            },
-            {
-                id: 5,
-                level: 2,
-                appId: 'APP002',
-                appName: '产品管理系统',
-                level1Theme: '产品管理',
-                level1Abbr: 'CPGL',
-                level2Theme: '产品分类',
-                level2Abbr: 'CPFL',
-                level3Theme: '',
-                level3Abbr: '',
-                modelLibrary: 'product_category_db'
+        let themes = [];
+        const API_BASE = 'http://localhost:8000';
+        const CONFIG_NAME = 'themes';
+        
+        async function loadThemesFromServer() {
+            try {
+                const res = await fetch(`${API_BASE}/config/${CONFIG_NAME}`);
+                if (res.ok) {
+                    themes = await res.json();
+                } else if (res.status === 404) {
+                    themes = [];
+                } else {
+                    console.error('加载主题失败', res.status);
+                }
+                renderThemes();
+            } catch (e) {
+                console.error('请求失败', e);
             }
-        ];
+        }
+        
+        async function saveThemesToServer() {
+            try {
+                await fetch(`${API_BASE}/config/${CONFIG_NAME}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(themes)
+                });
+            } catch (e) {
+                console.error('保存主题失败', e);
+            }
+        }
         
         let editingId = null;
         
@@ -619,8 +583,8 @@
             const filteredThemes = themes.filter(theme => 
                 theme.appName.toLowerCase().includes(searchTerm) ||
                 theme.level1Theme.toLowerCase().includes(searchTerm) ||
-                theme.level2Theme.toLowerCase().includes(searchTerm) ||
-                theme.level3Theme.toLowerCase().includes(searchTerm)
+                (theme.level2Theme || '').toLowerCase().includes(searchTerm) ||
+                (theme.level3Theme || '').toLowerCase().includes(searchTerm)
             );
             renderThemes(filteredThemes);
         }
@@ -670,10 +634,10 @@
                 document.getElementById('appName').value = theme.appName;
                 document.getElementById('level1Theme').value = theme.level1Theme;
                 document.getElementById('level1Abbr').value = theme.level1Abbr;
-                document.getElementById('level2Theme').value = theme.level2Theme;
-                document.getElementById('level2Abbr').value = theme.level2Abbr;
-                document.getElementById('level3Theme').value = theme.level3Theme;
-                document.getElementById('level3Abbr').value = theme.level3Abbr;
+                document.getElementById('level2Theme').value = theme.level2Theme || '';
+                document.getElementById('level2Abbr').value = theme.level2Abbr || '';
+                document.getElementById('level3Theme').value = theme.level3Theme || '';
+                document.getElementById('level3Abbr').value = theme.level3Abbr || '';
                 document.getElementById('modelLibrary').value = theme.modelLibrary;
                 document.getElementById('themeModal').classList.add('show');
             }
@@ -683,28 +647,16 @@
             document.getElementById('themeModal').classList.remove('show');
         }
         
-        function deleteTheme(id) {
+        async function deleteTheme(id) {
             if (confirm('确定要删除这个主题吗？')) {
                 themes = themes.filter(t => t.id !== id);
                 renderThemes();
-                saveToLocalStorage();
-            }
-        }
-        
-        function saveToLocalStorage() {
-            localStorage.setItem('dmDataPlan_themes', JSON.stringify(themes));
-        }
-        
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('dmDataPlan_themes');
-            if (saved) {
-                themes = JSON.parse(saved);
-                renderThemes();
+                await saveThemesToServer();
             }
         }
         
         // 表单提交处理
-        document.getElementById('themeForm').addEventListener('submit', function(e) {
+        document.getElementById('themeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const formData = {
@@ -721,25 +673,23 @@
             };
             
             if (editingId) {
-                // 编辑现有主题
                 const index = themes.findIndex(t => t.id === editingId);
                 if (index !== -1) {
                     themes[index] = { ...themes[index], ...formData };
                 }
             } else {
-                // 新增主题
-                const newId = Math.max(...themes.map(t => t.id), 0) + 1;
+                const newId = Math.max(...themes.map(t => t.id || 0), 0) + 1;
                 themes.push({ id: newId, ...formData });
             }
             
             renderThemes();
-            saveToLocalStorage();
+            await saveThemesToServer();
             hideModal();
         });
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadFromLocalStorage();
+            loadThemesFromServer();
         });
     </script>
 </body>
