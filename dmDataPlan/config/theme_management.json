@@ -1,0 +1,8 @@
+{
+  "themes": [
+    {"id": "theme_analytics", "name": "Analytics", "description": "Data analytics theme", "owner": "data_governance"}
+  ],
+  "categories": [
+    {"id": "cat_governance", "name": "Governance"}
+  ]
+}
