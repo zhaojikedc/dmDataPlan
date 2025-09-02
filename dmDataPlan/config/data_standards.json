@@ -1,0 +1,6 @@
+{
+  "standards": [
+    {"id": "std_naming", "name": "Naming Convention", "version": "1.0.0", "areas": ["tables", "columns"], "reference": "https://example.org/naming-std"}
+  ],
+  "quality_dimensions": ["accuracy", "completeness", "consistency", "timeliness"]
+}

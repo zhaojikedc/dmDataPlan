@@ -1,0 +1,9 @@
+{
+  "applications": [
+    {"id": "app_mdms", "name": "Master Data Management", "owner": "data_platform", "status": "active", "themes": ["theme_analytics"]}
+  ],
+  "environments": [
+    {"id": "env_prod", "name": "Production"},
+    {"id": "env_dev", "name": "Development"}
+  ]
+}
