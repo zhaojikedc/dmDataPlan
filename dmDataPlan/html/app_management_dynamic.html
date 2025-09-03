@@ -100,7 +100,8 @@
         
         .ant-input:focus {
             border-color: #1890ff;
-            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: none;
         }
         
         .ant-btn {
@@ -109,19 +110,14 @@
             font-size: 14px;
             border: 1px solid #d9d9d9;
             background: white;
+            color: #262626;
             cursor: pointer;
             transition: all 0.3s;
         }
         
-        .ant-btn-primary {
-            background: #1890ff;
+        .ant-btn:hover {
             border-color: #1890ff;
-            color: white;
-        }
-        
-        .ant-btn-primary:hover {
-            background: #40a9ff;
-            border-color: #40a9ff;
+            color: #1890ff;
         }
         
         .ant-btn-success {
@@ -215,93 +211,9 @@
             border-color: #ff7875;
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 24px;
-            border-radius: 8px;
-            min-width: 600px;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #262626;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #262626;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .form-textarea {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            min-height: 80px;
-            resize: vertical;
-        }
-        
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        
         .status-badge {
             padding: 4px 8px;
-            border-radius: 12px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
         }
@@ -325,44 +237,143 @@
         }
         
         .status-maintenance {
-            background: #fff7e6;
-            color: #fa8c16;
-            border: 1px solid #ffd591;
+            background: #f9f0ff;
+            color: #722ed1;
+            border: 1px solid #d3adf7;
         }
         
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
         }
         
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #8c8c8c;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            color: #262626;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: none;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+        
+        .form-textarea:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: none;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- 头部 -->
+    <div class="app-container">
+        <!-- 头部导航 -->
         <header class="app-header">
-            <div class="app-title">数据仓库资产规划管理系统</div>
+            <div class="app-title">应用管理</div>
             <a href="index.html" class="back-btn">返回首页</a>
         </header>
         
-        <!-- 主内容区 -->
         <main class="app-content">
+            <!-- 页面标题 -->
             <div class="page-header">
                 <h1 class="page-title">应用管理</h1>
-                <p class="page-desc">管理数据仓库应用信息，包括应用名称、服务组织、应用负责人、应用说明、租户、归属部门、状态等信息</p>
+                <p class="page-desc">管理系统中的应用信息，包括应用名称、负责人、状态等</p>
             </div>
             
+            <!-- 主要内容 -->
             <div class="content-card">
                 <div class="toolbar">
                     <div class="search-box">
-                        <input type="text" id="searchInput" class="ant-input" placeholder="搜索应用、服务组织或负责人...">
-                        <button class="ant-btn ant-btn-primary" onclick="searchData()">搜索</button>
+                        <input type="text" id="searchInput" class="ant-input" placeholder="搜索应用名称、负责人...">
+                        <button class="ant-btn" onclick="searchApps()">搜索</button>
                         <button class="ant-btn" onclick="resetSearch()">重置</button>
                     </div>
                     <button class="ant-btn ant-btn-success" onclick="openAddModal()">新增应用</button>
@@ -395,32 +406,15 @@
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
             
-            <form id="appForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">应用名称 *</label>
-                        <input type="text" id="appName" class="form-input" placeholder="请输入应用名称" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">服务组织 *</label>
-                        <input type="text" id="serviceOrg" class="form-input" placeholder="请输入服务组织" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">应用负责人 *</label>
-                        <input type="text" id="appOwner" class="form-input" placeholder="请输入应用负责人" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">租户 *</label>
-                        <input type="text" id="tenant" class="form-input" placeholder="请输入租户" required>
-                    </div>
+            <form id="appForm" class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">应用名称 *</label>
+                    <input type="text" id="appName" class="form-input" placeholder="请输入应用名称" required>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">归属部门 *</label>
-                    <input type="text" id="department" class="form-input" placeholder="请输入归属部门" required>
+                    <label class="form-label">负责人 *</label>
+                    <input type="text" id="appOwner" class="form-input" placeholder="请输入负责人姓名" required>
                 </div>
                 
                 <div class="form-group">
@@ -446,74 +440,123 @@
         </div>
     </div>
     
-    <script src="js/data-api.js"></script>
     <script>
         let currentEditId = null;
-        const api = new DataAPI('http://localhost:8080');
-
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadAndRender();
-        });
-
-        async function loadAndRender() {
-            const tbody = document.getElementById('appTableBody');
-            tbody.innerHTML = '';
-            const apps = await api.listItems('app_management.json', 'applications');
-            apps.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.name || item.appName || '-'}</td>
-                    <td>${item.serviceOrg || '-'}</td>
-                    <td>${item.owner || item.appOwner || '-'}</td>
-                    <td>${item.description || '-'}</td>
-                    <td>${Array.isArray(item.themes) ? item.themes.join(', ') : (item.tenant || '-')}</td>
-                    <td>${item.department || '-'}</td>
-                    <td><span class="status-badge status-${item.status || 'active'}">${getStatusText(item.status || 'active')}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="ant-btn btn-warning" onclick="editApp('${item.id}')">编辑</button>
-                            <button class="ant-btn btn-danger" onclick="deleteApp('${item.id}')">删除</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+        let dataTable = null;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化数据表格
+            initDataTable('applicationsTable', 'app_management.json', 'applications');
+            
+            // 绑定搜索事件
+            document.getElementById('searchInput').addEventListener('input', function() {
+                searchApps();
             });
-        }
-
+        });
+        
+        // 获取状态文本
         function getStatusText(status) {
-            const statusMap = { active: '启用', inactive: '停用', development: '开发中', maintenance: '维护中' };
+            const statusMap = {
+                'active': '启用',
+                'inactive': '停用',
+                'development': '开发中',
+                'maintenance': '维护中'
+            };
             return statusMap[status] || status;
         }
-
-        async function searchData() {
-            const kw = document.getElementById('searchInput').value.trim();
-            if (!kw) { await loadAndRender(); return; }
-            const results = await api.searchItems('app_management.json', 'applications', 'name', kw);
+        
+        // 搜索功能
+        async function searchApps() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            if (!keyword.trim()) {
+                // 如果搜索框为空，重新加载所有数据
+                if (dataTable) {
+                    await dataTable.refresh();
+                }
+                return;
+            }
+            
+            try {
+                const results = await dataAPI.searchItems('app_management.json', 'applications', 'name', keyword);
+                renderSearchResults(results);
+            } catch (error) {
+                console.error('搜索失败:', error);
+                showError('搜索失败: ' + error.message);
+            }
+        }
+        
+        // 渲染搜索结果
+        function renderSearchResults(results) {
             const tbody = document.getElementById('appTableBody');
             tbody.innerHTML = '';
+            
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">未找到匹配的应用</td></tr>';
+                return;
+            }
+            
             results.forEach(item => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.name || '-'}</td>
-                    <td>${item.serviceOrg || '-'}</td>
-                    <td>${item.owner || '-'}</td>
-                    <td>${item.description || '-'}</td>
-                    <td>${Array.isArray(item.themes) ? item.themes.join(', ') : '-'}</td>
-                    <td>${item.department || '-'}</td>
-                    <td><span class="status-badge status-${item.status || 'active'}">${getStatusText(item.status || 'active')}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="ant-btn btn-warning" onclick="editApp('${item.id}')">编辑</button>
-                            <button class="ant-btn btn-danger" onclick="deleteApp('${item.id}')">删除</button>
-                        </div>
-                    </td>
-                `;
+                
+                // 创建应用名称列
+                const nameCell = document.createElement('td');
+                nameCell.textContent = item.name || '-';
+                row.appendChild(nameCell);
+                
+                // 创建负责人列
+                const ownerCell = document.createElement('td');
+                ownerCell.textContent = item.owner || '-';
+                row.appendChild(ownerCell);
+                
+                // 创建状态列
+                const statusCell = document.createElement('td');
+                const statusSpan = document.createElement('span');
+                statusSpan.className = `status-badge status-${item.status || 'active'}`;
+                statusSpan.textContent = getStatusText(item.status);
+                statusCell.appendChild(statusSpan);
+                row.appendChild(statusCell);
+                
+                // 创建主题列
+                const themesCell = document.createElement('td');
+                themesCell.textContent = Array.isArray(item.themes) ? item.themes.join(', ') : (item.themes || '-');
+                row.appendChild(themesCell);
+                
+                // 创建操作列
+                const actionCell = document.createElement('td');
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'action-buttons';
+                
+                // 创建编辑按钮
+                const editBtn = document.createElement('button');
+                editBtn.className = 'ant-btn btn-warning';
+                editBtn.textContent = '编辑';
+                editBtn.addEventListener('click', () => editApp(item.id));
+                
+                // 创建删除按钮
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'ant-btn btn-danger';
+                deleteBtn.textContent = '删除';
+                deleteBtn.addEventListener('click', () => deleteApp(item.id));
+                
+                actionDiv.appendChild(editBtn);
+                actionDiv.appendChild(deleteBtn);
+                actionCell.appendChild(actionDiv);
+                row.appendChild(actionCell);
+                
                 tbody.appendChild(row);
             });
         }
-
-        function resetSearch() { document.getElementById('searchInput').value = ''; loadAndRender(); }
-
+        
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            if (dataTable) {
+                dataTable.refresh();
+            }
+        }
+        
+        // 打开新增模态框
         function openAddModal() {
             currentEditId = null;
             document.getElementById('modalTitle').textContent = '新增应用';
@@ -521,67 +564,99 @@
             document.getElementById('status').value = 'active';
             document.getElementById('appModal').style.display = 'block';
         }
-
+        
+        // 编辑应用
         async function editApp(id) {
-            const item = await api.getItem('app_management.json', 'applications', id);
-            if (item) {
-                currentEditId = id;
-                document.getElementById('modalTitle').textContent = '编辑应用';
-                document.getElementById('appName').value = item.name || item.appName || '';
-                document.getElementById('serviceOrg').value = item.serviceOrg || '';
-                document.getElementById('appOwner').value = item.owner || item.appOwner || '';
-                document.getElementById('description').value = item.description || '';
-                document.getElementById('tenant').value = item.tenant || '';
-                document.getElementById('department').value = item.department || '';
-                document.getElementById('status').value = item.status || 'active';
-                document.getElementById('appModal').style.display = 'block';
+            try {
+                const item = await dataAPI.getItem('app_management.json', 'applications', id);
+                if (item) {
+                    currentEditId = id;
+                    document.getElementById('modalTitle').textContent = '编辑应用';
+                    document.getElementById('appName').value = item.name || '';
+                    document.getElementById('appOwner').value = item.owner || '';
+                    document.getElementById('description').value = item.description || '';
+                    document.getElementById('status').value = item.status || 'active';
+                    document.getElementById('appModal').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('获取应用信息失败:', error);
+                showError('获取应用信息失败: ' + error.message);
             }
         }
-
+        
+        // 删除应用
         async function deleteApp(id) {
-            if (!confirm('确定要删除这个应用吗？')) return;
-            const ok = await api.deleteItem('app_management.json', 'applications', id);
-            if (ok) { await loadAndRender(); }
+            if (confirm('确定要删除这个应用吗？')) {
+                try {
+                    const success = await dataAPI.deleteItem('app_management.json', 'applications', id);
+                    if (success) {
+                        showSuccess('应用删除成功');
+                        if (dataTable) {
+                            await dataTable.refresh();
+                        }
+                    } else {
+                        showError('应用删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除应用失败:', error);
+                    showError('删除应用失败: ' + error.message);
+                }
+            }
         }
-
-        function closeModal() { document.getElementById('appModal').style.display = 'none'; }
-
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('appModal').style.display = 'none';
+        }
+        
+        // 表单提交
         document.getElementById('appForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const payload = {
+            
+            const appItem = {
                 name: document.getElementById('appName').value.trim(),
-                serviceOrg: document.getElementById('serviceOrg').value.trim(),
                 owner: document.getElementById('appOwner').value.trim(),
                 description: document.getElementById('description').value.trim(),
-                tenant: document.getElementById('tenant').value.trim(),
-                department: document.getElementById('department').value.trim(),
-                status: document.getElementById('status').value
+                status: document.getElementById('status').value,
+                themes: [] // 可以根据需要添加主题选择
             };
-            if (!payload.name || !payload.owner) { alert('请填写必填字段'); return; }
-            let ok = false;
-            if (currentEditId) {
-                ok = await api.updateItem('app_management.json', 'applications', currentEditId, payload);
-            } else {
-                ok = await api.addItem('app_management.json', 'applications', payload);
+            
+            if (!appItem.name || !appItem.owner) {
+                alert('请填写必填字段');
+                return;
             }
-            if (ok) { closeModal(); await loadAndRender(); }
+            
+            try {
+                if (currentEditId) {
+                    // 编辑现有数据
+                    const success = await dataAPI.updateItem('app_management.json', 'applications', currentEditId, appItem);
+                    if (success) {
+                        showSuccess('应用更新成功');
+                        if (dataTable) {
+                            await dataTable.refresh();
+                        }
+                    } else {
+                        showError('应用更新失败');
+                    }
+                } else {
+                    // 新增数据
+                    const success = await dataAPI.addItem('app_management.json', 'applications', appItem);
+                    if (success) {
+                        showSuccess('应用添加成功');
+                        if (dataTable) {
+                            await dataTable.refresh();
+                        }
+                    } else {
+                        showError('应用添加失败');
+                    }
+                }
+                
+                closeModal();
+            } catch (error) {
+                console.error('保存应用失败:', error);
+                showError('保存应用失败: ' + error.message);
+            }
         });
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('appModal');
-            if (event.target === modal) closeModal();
-        };
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-

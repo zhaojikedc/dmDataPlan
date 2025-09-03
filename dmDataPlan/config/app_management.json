@@ -1,0 +1,26 @@
+{
+  "applications": [
+    {
+      "name": "1221",
+      "serviceOrg": "1212",
+      "owner": "122",
+      "description": "1212",
+      "tenant": "1212",
+      "department": "122112",
+      "status": "active",
+      "id": "applications_4aef5f11",
+      "created_at": "2025-09-02T18:35:42.463352"
+    }
+  ],
+  "environments": [
+    {
+      "id": "env_prod",
+      "name": "Production"
+    },
+    {
+      "id": "env_dev",
+      "name": "Development"
+    }
+  ],
+  "last_updated": "2025-09-02T18:35:42.463352"
+}

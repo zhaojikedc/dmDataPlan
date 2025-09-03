@@ -3,297 +3,962 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M线模型管理 - 数据仓库规划管理</title>
+    <title>M线模型管理 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
         }
         
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        .app-header {
+            background: #001529;
             color: white;
-            padding: 20px 30px;
+            padding: 0 24px;
+            height: 64px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
-        .header h1 {
-            font-size: 2em;
-            font-weight: 300;
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
         }
         
         .back-btn {
-            background: rgba(255,255,255,0.2);
             color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
             text-decoration: none;
-            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
         }
         
         .back-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
         
-        .content {
-            padding: 30px;
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
         }
         
-        .overview-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .overview-section h2 {
-            color: #2c3e50;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
-        
-        .overview-section p {
-            color: #6c757d;
-            font-size: 1.1em;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .feature-card {
+        .page-header {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-            border-color: #667eea;
-        }
-        
-        .feature-card h3 {
-            color: #667eea;
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .feature-card p {
-            color: #6c757d;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
+            padding: 24px;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         
-        .btn-primary {
-            background: #667eea;
-            color: white;
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
         }
         
-        .btn-primary:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
+        .page-desc {
+            color: #666;
         }
         
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
-        
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-        
-        .icon {
-            font-size: 1.5em;
-        }
-        
-        .stats-section {
+        .tab-container {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
         }
         
-        .stats-section h3 {
-            color: #2c3e50;
-            font-size: 1.5em;
+        .tab-header {
+            display: flex;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .tab-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .tab-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            background: white;
+        }
+        
+        .tab-item:hover {
+            color: #1890ff;
+        }
+        
+        .tab-content {
+            padding: 24px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #fafafa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            min-width: 600px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
             margin-bottom: 20px;
-            text-align: center;
         }
         
-        .stats-grid {
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .form-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
         
-        .stat-item {
-            text-align: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9em;
-        }
-        
         @media (max-width: 768px) {
-            .feature-grid {
+            .form-row {
                 grid-template-columns: 1fr;
             }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        }
+        
+        .er-preview {
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 16px;
+            background: #fafafa;
+            margin-top: 16px;
+        }
+        
+        .er-preview h4 {
+            margin: 0 0 12px 0;
+            color: #262626;
+        }
+        
+        .er-preview p {
+            margin: 0 0 8px 0;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>M线模型管理</h1>
-            <a href="dm_planning.html" class="back-btn">返回主页</a>
-        </div>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
         
-        <div class="content">
-            <div class="overview-section">
-                <h2>M线业务模型概览</h2>
-                <p>M线（Management Line）模型主要管理管理相关的业务模型，包括财务管理、人力资源、项目管理等管理业务流程。通过统一的模型管理，确保管理数据的准确性和决策支持的有效性。</p>
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="page-header">
+                <h1 class="page-title">M线数据ER关系</h1>
+                <p class="page-desc">管理M线数据模型的ER关系</p>
             </div>
             
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3><span class="icon">🔗</span>M线ER模型</h3>
-                    <p>查看和管理M线业务模型的实体关系图，了解各管理实体之间的关联关系和依赖关系。</p>
-                    <a href="m_erGenHtml.html" class="btn btn-primary" target="_blank">查看ER模型</a>
+            <div class="tab-container">
+                <div class="tab-header">
+                    <div class="tab-item active" onclick="switchTab('er')">模型表关系创建</div>
+                    <div class="tab-item" onclick="switchTab('m-er')">M线ER关系说明</div>
                 </div>
                 
-                <div class="feature-card">
-                    <h3><span class="icon">📊</span>模型监控</h3>
-                    <p>实时监控M线模型的运行状态，包括数据质量、性能指标、异常告警等信息。</p>
-                    <button class="btn btn-success">启动监控</button>
+                <!-- M线模型ER关系内容 -->
+                <div id="er-tab" class="tab-content active">
+                    <div class="content-card">
+                        <div class="toolbar">
+                            <div class="search-box">
+                                <input type="text" id="erSearchInput" class="ant-input" placeholder="搜索源表/目标表/字段...">
+                                <button class="ant-btn" onclick="searchER()">搜索</button>
+                                <button class="ant-btn" onclick="resetERSearch()">重置</button>
+                            </div>
+                            <button class="ant-btn ant-btn-primary" onclick="showAddERModal()">新增表关系</button>
+                        </div>
+                        
+                        <table class="ant-table">
+                            <thead>
+                                <tr>
+                                    <th>源表</th>
+                                    <th>目标表</th>
+                                    <th>源表字段</th>
+                                    <th>目标表字段</th>
+                                    <th>关系类型</th>
+                                    <th>是否事实维度关系</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="erTableBody">
+                                <!-- 数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
-                <div class="feature-card">
-                    <h3><span class="icon">⚙️</span>模型配置</h3>
-                    <p>配置M线模型的参数设置，包括数据源配置、调度策略、权限管理等。</p>
-                    <button class="btn btn-warning">配置管理</button>
-                </div>
-                
-                <div class="feature-card">
-                    <h3><span class="icon">📈</span>性能分析</h3>
-                    <p>分析M线模型的性能表现，识别性能瓶颈，优化模型结构和查询效率。</p>
-                    <button class="btn btn-primary">性能报告</button>
-                </div>
-                
-                <div class="feature-card">
-                    <h3><span class="icon">🔄</span>模型同步</h3>
-                    <p>管理M线模型与其他业务系统的数据同步，确保数据的一致性和实时性。</p>
-                    <button class="btn btn-success">同步管理</button>
-                </div>
-                
-                <div class="feature-card">
-                    <h3><span class="icon">📋</span>变更管理</h3>
-                    <p>管理M线模型的变更流程，包括版本控制、变更审批、回滚机制等。</p>
-                    <button class="btn btn-warning">变更申请</button>
+                <!-- M线ER关系说明内容 -->
+                <div id="m-er-tab" class="tab-content">
+                    <div class="content-card">
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <h3 style="color: #262626; margin-bottom: 20px;">M线ER关系图</h3>
+                            <p style="color: #666; margin-bottom: 30px;">点击下方按钮查看M线ER关系图</p>
+                            <a href="m_erGenHtml.html" target="_blank" class="ant-btn ant-btn-primary" style="padding: 12px 24px; font-size: 16px;">
+                                查看M线ER关系图
+                            </a>
+                        </div>
+                        
+                        <!-- ER关系说明 -->
+                        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 6px;">
+                            <h4 style="margin: 0 0 15px 0; color: #262626;">M线ER关系说明</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                                <div>
+                                    <h5 style="color: #1890ff; margin-bottom: 10px;">表格类型</h5>
+                                    <p style="margin: 5px 0; color: #666;">• 红色边框：事实表（Fact Table）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 蓝色边框：维度表（Dimension Table）</p>
+                                </div>
+                                <div>
+                                    <h5 style="color: #1890ff; margin-bottom: 10px;">字段类型</h5>
+                                    <p style="margin: 5px 0; color: #666;">• 红色文字：主键（Primary Key）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 蓝色文字：外键（Foreign Key）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 紫色文字：主外键（Primary Foreign Key）</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="stats-section">
-                <h3>M线模型统计信息</h3>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number">98</div>
-                        <div class="stat-label">管理实体</div>
+        </main>
+                </div>
+                
+    <!-- 新增/编辑ER模型模态框 -->
+    <div id="erModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="erModalTitle">新增表关系</h3>
+                <button class="close-btn" onclick="closeERModal()">&times;</button>
+                </div>
+                
+            <form id="erForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源表 *</label>
+                        <input type="text" id="erSourceTable" class="form-input" required>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">67</div>
-                        <div class="stat-label">关系映射</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">18</div>
-                        <div class="stat-label">数据源</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">99.2%</div>
-                        <div class="stat-label">数据质量</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">8</div>
-                        <div class="stat-label">活跃用户</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">24/7</div>
-                        <div class="stat-label">运行状态</div>
+                    <div class="form-group">
+                        <label class="form-label">目标表 *</label>
+                        <input type="text" id="erTargetTable" class="form-input" required>
                     </div>
                 </div>
-            </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源表字段 *</label>
+                        <input type="text" id="erSourceField" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标表字段 *</label>
+                        <input type="text" id="erTargetField" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="erRelationType" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="one-to-one">一对一</option>
+                            <option value="one-to-many">一对多</option>
+                            <option value="many-to-one">多对一</option>
+                            <option value="many-to-many">多对多</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">是否事实维度关系 *</label>
+                        <select id="erIsFactDim" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="fact">事实关系</option>
+                            <option value="dimension">维度关系</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeERModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- 新增/编辑M线ER关系模态框 -->
+    <div id="mErModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="mErModalTitle">新增ER关系</h3>
+                <button class="close-btn" onclick="closeMErModal()">&times;</button>
+            </div>
+            
+            <form id="mErForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系编码 *</label>
+                        <input type="text" id="mErCode" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">关系名称 *</label>
+                        <input type="text" id="mErName" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源实体 *</label>
+                        <input type="text" id="mErSourceEntity" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">目标实体 *</label>
+                        <input type="text" id="mErTargetEntity" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="mErRelationType" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="one-to-one">一对一</option>
+                            <option value="one-to-many">一对多</option>
+                            <option value="many-to-one">多对一</option>
+                            <option value="many-to-many">多对多</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">基数 *</label>
+                        <input type="text" id="mErCardinality" class="form-input" placeholder="如: 1:N" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">负责人 *</label>
+                        <input type="text" id="mErOwner" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">状态</label>
+                        <select id="mErStatus" class="form-input">
+                            <option value="draft">草稿</option>
+                            <option value="review">审核中</option>
+                            <option value="approved">已批准</option>
+                            <option value="implemented">已实施</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">关系描述</label>
+                    <textarea id="mErDescription" class="form-textarea" placeholder="请输入ER关系的详细描述..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeMErModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+            </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/data-api.js"></script>
+    <script>
+        let currentEREditId = null;
+        let currentMErEditId = null;
+        const api = new DataAPI('http://localhost:8080');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAndRender();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('erForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveER();
+            });
+            
+            document.getElementById('mErForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveMEr();
+            });
+            
+            document.getElementById('erSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchER();
+                }
+            });
+            
+            document.getElementById('mErSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchMEr();
+                }
+            });
+        }
+
+        async function loadAndRender() {
+            await loadERData();
+            await loadMErData();
+        }
+
+        // Tab切换功能
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有tab项的active类
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 显示选中的tab内容
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 激活选中的tab项
+            event.target.classList.add('active');
+        }
+
+        // ER模型相关功能
+        async function loadERData() {
+            try {
+                const tableBody = document.getElementById('erTableBody');
+                tableBody.innerHTML = '';
+                const relations = await api.listItems('m_line_er_relations.json', 'erRelations');
+                relations.forEach(r => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${r.sourceTable || '-'}</td>
+                        <td>${r.targetTable || '-'}</td>
+                        <td>${r.sourceField || '-'}</td>
+                        <td>${r.targetField || '-'}</td>
+                        <td>${getRelationTypeName(r.relationType)}</td>
+                        <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                        <td>${r.createTime || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('加载数据时出错:', error);
+                alert('加载数据失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function searchER() {
+            const searchTerm = document.getElementById('erSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadERData();
+                return;
+            }
+            
+            const all = await api.listItems('m_line_er_relations.json', 'erRelations');
+            const tableBody = document.getElementById('erTableBody');
+            tableBody.innerHTML = '';
+            const results = all.filter(r => (r.sourceTable||'').toLowerCase().includes(searchTerm) || (r.targetTable||'').toLowerCase().includes(searchTerm) || (r.sourceField||'').toLowerCase().includes(searchTerm) || (r.targetField||'').toLowerCase().includes(searchTerm));
+            results.forEach(r => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${r.sourceTable || '-'}</td>
+                    <td>${r.targetTable || '-'}</td>
+                    <td>${r.sourceField || '-'}</td>
+                    <td>${r.targetField || '-'}</td>
+                    <td>${getRelationTypeName(r.relationType)}</td>
+                    <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                    <td>${r.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function resetERSearch() {
+            document.getElementById('erSearchInput').value = '';
+            loadERData();
+        }
+
+        function showAddERModal() {
+            currentEREditId = null;
+            document.getElementById('erModalTitle').textContent = '新增表关系';
+            document.getElementById('erForm').reset();
+            document.getElementById('erModal').style.display = 'block';
+        }
+
+        async function editER(id) {
+            const rel = await api.getItem('m_line_er_relations.json', 'erRelations', id);
+            if (rel) {
+                currentEREditId = id;
+                document.getElementById('erModalTitle').textContent = '编辑表关系';
+                document.getElementById('erSourceTable').value = rel.sourceTable || '';
+                document.getElementById('erTargetTable').value = rel.targetTable || '';
+                document.getElementById('erSourceField').value = rel.sourceField || '';
+                document.getElementById('erTargetField').value = rel.targetField || '';
+                document.getElementById('erRelationType').value = rel.relationType || '';
+                document.getElementById('erIsFactDim').value = rel.isFactDim || '';
+                document.getElementById('erModal').style.display = 'block';
+            }
+        }
+
+        async function saveER() {
+            try {
+                const formData = {
+                    sourceTable: document.getElementById('erSourceTable').value.trim(),
+                    targetTable: document.getElementById('erTargetTable').value.trim(),
+                    sourceField: document.getElementById('erSourceField').value.trim(),
+                    targetField: document.getElementById('erTargetField').value.trim(),
+                    relationType: document.getElementById('erRelationType').value,
+                    isFactDim: document.getElementById('erIsFactDim').value,
+                    createTime: new Date().toLocaleString('zh-CN')
+                };
+                
+                if (!formData.sourceTable || !formData.targetTable || !formData.sourceField || !formData.targetField || !formData.relationType || !formData.isFactDim) {
+                    alert('请填写必填字段');
+                    return;
+                }
+                
+                let ok = false;
+                if (currentEREditId) {
+                    ok = await api.updateItem('m_line_er_relations.json', 'erRelations', currentEREditId, formData);
+                } else {
+                    ok = await api.addItem('m_line_er_relations.json', 'erRelations', formData);
+                }
+                
+                if (ok) {
+                    closeERModal();
+                    await loadERData();
+                    alert('保存成功！');
+                } else {
+                    alert('保存失败，请重试！');
+                }
+            } catch (error) {
+                console.error('保存数据时出错:', error);
+                alert('保存失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function deleteER(id) {
+            if (!confirm('确定要删除这个表关系吗？')) return;
+            try {
+                const ok = await api.deleteItem('m_line_er_relations.json', 'erRelations', id);
+                if (ok) { 
+                    await loadERData(); 
+                    alert('删除成功！');
+                } else {
+                    alert('删除失败，请重试！');
+                }
+            } catch (error) {
+                console.error('删除数据时出错:', error);
+                alert('删除失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        function closeERModal() {
+            document.getElementById('erModal').style.display = 'none';
+            currentEREditId = null;
+        }
+
+        // M线ER关系相关功能
+        async function loadMErData() {
+            const tableBody = document.getElementById('mErTableBody');
+            tableBody.innerHTML = '';
+            const mErRelations = await api.listItems('m_line_er_relations.json', 'erRelations');
+            mErRelations.forEach(relation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${relation.code || '-'}</td>
+                    <td>${relation.name || '-'}</td>
+                    <td>${relation.sourceEntity || '-'}</td>
+                    <td>${relation.targetEntity || '-'}</td>
+                    <td>${getRelationTypeName(relation.relationType)}</td>
+                    <td>${relation.cardinality || '-'}</td>
+                    <td>${relation.owner || '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(relation.status)}">${getStatusName(relation.status)}</span></td>
+                    <td>${relation.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editMEr('${relation.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteMEr('${relation.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function searchMEr() {
+            const searchTerm = document.getElementById('mErSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadMErData();
+                return;
+            }
+            
+            const results = await api.searchItems('m_line_er_relations.json', 'erRelations', 'name', searchTerm);
+            const tableBody = document.getElementById('mErTableBody');
+            tableBody.innerHTML = '';
+            results.forEach(relation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${relation.code || '-'}</td>
+                    <td>${relation.name || '-'}</td>
+                    <td>${relation.sourceEntity || '-'}</td>
+                    <td>${relation.targetEntity || '-'}</td>
+                    <td>${getRelationTypeName(relation.relationType)}</td>
+                    <td>${relation.cardinality || '-'}</td>
+                    <td>${relation.owner || '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(relation.status)}">${getStatusName(relation.status)}</span></td>
+                    <td>${relation.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editMEr('${relation.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteMEr('${relation.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function resetMErSearch() {
+            document.getElementById('mErSearchInput').value = '';
+            loadMErData();
+        }
+
+        function showAddMErModal() {
+            currentMErEditId = null;
+            document.getElementById('mErModalTitle').textContent = '新增ER关系';
+            document.getElementById('mErForm').reset();
+            document.getElementById('mErModal').style.display = 'block';
+        }
+
+        async function editMEr(id) {
+            const relation = await api.getItem('m_line_er_relations.json', 'erRelations', id);
+            if (relation) {
+                currentMErEditId = id;
+                document.getElementById('mErModalTitle').textContent = '编辑ER关系';
+                document.getElementById('mErCode').value = relation.code || '';
+                document.getElementById('mErName').value = relation.name || '';
+                document.getElementById('mErSourceEntity').value = relation.sourceEntity || '';
+                document.getElementById('mErTargetEntity').value = relation.targetEntity || '';
+                document.getElementById('mErRelationType').value = relation.relationType || '';
+                document.getElementById('mErCardinality').value = relation.cardinality || '';
+                document.getElementById('mErOwner').value = relation.owner || '';
+                document.getElementById('mErStatus').value = relation.status || 'draft';
+                document.getElementById('mErDescription').value = relation.description || '';
+                document.getElementById('mErModal').style.display = 'block';
+            }
+        }
+
+        async function saveMEr() {
+            const formData = {
+                code: document.getElementById('mErCode').value.trim(),
+                name: document.getElementById('mErName').value.trim(),
+                sourceEntity: document.getElementById('mErSourceEntity').value.trim(),
+                targetEntity: document.getElementById('mErTargetEntity').value.trim(),
+                relationType: document.getElementById('mErRelationType').value,
+                cardinality: document.getElementById('mErCardinality').value.trim(),
+                owner: document.getElementById('mErOwner').value.trim(),
+                status: document.getElementById('mErStatus').value,
+                description: document.getElementById('mErDescription').value.trim(),
+                createTime: new Date().toLocaleString('zh-CN')
+            };
+            
+            if (!formData.code || !formData.name || !formData.sourceEntity || !formData.targetEntity || 
+                !formData.relationType || !formData.cardinality || !formData.owner) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            let ok = false;
+            if (currentMErEditId) {
+                ok = await api.updateItem('m_line_er_relations.json', 'erRelations', currentMErEditId, formData);
+            } else {
+                ok = await api.addItem('m_line_er_relations.json', 'erRelations', formData);
+            }
+            
+            if (ok) {
+                closeMErModal();
+                await loadMErData();
+            }
+        }
+
+        async function deleteMEr(id) {
+            if (!confirm('确定要删除这个ER关系吗？')) return;
+            const ok = await api.deleteItem('m_line_er_relations.json', 'erRelations', id);
+            if (ok) { await loadMErData(); }
+        }
+
+        function closeMErModal() {
+            document.getElementById('mErModal').style.display = 'none';
+            currentMErEditId = null;
+        }
+
+        // 辅助函数
+        function getBusinessDomainName(domain) {
+            const domainMap = {
+                'finance': '财务管理',
+                'hr': '人力资源',
+                'project': '项目管理',
+                'admin': '行政管理'
+            };
+            return domainMap[domain] || domain || '-';
+        }
+
+        function getRelationTypeName(type) {
+            const typeMap = {
+                'one-to-one': '一对一',
+                'one-to-many': '一对多',
+                'many-to-one': '多对一',
+                'many-to-many': '多对多'
+            };
+            return typeMap[type] || type || '-';
+        }
+
+        function getStatusName(status) {
+            const statusMap = {
+                'draft': '草稿',
+                'review': '审核中',
+                'approved': '已批准',
+                'implemented': '已实施'
+            };
+            return statusMap[status] || status || '-';
+        }
+
+        function getStatusClass(status) {
+            if (['approved', 'implemented'].includes(status)) {
+                return 'status-active';
+            } else if (['draft'].includes(status)) {
+                return 'status-inactive';
+            } else {
+                return 'status-active';
+            }
+        }
+
+
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const erModal = document.getElementById('erModal');
+            const mErModal = document.getElementById('mErModal');
+            
+            if (event.target === erModal) {
+                closeERModal();
+            }
+            if (event.target === mErModal) {
+                closeMErModal();
+            }
+        }
+    </script>
 </body>
 </html>

@@ -414,133 +414,78 @@
         </div>
     </div>
     
+    <script src="js/data-api.js"></script>
     <script>
-        // 模拟数据
-        let libraryData = [
-            {
-                id: 1,
-                libraryName: "客户数据仓库",
-                dbAdmin: "张三",
-                dataThemes: "客户管理,销售管理,客户服务",
-                tenant: "租户A",
-                applications: "CRM系统,销售系统,客服系统",
-                status: "active"
-            },
-            {
-                id: 2,
-                libraryName: "订单数据仓库",
-                dbAdmin: "李四",
-                dataThemes: "订单管理,库存管理,物流管理",
-                tenant: "租户B",
-                applications: "订单系统,库存系统,物流系统",
-                status: "active"
-            },
-            {
-                id: 3,
-                libraryName: "财务数据仓库",
-                dbAdmin: "王五",
-                dataThemes: "财务管理,成本管理,预算管理",
-                tenant: "租户A",
-                applications: "财务系统,成本系统,预算系统",
-                status: "maintenance"
-            }
-        ];
-        
         let currentEditId = null;
-        
-        // 初始化页面
-        document.addEventListener('DOMContentLoaded', function() {
-            renderTable();
+        const api = new DataAPI('http://localhost:8080');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAndRender();
         });
-        
-        // 渲染表格
-        function renderTable() {
+
+        async function loadAndRender() {
             const tbody = document.getElementById('libraryTableBody');
             tbody.innerHTML = '';
-            
-            libraryData.forEach(item => {
+            const libraries = await api.listItems('standard_library.json', 'libraries');
+            libraries.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.libraryName}</td>
-                    <td>${item.dbAdmin}</td>
-                    <td>${renderTags(item.dataThemes)}</td>
-                    <td>${item.tenant}</td>
-                    <td>${renderTags(item.applications)}</td>
-                    <td><span class="status-badge status-${item.status}">${getStatusText(item.status)}</span></td>
+                    <td>${item.libraryName || '-'}</td>
+                    <td>${item.dbAdmin || '-'}</td>
+                    <td>${renderTags(item.dataThemes || '')}</td>
+                    <td>${item.tenant || '-'}</td>
+                    <td>${renderTags(item.applications || '')}</td>
+                    <td><span class="status-badge status-${item.status || 'active'}">${getStatusText(item.status || 'active')}</span></td>
                     <td>
                         <div class="action-buttons">
-                            <button class="ant-btn btn-warning" onclick="editLibrary(${item.id})">编辑</button>
-                            <button class="ant-btn btn-danger" onclick="deleteLibrary(${item.id})">删除</button>
+                            <button class="ant-btn btn-warning" onclick="editLibrary('${item.id}')">编辑</button>
+                            <button class="ant-btn btn-danger" onclick="deleteLibrary('${item.id}')">删除</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
         }
-        
-        // 渲染标签
+
         function renderTags(tagsString) {
             if (!tagsString) return '-';
             const tags = tagsString.split(',').map(tag => tag.trim());
             return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
         }
-        
-        // 获取状态文本
+
         function getStatusText(status) {
-            const statusMap = {
-                'active': '启用',
-                'inactive': '停用',
-                'maintenance': '维护中'
-            };
+            const statusMap = { active: '启用', inactive: '停用', maintenance: '维护中' };
             return statusMap[status] || status;
         }
-        
-        // 搜索功能
-        function searchData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const filteredData = libraryData.filter(item => 
-                item.libraryName.toLowerCase().includes(searchTerm) ||
-                item.dbAdmin.toLowerCase().includes(searchTerm) ||
-                item.dataThemes.toLowerCase().includes(searchTerm) ||
-                item.tenant.toLowerCase().includes(searchTerm) ||
-                item.applications.toLowerCase().includes(searchTerm)
-            );
-            
-            renderFilteredTable(filteredData);
-        }
-        
-        // 重置搜索
-        function resetSearch() {
-            document.getElementById('searchInput').value = '';
-            renderTable();
-        }
-        
-        // 渲染过滤后的表格
-        function renderFilteredTable(data) {
+
+        async function searchData() {
+            const kw = document.getElementById('searchInput').value.trim();
+            if (!kw) { await loadAndRender(); return; }
+            const results = await api.searchItems('standard_library.json', 'libraries', 'libraryName', kw);
             const tbody = document.getElementById('libraryTableBody');
             tbody.innerHTML = '';
-            
-            data.forEach(item => {
+            results.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${item.libraryName}</td>
-                    <td>${item.dbAdmin}</td>
-                    <td>${renderTags(item.dataThemes)}</td>
-                    <td>${item.tenant}</td>
-                    <td>${renderTags(item.applications)}</td>
-                    <td><span class="status-badge status-${item.status}">${getStatusText(item.status)}</span></td>
+                    <td>${item.libraryName || '-'}</td>
+                    <td>${item.dbAdmin || '-'}</td>
+                    <td>${renderTags(item.dataThemes || '')}</td>
+                    <td>${item.tenant || '-'}</td>
+                    <td>${renderTags(item.applications || '')}</td>
+                    <td><span class="status-badge status-${item.status || 'active'}">${getStatusText(item.status || 'active')}</span></td>
                     <td>
                         <div class="action-buttons">
-                            <button class="ant-btn btn-warning" onclick="editLibrary(${item.id})">编辑</button>
-                            <button class="ant-btn btn-danger" onclick="editLibrary(${item.id})">删除</button>
+                            <button class="ant-btn btn-warning" onclick="editLibrary('${item.id}')">编辑</button>
+                            <button class="ant-btn btn-danger" onclick="deleteLibrary('${item.id}')">删除</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
         }
-        
-        // 打开新增模态框
+
+        function resetSearch() { document.getElementById('searchInput').value = ''; loadAndRender(); }
+
         function openAddModal() {
             currentEditId = null;
             document.getElementById('modalTitle').textContent = '新增模型库';
@@ -548,42 +493,33 @@
             document.getElementById('status').value = 'active';
             document.getElementById('libraryModal').style.display = 'block';
         }
-        
-        // 编辑模型库
-        function editLibrary(id) {
-            const item = libraryData.find(item => item.id === id);
+
+        async function editLibrary(id) {
+            const item = await api.getItem('standard_library.json', 'libraries', id);
             if (item) {
                 currentEditId = id;
                 document.getElementById('modalTitle').textContent = '编辑模型库';
-                document.getElementById('libraryName').value = item.libraryName;
-                document.getElementById('dbAdmin').value = item.dbAdmin;
+                document.getElementById('libraryName').value = item.libraryName || '';
+                document.getElementById('dbAdmin').value = item.dbAdmin || '';
                 document.getElementById('dataThemes').value = item.dataThemes || '';
-                document.getElementById('tenant').value = item.tenant;
+                document.getElementById('tenant').value = item.tenant || '';
                 document.getElementById('applications').value = item.applications || '';
-                document.getElementById('status').value = item.status;
+                document.getElementById('status').value = item.status || 'active';
                 document.getElementById('libraryModal').style.display = 'block';
             }
         }
-        
-        // 删除模型库
-        function deleteLibrary(id) {
-            if (confirm('确定要删除这个模型库吗？')) {
-                libraryData = libraryData.filter(item => item.id !== id);
-                renderTable();
-            }
+
+        async function deleteLibrary(id) {
+            if (!confirm('确定要删除这个模型库吗？')) return;
+            const ok = await api.deleteItem('standard_library.json', 'libraries', id);
+            if (ok) { await loadAndRender(); }
         }
-        
-        // 关闭模态框
-        function closeModal() {
-            document.getElementById('libraryModal').style.display = 'none';
-        }
-        
-        // 表单提交
-        document.getElementById('libraryForm').addEventListener('submit', function(e) {
+
+        function closeModal() { document.getElementById('libraryModal').style.display = 'none'; }
+
+        document.getElementById('libraryForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const libraryItem = {
-                id: currentEditId || Date.now(),
+            const payload = {
                 libraryName: document.getElementById('libraryName').value.trim(),
                 dbAdmin: document.getElementById('dbAdmin').value.trim(),
                 dataThemes: document.getElementById('dataThemes').value.trim(),
@@ -591,38 +527,20 @@
                 applications: document.getElementById('applications').value.trim(),
                 status: document.getElementById('status').value
             };
-            
-            if (!libraryItem.libraryName || !libraryItem.dbAdmin || !libraryItem.tenant) {
-                alert('请填写必填字段');
-                return;
-            }
-            
+            if (!payload.libraryName || !payload.dbAdmin || !payload.tenant) { alert('请填写必填字段'); return; }
+            let ok = false;
             if (currentEditId) {
-                // 编辑现有数据
-                const index = libraryData.findIndex(item => item.id === currentEditId);
-                if (index !== -1) {
-                    libraryData[index] = libraryItem;
-                }
+                ok = await api.updateItem('standard_library.json', 'libraries', currentEditId, payload);
             } else {
-                // 新增数据
-                libraryData.push(libraryItem);
+                ok = await api.addItem('standard_library.json', 'libraries', payload);
             }
-            
-            renderTable();
-            closeModal();
-            
-            // 显示成功消息
-            const message = currentEditId ? '模型库更新成功' : '模型库创建成功';
-            alert(message);
+            if (ok) { closeModal(); await loadAndRender(); }
         });
-        
-        // 点击模态框外部关闭
+
         window.onclick = function(event) {
             const modal = document.getElementById('libraryModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
+            if (event.target === modal) closeModal();
+        };
     </script>
 </body>
 </html>

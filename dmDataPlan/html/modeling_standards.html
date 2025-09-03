@@ -340,73 +340,7 @@
                             <th>操作</th>
                         </tr>
                     </thead>
-                    <tbody id="specificationsTableBody">
-                        <tr>
-                            <td>1</td>
-                            <td>命名规范</td>
-                            <td>表名必须使用下划线分隔的小写字母</td>
-                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
-                            <td class="text-truncate" title="表名必须符合正则表达式：^[a-z][a-z0-9_]*$">表名必须符合正则表达式：^[a-z][a-z0-9_]*$</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="ant-btn" onclick="editSpecification(1)">编辑</button>
-                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(1)">删除</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>字段规范</td>
-                            <td>主键字段必须命名为id</td>
-                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
-                            <td class="text-truncate" title="主键字段名称必须为'id'，类型为bigint">主键字段名称必须为'id'，类型为bigint</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="ant-btn" onclick="editSpecification(2)">编辑</button>
-                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(2)">删除</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>数据类型规范</td>
-                            <td>金额字段必须使用decimal类型</td>
-                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
-                            <td class="text-truncate" title="金额相关字段必须使用decimal(18,2)类型">金额相关字段必须使用decimal(18,2)类型</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="ant-btn" onclick="editSpecification(3)">编辑</button>
-                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(3)">删除</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>索引规范</td>
-                            <td>外键字段建议创建索引</td>
-                            <td><span class="constraint-tag constraint-weak">建议约束</span></td>
-                            <td class="text-truncate" title="外键字段建议创建索引以提高查询性能">外键字段建议创建索引以提高查询性能</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="ant-btn" onclick="editSpecification(4)">编辑</button>
-                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(4)">删除</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>5</td>
-                            <td>注释规范</td>
-                            <td>所有字段必须添加中文注释</td>
-                            <td><span class="constraint-tag constraint-strong">强约束</span></td>
-                            <td class="text-truncate" title="每个字段必须添加COMMENT注释，说明字段含义">每个字段必须添加COMMENT注释，说明字段含义</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="ant-btn" onclick="editSpecification(5)">编辑</button>
-                                    <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(5)">删除</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="specificationsTableBody"></tbody>
                 </table>
             </div>
         </main>
@@ -471,164 +405,108 @@
         </div>
     </div>
 
+    <script src="js/data-api.js"></script>
     <script>
-        // 数据规范存储
-        let specifications = [];
         let currentEditId = null;
-        
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSpecifications();
+        const api = new DataAPI('http://localhost:8080');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAndRender();
             setupEventListeners();
         });
-        
-        // 设置事件监听器
+
         function setupEventListeners() {
-            document.getElementById('specificationForm').addEventListener('submit', function(e) {
+            document.getElementById('specificationForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                saveSpecification();
+                await saveSpecification();
             });
             
-            // 搜索框回车事件
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchSpecifications();
                 }
             });
         }
-        
-        // 加载数据规范
-        function loadSpecifications() {
-            // 从localStorage加载数据，如果没有则使用默认数据
-            const savedSpecifications = localStorage.getItem('dmDataPlan_specifications');
-            if (savedSpecifications) {
-                specifications = JSON.parse(savedSpecifications);
-            } else {
-                // 默认数据规范
-                specifications = [
-                    {
-                        id: 1,
-                        sequenceNumber: 1,
-                        category: '命名规范',
-                        specificationItem: '表名必须使用下划线分隔的小写字母',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '表名必须符合正则表达式：^[a-z][a-z0-9_]*$'
-                    },
-                    {
-                        id: 2,
-                        sequenceNumber: 2,
-                        category: '字段规范',
-                        specificationItem: '主键字段必须命名为id',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '主键字段名称必须为\'id\'，类型为bigint'
-                    },
-                    {
-                        id: 3,
-                        sequenceNumber: 3,
-                        category: '数据类型规范',
-                        specificationItem: '金额字段必须使用decimal类型',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '金额相关字段必须使用decimal(18,2)类型'
-                    },
-                    {
-                        id: 4,
-                        sequenceNumber: 4,
-                        category: '索引规范',
-                        specificationItem: '外键字段建议创建索引',
-                        isStrongConstraint: '建议约束',
-                        validationLogic: '外键字段建议创建索引以提高查询性能'
-                    },
-                    {
-                        id: 5,
-                        sequenceNumber: 5,
-                        category: '注释规范',
-                        specificationItem: '所有字段必须添加中文注释',
-                        isStrongConstraint: '强约束',
-                        validationLogic: '每个字段必须添加COMMENT注释，说明字段含义'
-                    }
-                ];
-                saveSpecificationsToStorage();
-            }
-            renderSpecificationsTable();
-        }
-        
-        // 保存数据规范到localStorage
-        function saveSpecificationsToStorage() {
-            localStorage.setItem('dmDataPlan_specifications', JSON.stringify(specifications));
-        }
-        
-        // 渲染数据规范表格
-        function renderSpecificationsTable(data = null) {
+
+        async function loadAndRender() {
             const tableBody = document.getElementById('specificationsTableBody');
-            const displayData = data || specifications;
-            
-            tableBody.innerHTML = displayData.map(spec => `
-                <tr>
-                    <td>${spec.sequenceNumber}</td>
-                    <td>${spec.category}</td>
-                    <td>${spec.specificationItem}</td>
-                    <td><span class="constraint-tag constraint-${spec.isStrongConstraint === '强约束' ? 'strong' : 'weak'}">${spec.isStrongConstraint}</span></td>
-                    <td class="text-truncate" title="${spec.validationLogic}">${spec.validationLogic}</td>
+            tableBody.innerHTML = '';
+            const specifications = await api.listItems('modeling_standards.json', 'specifications');
+            specifications.forEach(spec => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${spec.sequenceNumber || '-'}</td>
+                    <td>${spec.category || '-'}</td>
+                    <td>${spec.specificationItem || '-'}</td>
+                    <td><span class="constraint-tag constraint-${spec.isStrongConstraint === '强约束' ? 'strong' : 'weak'}">${spec.isStrongConstraint || '-'}</span></td>
+                    <td class="text-truncate" title="${spec.validationLogic || ''}">${spec.validationLogic || '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="ant-btn" onclick="editSpecification(${spec.id})">编辑</button>
-                            <button class="ant-btn ant-btn-danger" onclick="deleteSpecification(${spec.id})">删除</button>
+                            <button class="ant-btn" onclick="editSpecification('${spec.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteSpecification('${spec.id}')">删除</button>
                         </div>
                     </td>
-                </tr>
-            `).join('');
+                `;
+                tableBody.appendChild(row);
+            });
         }
-        
-        // 搜索数据规范
-        function searchSpecifications() {
+
+        async function searchSpecifications() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             if (!searchTerm) {
-                renderSpecificationsTable();
+                await loadAndRender();
                 return;
             }
             
-            const filteredSpecifications = specifications.filter(spec => 
-                spec.category.toLowerCase().includes(searchTerm) ||
-                spec.specificationItem.toLowerCase().includes(searchTerm) ||
-                spec.validationLogic.toLowerCase().includes(searchTerm)
-            );
-            
-            renderSpecificationsTable(filteredSpecifications);
+            const results = await api.searchItems('modeling_standards.json', 'specifications', 'category', searchTerm);
+            const tableBody = document.getElementById('specificationsTableBody');
+            tableBody.innerHTML = '';
+            results.forEach(spec => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${spec.sequenceNumber || '-'}</td>
+                    <td>${spec.category || '-'}</td>
+                    <td>${spec.specificationItem || '-'}</td>
+                    <td><span class="constraint-tag constraint-${spec.isStrongConstraint === '强约束' ? 'strong' : 'weak'}">${spec.isStrongConstraint || '-'}</span></td>
+                    <td class="text-truncate" title="${spec.validationLogic || ''}">${spec.validationLogic || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editSpecification('${spec.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteSpecification('${spec.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
         }
-        
-        // 重置搜索
-        function resetSearch() {
-            document.getElementById('searchInput').value = '';
-            renderSpecificationsTable();
+
+        function resetSearch() { 
+            document.getElementById('searchInput').value = ''; 
+            loadAndRender(); 
         }
-        
-        // 显示新增模态框
+
         function showAddModal() {
             currentEditId = null;
             document.getElementById('modalTitle').textContent = '新增数据规范';
             document.getElementById('specificationForm').reset();
-            document.getElementById('version').value = '1.0';
             document.getElementById('specificationModal').style.display = 'block';
         }
-        
-        // 显示编辑模态框
-        function editSpecification(id) {
-            const spec = specifications.find(s => s.id === id);
-            if (!spec) return;
-            
-            currentEditId = id;
-            document.getElementById('modalTitle').textContent = '编辑数据规范';
-            document.getElementById('sequenceNumber').value = spec.sequenceNumber;
-            document.getElementById('category').value = spec.category;
-            document.getElementById('specificationItem').value = spec.specificationItem;
-            document.getElementById('isStrongConstraint').value = spec.isStrongConstraint;
-            document.getElementById('validationLogic').value = spec.validationLogic;
-            
-            document.getElementById('specificationModal').style.display = 'block';
+
+        async function editSpecification(id) {
+            const spec = await api.getItem('modeling_standards.json', 'specifications', id);
+            if (spec) {
+                currentEditId = id;
+                document.getElementById('modalTitle').textContent = '编辑数据规范';
+                document.getElementById('sequenceNumber').value = spec.sequenceNumber || '';
+                document.getElementById('category').value = spec.category || '';
+                document.getElementById('specificationItem').value = spec.specificationItem || '';
+                document.getElementById('isStrongConstraint').value = spec.isStrongConstraint || '';
+                document.getElementById('validationLogic').value = spec.validationLogic || '';
+                document.getElementById('specificationModal').style.display = 'block';
+            }
         }
-        
-        // 保存数据规范
-        function saveSpecification() {
+
+        async function saveSpecification() {
             const sequenceNumber = parseInt(document.getElementById('sequenceNumber').value);
             const category = document.getElementById('category').value;
             const specificationItem = document.getElementById('specificationItem').value.trim();
@@ -640,64 +518,44 @@
                 return;
             }
             
+            const payload = {
+                sequenceNumber,
+                category,
+                specificationItem,
+                isStrongConstraint,
+                validationLogic
+            };
+            
+            let ok = false;
             if (currentEditId) {
-                // 编辑模式
-                const index = specifications.findIndex(s => s.id === currentEditId);
-                if (index !== -1) {
-                    specifications[index] = {
-                        ...specifications[index],
-                        sequenceNumber,
-                        category,
-                        specificationItem,
-                        isStrongConstraint,
-                        validationLogic
-                    };
-                }
+                ok = await api.updateItem('modeling_standards.json', 'specifications', currentEditId, payload);
             } else {
-                // 新增模式
-                const newId = Math.max(...specifications.map(s => s.id), 0) + 1;
-                specifications.push({
-                    id: newId,
-                    sequenceNumber,
-                    category,
-                    specificationItem,
-                    isStrongConstraint,
-                    validationLogic
-                });
+                ok = await api.addItem('modeling_standards.json', 'specifications', payload);
             }
             
-            saveSpecificationsToStorage();
-            renderSpecificationsTable();
-            closeModal();
-            
-            // 显示成功消息
-            const message = currentEditId ? '数据规范更新成功' : '数据规范创建成功';
-            alert(message);
+            if (ok) {
+                closeModal();
+                await loadAndRender();
+            }
         }
-        
-        // 删除数据规范
-        function deleteSpecification(id) {
+
+        async function deleteSpecification(id) {
             if (!confirm('确定要删除这个数据规范吗？')) return;
-            
-            specifications = specifications.filter(s => s.id !== id);
-            saveSpecificationsToStorage();
-            renderSpecificationsTable();
-            alert('数据规范删除成功');
+            const ok = await api.deleteItem('modeling_standards.json', 'specifications', id);
+            if (ok) { await loadAndRender(); }
         }
-        
-        // 关闭模态框
+
         function closeModal() {
             document.getElementById('specificationModal').style.display = 'none';
             currentEditId = null;
         }
-        
-        // 点击模态框外部关闭
+
         window.onclick = function(event) {
             const modal = document.getElementById('specificationModal');
             if (event.target === modal) {
                 closeModal();
             }
-        }
+        };
     </script>
 </body>
 </html>

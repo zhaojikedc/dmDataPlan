@@ -1,0 +1,14 @@
+{
+  "specifications": [
+    {
+      "sequenceNumber": 1,
+      "category": "命名规范",
+      "specificationItem": "asas",
+      "isStrongConstraint": "强约束",
+      "validationLogic": "asa",
+      "id": "specifications_5e2d4a74",
+      "created_at": "2025-09-02T18:54:27.091010"
+    }
+  ],
+  "last_updated": "2025-09-02T18:54:27.091010"
+}

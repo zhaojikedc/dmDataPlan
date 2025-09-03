@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
     <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -354,7 +355,8 @@
             
             <div class="tab-container">
                 <div class="tab-header">
-                    <div class="tab-item active">O线模型ER关系</div>
+                    <div class="tab-item active" onclick="switchTab('er')">模型表关系创建</div>
+                    <div class="tab-item" onclick="switchTab('o-er')">O线ER关系说明</div>
                 </div>
                 
                 <!-- O线模型ER关系内容 -->
@@ -362,23 +364,22 @@
                     <div class="content-card">
                         <div class="toolbar">
                             <div class="search-box">
-                                <input type="text" id="erSearchInput" class="ant-input" placeholder="搜索模型名称或描述...">
+                                <input type="text" id="erSearchInput" class="ant-input" placeholder="搜索源表/目标表/字段...">
                                 <button class="ant-btn" onclick="searchER()">搜索</button>
                                 <button class="ant-btn" onclick="resetERSearch()">重置</button>
                             </div>
-                            <button class="ant-btn ant-btn-primary" onclick="showAddERModal()">新增ER模型</button>
+                            <button class="ant-btn ant-btn-primary" onclick="showAddERModal()">新增表关系</button>
                         </div>
                         
                         <table class="ant-table">
                             <thead>
                                 <tr>
-                                    <th>模型编码</th>
-                                    <th>模型名称</th>
-                                    <th>业务域</th>
-                                    <th>表数量</th>
-                                    <th>关系数量</th>
-                                    <th>负责人</th>
-                                    <th>状态</th>
+                                    <th>源表</th>
+                                    <th>目标表</th>
+                                    <th>源表字段</th>
+                                    <th>目标表字段</th>
+                                    <th>关系类型</th>
+                                    <th>是否事实维度关系</th>
                                     <th>创建时间</th>
                                     <th>操作</th>
                                 </tr>
@@ -387,6 +388,37 @@
                                 <!-- 数据将通过JavaScript动态加载 -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                
+                <!-- O线ER关系说明内容 -->
+                <div id="o-er-tab" class="tab-content">
+                    <div class="content-card">
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <h3 style="color: #262626; margin-bottom: 20px;">O线ER关系图</h3>
+                            <p style="color: #666; margin-bottom: 30px;">点击下方按钮查看O线ER关系图</p>
+                            <a href="o_erGenHtml.html" target="_blank" class="ant-btn ant-btn-primary" style="padding: 12px 24px; font-size: 16px;">
+                                查看O线ER关系图
+                            </a>
+                        </div>
+                        
+                        <!-- ER关系说明 -->
+                        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 6px;">
+                            <h4 style="margin: 0 0 15px 0; color: #262626;">O线ER关系说明</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                                <div>
+                                    <h5 style="color: #1890ff; margin-bottom: 10px;">表格类型</h5>
+                                    <p style="margin: 5px 0; color: #666;">• 红色边框：事实表（Fact Table）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 蓝色边框：维度表（Dimension Table）</p>
+                                </div>
+                                <div>
+                                    <h5 style="color: #1890ff; margin-bottom: 10px;">字段类型</h5>
+                                    <p style="margin: 5px 0; color: #666;">• 红色文字：主键（Primary Key）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 蓝色文字：外键（Foreign Key）</p>
+                                    <p style="margin: 5px 0; color: #666;">• 紫色文字：主外键（Primary Foreign Key）</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -406,49 +438,44 @@
             <form id="erForm">
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">模型编码 *</label>
-                        <input type="text" id="erCode" class="form-input" required>
+                        <label class="form-label">源表 *</label>
+                        <input type="text" id="erSourceTable" class="form-input" required>
                     </div>
-                    
                     <div class="form-group">
-                        <label class="form-label">模型名称 *</label>
-                        <input type="text" id="erName" class="form-input" required>
+                        <label class="form-label">目标表 *</label>
+                        <input type="text" id="erTargetTable" class="form-input" required>
                     </div>
                 </div>
-                
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">业务域 *</label>
-                        <select id="erBusinessDomain" class="form-input" required>
+                        <label class="form-label">源表字段 *</label>
+                        <input type="text" id="erSourceField" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标表字段 *</label>
+                        <input type="text" id="erTargetField" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="erRelationType" class="form-input" required>
                             <option value="">请选择</option>
-                            <option value="customer">客户管理</option>
-                            <option value="product">产品管理</option>
-                            <option value="order">订单管理</option>
-                            <option value="finance">财务管理</option>
+                            <option value="one-to-one">一对一</option>
+                            <option value="one-to-many">一对多</option>
+                            <option value="many-to-one">多对一</option>
+                            <option value="many-to-many">多对多</option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
-                        <label class="form-label">负责人 *</label>
-                        <input type="text" id="erOwner" class="form-input" required>
+                        <label class="form-label">是否事实维度关系 *</label>
+                        <select id="erIsFactDim" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="fact">事实关系</option>
+                            <option value="dimension">维度关系</option>
+                        </select>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">模型描述</label>
-                    <textarea id="erDescription" class="form-textarea" placeholder="请输入ER模型的详细描述..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">状态</label>
-                    <select id="erStatus" class="form-input">
-                        <option value="draft">草稿</option>
-                        <option value="review">审核中</option>
-                        <option value="approved">已批准</option>
-                        <option value="implemented">已实施</option>
-                    </select>
-                </div>
-                
                 <div class="form-actions">
                     <button type="button" class="ant-btn" onclick="closeERModal()">取消</button>
                     <button type="submit" class="ant-btn ant-btn-primary">保存</button>
@@ -457,99 +484,430 @@
         </div>
     </div>
 
+    <!-- 新增/编辑O线ER关系模态框 -->
+    <div id="oErModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="oErModalTitle">新增ER关系</h3>
+                <button class="close-btn" onclick="closeOErModal()">&times;</button>
+            </div>
+            
+            <form id="oErForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系编码 *</label>
+                        <input type="text" id="oErCode" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">关系名称 *</label>
+                        <input type="text" id="oErName" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源实体 *</label>
+                        <input type="text" id="oErSourceEntity" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">目标实体 *</label>
+                        <input type="text" id="oErTargetEntity" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="oErRelationType" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="one-to-one">一对一</option>
+                            <option value="one-to-many">一对多</option>
+                            <option value="many-to-one">多对一</option>
+                            <option value="many-to-many">多对多</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">基数 *</label>
+                        <input type="text" id="oErCardinality" class="form-input" placeholder="如: 1:N" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                <div class="form-group">
+                        <label class="form-label">负责人 *</label>
+                        <input type="text" id="oErOwner" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                        <select id="oErStatus" class="form-input">
+                        <option value="draft">草稿</option>
+                        <option value="review">审核中</option>
+                        <option value="approved">已批准</option>
+                        <option value="implemented">已实施</option>
+                    </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">关系描述</label>
+                    <textarea id="oErDescription" class="form-textarea" placeholder="请输入ER关系的详细描述..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeOErModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/data-api.js"></script>
     <script>
-        // 数据存储
-        let erData = [];
         let currentEREditId = null;
+        let currentOErEditId = null;
+        const api = new DataAPI('http://localhost:8080');
         
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAndRender();
             setupEventListeners();
         });
         
-        // 设置事件监听器
         function setupEventListeners() {
-            document.getElementById('erForm').addEventListener('submit', function(e) {
+            document.getElementById('erForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                saveER();
+                await saveER();
             });
             
-            // 搜索框回车事件
+            document.getElementById('oErForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveOEr();
+            });
+            
             document.getElementById('erSearchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     searchER();
                 }
             });
+            
+            document.getElementById('oErSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchOEr();
+                }
+            });
         }
-        
-        // 加载数据
-        function loadData() {
+
+        async function loadAndRender() {
+            await loadERData();
+            await loadOErData();
+        }
+
+        // Tab切换功能
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有tab项的active类
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 显示选中的tab内容
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 激活选中的tab项
+            event.target.classList.add('active');
+        }
+
+        // ER模型相关功能
+        async function loadERData() {
+            try {
+                const tableBody = document.getElementById('erTableBody');
+                tableBody.innerHTML = '';
+                const relations = await api.listItems('o_line_er_relations.json', 'erRelations');
+                relations.forEach(r => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${r.sourceTable || '-'}</td>
+                        <td>${r.targetTable || '-'}</td>
+                        <td>${r.sourceField || '-'}</td>
+                        <td>${r.targetField || '-'}</td>
+                        <td>${getRelationTypeName(r.relationType)}</td>
+                        <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                        <td>${r.createTime || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('加载数据时出错:', error);
+                alert('加载数据失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function searchER() {
+            const searchTerm = document.getElementById('erSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadERData();
+                return;
+            }
+            
+            const all = await api.listItems('o_line_er_relations.json', 'erRelations');
+            const tableBody = document.getElementById('erTableBody');
+            tableBody.innerHTML = '';
+            const results = all.filter(r => (r.sourceTable||'').toLowerCase().includes(searchTerm) || (r.targetTable||'').toLowerCase().includes(searchTerm) || (r.sourceField||'').toLowerCase().includes(searchTerm) || (r.targetField||'').toLowerCase().includes(searchTerm));
+            results.forEach(r => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${r.sourceTable || '-'}</td>
+                    <td>${r.targetTable || '-'}</td>
+                    <td>${r.sourceField || '-'}</td>
+                    <td>${r.targetField || '-'}</td>
+                    <td>${getRelationTypeName(r.relationType)}</td>
+                    <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                    <td>${r.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function resetERSearch() {
+            document.getElementById('erSearchInput').value = '';
             loadERData();
         }
         
-        // 加载ER模型数据
-        function loadERData() {
-            const savedData = localStorage.getItem('dmDataPlan_o_line_er');
-            if (savedData) {
-                erData = JSON.parse(savedData);
-            } else {
-                erData = [
-                    {
-                        id: 1,
-                        code: 'O_ER_001',
-                        name: '客户订单ER模型',
-                        businessDomain: 'customer',
-                        tableCount: 5,
-                        relationCount: 8,
-                        owner: '李四',
-                        description: '客户与订单之间的实体关系模型',
-                        status: 'approved',
-                        createTime: '2024-01-01 10:00:00'
-                    }
-                ];
-                saveERDataToStorage();
-            }
-            renderERTable();
+        function showAddERModal() {
+            currentEREditId = null;
+            document.getElementById('erModalTitle').textContent = '新增表关系';
+            document.getElementById('erForm').reset();
+            document.getElementById('erModal').style.display = 'block';
         }
-        
-        // 保存数据到localStorage
-        function saveERDataToStorage() {
-            localStorage.setItem('dmDataPlan_o_line_er', JSON.stringify(erData));
-        }
-        
 
-        
-        // 渲染ER模型表格
-        function renderERTable(data = null) {
-            const tableBody = document.getElementById('erTableBody');
-            const displayData = data || erData;
-            
-            tableBody.innerHTML = displayData.map(er => `
-                <tr>
-                    <td>${er.code}</td>
-                    <td>${er.name}</td>
-                    <td>${getBusinessDomainName(er.businessDomain)}</td>
-                    <td>${er.tableCount}</td>
-                    <td>${er.relationCount}</td>
-                    <td>${er.owner}</td>
-                    <td>
-                        <span class="status-badge ${getStatusClass(er.status)}">
-                            ${getStatusName(er.status)}
-                        </span>
-                    </td>
-                    <td>${er.createTime}</td>
+        async function editER(id) {
+            const rel = await api.getItem('o_line_er_relations.json', 'erRelations', id);
+            if (rel) {
+                currentEREditId = id;
+                document.getElementById('erModalTitle').textContent = '编辑表关系';
+                document.getElementById('erSourceTable').value = rel.sourceTable || '';
+                document.getElementById('erTargetTable').value = rel.targetTable || '';
+                document.getElementById('erSourceField').value = rel.sourceField || '';
+                document.getElementById('erTargetField').value = rel.targetField || '';
+                document.getElementById('erRelationType').value = rel.relationType || '';
+                document.getElementById('erIsFactDim').value = rel.isFactDim || '';
+                document.getElementById('erModal').style.display = 'block';
+            }
+        }
+
+        async function saveER() {
+            try {
+                const formData = {
+                    sourceTable: document.getElementById('erSourceTable').value.trim(),
+                    targetTable: document.getElementById('erTargetTable').value.trim(),
+                    sourceField: document.getElementById('erSourceField').value.trim(),
+                    targetField: document.getElementById('erTargetField').value.trim(),
+                    relationType: document.getElementById('erRelationType').value,
+                    isFactDim: document.getElementById('erIsFactDim').value,
+                    createTime: new Date().toLocaleString('zh-CN')
+                };
+                
+                if (!formData.sourceTable || !formData.targetTable || !formData.sourceField || !formData.targetField || !formData.relationType || !formData.isFactDim) {
+                    alert('请填写必填字段');
+                    return;
+                }
+                
+                let ok = false;
+                if (currentEREditId) {
+                    ok = await api.updateItem('o_line_er_relations.json', 'erRelations', currentEREditId, formData);
+                } else {
+                    ok = await api.addItem('o_line_er_relations.json', 'erRelations', formData);
+                }
+                
+                if (ok) {
+                    closeERModal();
+                    await loadERData();
+                    alert('保存成功！');
+            } else {
+                    alert('保存失败，请重试！');
+                }
+            } catch (error) {
+                console.error('保存数据时出错:', error);
+                alert('保存失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function deleteER(id) {
+            if (!confirm('确定要删除这个表关系吗？')) return;
+            try {
+                const ok = await api.deleteItem('o_line_er_relations.json', 'erRelations', id);
+                if (ok) { 
+                    await loadERData(); 
+                    alert('删除成功！');
+                } else {
+                    alert('删除失败，请重试！');
+                }
+            } catch (error) {
+                console.error('删除数据时出错:', error);
+                alert('删除失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        function closeERModal() {
+            document.getElementById('erModal').style.display = 'none';
+            currentEREditId = null;
+        }
+
+        // O线ER关系相关功能
+        async function loadOErData() {
+            const tableBody = document.getElementById('oErTableBody');
+            tableBody.innerHTML = '';
+            const oErRelations = await api.listItems('o_line_er_relations.json', 'erRelations');
+            oErRelations.forEach(relation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${relation.code || '-'}</td>
+                    <td>${relation.name || '-'}</td>
+                    <td>${relation.sourceEntity || '-'}</td>
+                    <td>${relation.targetEntity || '-'}</td>
+                    <td>${getRelationTypeName(relation.relationType)}</td>
+                    <td>${relation.cardinality || '-'}</td>
+                    <td>${relation.owner || '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(relation.status)}">${getStatusName(relation.status)}</span></td>
+                    <td>${relation.createTime || '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="ant-btn" onclick="editER(${er.id})">编辑</button>
-                            <button class="ant-btn ant-btn-danger" onclick="deleteER(${er.id})">删除</button>
+                            <button class="ant-btn" onclick="editOEr('${relation.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteOEr('${relation.id}')">删除</button>
                         </div>
                     </td>
-                </tr>
-            `).join('');
+                `;
+                tableBody.appendChild(row);
+            });
         }
-        
-        // 获取业务域名称
+
+        async function searchOEr() {
+            const searchTerm = document.getElementById('oErSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadOErData();
+                return;
+            }
+            
+            const results = await api.searchItems('o_line_er_relations.json', 'erRelations', 'name', searchTerm);
+            const tableBody = document.getElementById('oErTableBody');
+            tableBody.innerHTML = '';
+            results.forEach(relation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${relation.code || '-'}</td>
+                    <td>${relation.name || '-'}</td>
+                    <td>${relation.sourceEntity || '-'}</td>
+                    <td>${relation.targetEntity || '-'}</td>
+                    <td>${getRelationTypeName(relation.relationType)}</td>
+                    <td>${relation.cardinality || '-'}</td>
+                    <td>${relation.owner || '-'}</td>
+                    <td><span class="status-badge ${getStatusClass(relation.status)}">${getStatusName(relation.status)}</span></td>
+                    <td>${relation.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editOEr('${relation.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteOEr('${relation.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function resetOErSearch() {
+            document.getElementById('oErSearchInput').value = '';
+            loadOErData();
+        }
+
+        function showAddOErModal() {
+            currentOErEditId = null;
+            document.getElementById('oErModalTitle').textContent = '新增ER关系';
+            document.getElementById('oErForm').reset();
+            document.getElementById('oErModal').style.display = 'block';
+        }
+
+        async function editOEr(id) {
+            const relation = await api.getItem('o_line_er_relations.json', 'erRelations', id);
+            if (relation) {
+                currentOErEditId = id;
+                document.getElementById('oErModalTitle').textContent = '编辑ER关系';
+                document.getElementById('oErCode').value = relation.code || '';
+                document.getElementById('oErName').value = relation.name || '';
+                document.getElementById('oErSourceEntity').value = relation.sourceEntity || '';
+                document.getElementById('oErTargetEntity').value = relation.targetEntity || '';
+                document.getElementById('oErRelationType').value = relation.relationType || '';
+                document.getElementById('oErCardinality').value = relation.cardinality || '';
+                document.getElementById('oErOwner').value = relation.owner || '';
+                document.getElementById('oErStatus').value = relation.status || 'draft';
+                document.getElementById('oErDescription').value = relation.description || '';
+                document.getElementById('oErModal').style.display = 'block';
+            }
+        }
+
+        async function saveOEr() {
+            const formData = {
+                code: document.getElementById('oErCode').value.trim(),
+                name: document.getElementById('oErName').value.trim(),
+                sourceEntity: document.getElementById('oErSourceEntity').value.trim(),
+                targetEntity: document.getElementById('oErTargetEntity').value.trim(),
+                relationType: document.getElementById('oErRelationType').value,
+                cardinality: document.getElementById('oErCardinality').value.trim(),
+                owner: document.getElementById('oErOwner').value.trim(),
+                status: document.getElementById('oErStatus').value,
+                description: document.getElementById('oErDescription').value.trim(),
+                createTime: new Date().toLocaleString('zh-CN')
+            };
+            
+            if (!formData.code || !formData.name || !formData.sourceEntity || !formData.targetEntity || 
+                !formData.relationType || !formData.cardinality || !formData.owner) {
+                alert('请填写必填字段');
+                return;
+            }
+            
+            let ok = false;
+            if (currentOErEditId) {
+                ok = await api.updateItem('o_line_er_relations.json', 'erRelations', currentOErEditId, formData);
+            } else {
+                ok = await api.addItem('o_line_er_relations.json', 'erRelations', formData);
+            }
+            
+            if (ok) {
+                closeOErModal();
+                await loadOErData();
+            }
+        }
+
+        async function deleteOEr(id) {
+            if (!confirm('确定要删除这个ER关系吗？')) return;
+            const ok = await api.deleteItem('o_line_er_relations.json', 'erRelations', id);
+            if (ok) { await loadOErData(); }
+        }
+
+        function closeOErModal() {
+            document.getElementById('oErModal').style.display = 'none';
+            currentOErEditId = null;
+        }
+
+        // 辅助函数
         function getBusinessDomainName(domain) {
             const domainMap = {
                 'customer': '客户管理',
@@ -557,152 +915,51 @@
                 'order': '订单管理',
                 'finance': '财务管理'
             };
-            return domainMap[domain] || domain;
+            return domainMap[domain] || domain || '-';
         }
-        
 
-        
-        // 获取状态名称
+        function getRelationTypeName(type) {
+            const typeMap = {
+                'one-to-one': '一对一',
+                'one-to-many': '一对多',
+                'many-to-one': '多对一',
+                'many-to-many': '多对多'
+            };
+            return typeMap[type] || type || '-';
+        }
+
         function getStatusName(status) {
             const statusMap = {
-                'planning': '规划中',
-                'in_progress': '进行中',
-                'completed': '已完成',
-                'cancelled': '已取消',
                 'draft': '草稿',
                 'review': '审核中',
                 'approved': '已批准',
                 'implemented': '已实施'
             };
-            return statusMap[status] || status;
+            return statusMap[status] || status || '-';
         }
         
-        // 获取状态样式类
         function getStatusClass(status) {
-            if (['completed', 'approved', 'implemented'].includes(status)) {
+            if (['approved', 'implemented'].includes(status)) {
                 return 'status-active';
-            } else if (['cancelled'].includes(status)) {
+            } else if (['draft'].includes(status)) {
                 return 'status-inactive';
             } else {
                 return 'status-active';
             }
         }
         
-        // 搜索功能
 
-        
-        function searchER() {
-            const searchTerm = document.getElementById('erSearchInput').value.toLowerCase().trim();
-            if (!searchTerm) {
-                renderERTable();
-                return;
-            }
-            
-            const filteredData = erData.filter(er => 
-                er.name.toLowerCase().includes(searchTerm) ||
-                er.description.toLowerCase().includes(searchTerm) ||
-                er.code.toLowerCase().includes(searchTerm)
-            );
-            
-            renderERTable(filteredData);
-        }
-        
-
-        
-        function resetERSearch() {
-            document.getElementById('erSearchInput').value = '';
-            renderERTable();
-        }
-        
-
-        
-        function showAddERModal() {
-            currentEREditId = null;
-            document.getElementById('erModalTitle').textContent = '新增ER模型';
-            document.getElementById('erForm').reset();
-            document.getElementById('erModal').style.display = 'block';
-        }
-        
-
-        
-        function editER(id) {
-            const er = erData.find(e => e.id === id);
-            if (!er) return;
-            
-            currentEREditId = id;
-            document.getElementById('erModalTitle').textContent = '编辑ER模型';
-            document.getElementById('erCode').value = er.code;
-            document.getElementById('erName').value = er.name;
-            document.getElementById('erBusinessDomain').value = er.businessDomain;
-            document.getElementById('erOwner').value = er.owner;
-            document.getElementById('erDescription').value = er.description || '';
-            document.getElementById('erStatus').value = er.status;
-            
-            document.getElementById('erModal').style.display = 'block';
-        }
-        
-
-        
-        function saveER() {
-            const code = document.getElementById('erCode').value.trim();
-            const name = document.getElementById('erName').value.trim();
-            const businessDomain = document.getElementById('erBusinessDomain').value;
-            const owner = document.getElementById('erOwner').value.trim();
-            const description = document.getElementById('erDescription').value.trim();
-            const status = document.getElementById('erStatus').value;
-            
-            if (!code || !name || !businessDomain || !owner) {
-                alert('请填写必填字段');
-                return;
-            }
-            
-            const now = new Date().toLocaleString('zh-CN');
-            
-            if (currentEREditId) {
-                const index = erData.findIndex(e => e.id === currentEREditId);
-                if (index !== -1) {
-                    erData[index] = {
-                        ...erData[index],
-                        code, name, businessDomain, owner, description, status
-                    };
-                }
-            } else {
-                const newId = Math.max(...erData.map(e => e.id), 0) + 1;
-                erData.push({
-                    id: newId, code, name, businessDomain, tableCount: 0, relationCount: 0, owner, description, status, createTime: now
-                });
-            }
-            
-            saveERDataToStorage();
-            renderERTable();
-            closeERModal();
-            alert(currentEREditId ? 'ER模型更新成功' : 'ER模型创建成功');
-        }
-        
-
-        
-        function deleteER(id) {
-            if (!confirm('确定要删除这个ER模型吗？')) return;
-            
-            erData = erData.filter(e => e.id !== id);
-            saveERDataToStorage();
-            renderERTable();
-            alert('ER模型删除成功');
-        }
-        
-
-        
-        function closeERModal() {
-            document.getElementById('erModal').style.display = 'none';
-            currentEREditId = null;
-        }
         
         // 点击模态框外部关闭
         window.onclick = function(event) {
             const erModal = document.getElementById('erModal');
+            const oErModal = document.getElementById('oErModal');
             
             if (event.target === erModal) {
                 closeERModal();
+            }
+            if (event.target === oErModal) {
+                closeOErModal();
             }
         }
     </script>

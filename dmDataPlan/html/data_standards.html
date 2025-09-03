@@ -378,108 +378,7 @@
                         <th>操作</th>
                     </tr>
                 </thead>
-                <tbody id="standardsTableBody">
-                    <tr>
-                        <td>STD001</td>
-                        <td>客户管理</td>
-                        <td>客户管理</td>
-                        <td>客户基础信息</td>
-                        <td><span class="security-level security-high">高</span></td>
-                        <td>customer_id</td>
-                        <td class="text-truncate" title="^[A-Z]{2}[0-9]{8}$">^[A-Z]{2}[0-9]{8}$</td>
-                        <td>BP001</td>
-                        <td>张三</td>
-                        <td>三级审批</td>
-                        <td><span class="privacy-tag privacy-yes">是</span></td>
-                        <td class="text-truncate" title="客户唯一标识符，用于关联客户相关数据">客户唯一标识符，用于关联客户相关数据</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="ant-btn" onclick="editStandard(1)">编辑</button>
-                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(1)">删除</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>STD002</td>
-                        <td>产品管理</td>
-                        <td>产品管理</td>
-                        <td>产品分类</td>
-                        <td><span class="security-level security-medium">中</span></td>
-                        <td>product_category</td>
-                        <td class="text-truncate" title="^[A-Z]{2,4}$">^[A-Z]{2,4}$</td>
-                        <td>BP002</td>
-                        <td>李四</td>
-                        <td>二级审批</td>
-                        <td><span class="privacy-tag privacy-no">否</span></td>
-                        <td class="text-truncate" title="产品分类编码，用于产品分类管理">产品分类编码，用于产品分类管理</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="ant-btn" onclick="editStandard(2)">编辑</button>
-                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(2)">删除</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>STD003</td>
-                        <td>订单管理</td>
-                        <td>订单管理</td>
-                        <td>订单信息</td>
-                        <td><span class="security-level security-high">高</span></td>
-                        <td>order_amount</td>
-                        <td class="text-truncate" title="^[0-9]+(\.[0-9]{1,2})?$">^[0-9]+(\.[0-9]{1,2})?$</td>
-                        <td>BP003</td>
-                        <td>王五</td>
-                        <td>三级审批</td>
-                        <td><span class="privacy-tag privacy-yes">是</span></td>
-                        <td class="text-truncate" title="订单金额，精确到分，必须为正数">订单金额，精确到分，必须为正数</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="ant-btn" onclick="editStandard(3)">编辑</button>
-                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(3)">删除</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>STD004</td>
-                        <td>风控管理</td>
-                        <td>风控管理</td>
-                        <td>风险评估</td>
-                        <td><span class="security-level security-high">高</span></td>
-                        <td>risk_score</td>
-                        <td class="text-truncate" title="^[0-9]{1,3}$">^[0-9]{1,3}$</td>
-                        <td>BP004</td>
-                        <td>赵六</td>
-                        <td>四级审批</td>
-                        <td><span class="privacy-tag privacy-yes">是</span></td>
-                        <td class="text-truncate" title="风险评分，范围0-999，数值越大风险越高">风险评分，范围0-999，数值越大风险越高</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="ant-btn" onclick="editStandard(4)">编辑</button>
-                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(4)">删除</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>STD005</td>
-                        <td>财务管理</td>
-                        <td>财务管理</td>
-                        <td>账户信息</td>
-                        <td><span class="security-level security-high">高</span></td>
-                        <td>account_balance</td>
-                        <td class="text-truncate" title="^-?[0-9]+(\.[0-9]{1,2})?$">^-?[0-9]+(\.[0-9]{1,2})?$</td>
-                        <td>BP005</td>
-                        <td>钱七</td>
-                        <td>三级审批</td>
-                        <td><span class="privacy-tag privacy-yes">是</span></td>
-                        <td class="text-truncate" title="账户余额，可正可负，精确到分">账户余额，可正可负，精确到分</td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="ant-btn" onclick="editStandard(5)">编辑</button>
-                                <button class="ant-btn ant-btn-danger" onclick="deleteStandard(5)">删除</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody id="standardsTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -581,219 +480,156 @@
         </div>
     </div>
     
+    <script src="js/data-api.js"></script>
     <script>
-        let standards = [
-            {
-                id: 1,
-                standardCode: 'STD001',
-                businessLine: '客户管理',
-                level1Theme: '客户管理',
-                level2Theme: '客户基础信息',
-                securityLevel: 'high',
-                englishName: 'customer_id',
-                validationFormula: '^[A-Z]{2}[0-9]{8}$',
-                bpId: 'BP001',
-                bpName: '张三',
-                approvalStrategy: '三级审批',
-                privacyTag: '是',
-                description: '客户唯一标识符，用于关联客户相关数据'
-            },
-            {
-                id: 2,
-                standardCode: 'STD002',
-                businessLine: '产品管理',
-                level1Theme: '产品管理',
-                level2Theme: '产品分类',
-                securityLevel: 'medium',
-                englishName: 'product_category',
-                validationFormula: '^[A-Z]{2,4}$',
-                bpId: 'BP002',
-                bpName: '李四',
-                approvalStrategy: '二级审批',
-                privacyTag: '否',
-                description: '产品分类编码，用于产品分类管理'
-            },
-            {
-                id: 3,
-                standardCode: 'STD003',
-                businessLine: '订单管理',
-                level1Theme: '订单管理',
-                level2Theme: '订单信息',
-                securityLevel: 'high',
-                englishName: 'order_amount',
-                validationFormula: '^[0-9]+(\.[0-9]{1,2})?$',
-                bpId: 'BP003',
-                bpName: '王五',
-                approvalStrategy: '三级审批',
-                privacyTag: '是',
-                description: '订单金额，精确到分，必须为正数'
-            },
-            {
-                id: 4,
-                standardCode: 'STD004',
-                businessLine: '风控管理',
-                level1Theme: '风控管理',
-                level2Theme: '风险评估',
-                securityLevel: 'high',
-                englishName: 'risk_score',
-                validationFormula: '^[0-9]{1,3}$',
-                bpId: 'BP004',
-                bpName: '赵六',
-                approvalStrategy: '四级审批',
-                privacyTag: '是',
-                description: '风险评分，范围0-999，数值越大风险越高'
-            },
-            {
-                id: 5,
-                standardCode: 'STD005',
-                businessLine: '财务管理',
-                level1Theme: '财务管理',
-                level2Theme: '账户信息',
-                securityLevel: 'high',
-                englishName: 'account_balance',
-                validationFormula: '^-?[0-9]+(\.[0-9]{1,2})?$',
-                bpId: 'BP005',
-                bpName: '钱七',
-                approvalStrategy: '三级审批',
-                privacyTag: '是',
-                description: '账户余额，可正可负，精确到分'
-            }
-        ];
-        
         let editingId = null;
-        
-        function searchStandards() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filteredStandards = standards.filter(standard => 
-                standard.standardCode.toLowerCase().includes(searchTerm) ||
-                standard.englishName.toLowerCase().includes(searchTerm) ||
-                standard.businessLine.toLowerCase().includes(searchTerm) ||
-                standard.level1Theme.toLowerCase().includes(searchTerm)
-            );
-            renderStandards(filteredStandards);
-        }
-        
-        function renderStandards(standardsToRender = standards) {
+        const api = new DataAPI('http://localhost:8080');
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAndRender();
+        });
+
+        async function loadAndRender() {
             const tbody = document.getElementById('standardsTableBody');
             tbody.innerHTML = '';
-            
-            standardsToRender.forEach(standard => {
+            const standards = await api.listItems('data_standards.json', 'standards');
+            standards.forEach(standard => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${standard.standardCode}</td>
-                    <td>${standard.businessLine}</td>
-                    <td>${standard.level1Theme}</td>
+                    <td>${standard.standardCode || '-'}</td>
+                    <td>${standard.businessLine || '-'}</td>
+                    <td>${standard.level1Theme || '-'}</td>
                     <td>${standard.level2Theme || '-'}</td>
                     <td><span class="security-level security-${standard.securityLevel}">${standard.securityLevel === 'high' ? '高' : standard.securityLevel === 'medium' ? '中' : '低'}</span></td>
-                    <td>${standard.englishName}</td>
-                    <td class="text-truncate" title="${standard.validationFormula}">${standard.validationFormula}</td>
-                    <td>${standard.bpId}</td>
-                    <td>${standard.bpName}</td>
-                    <td>${standard.approvalStrategy}</td>
-                    <td><span class="privacy-tag privacy-${standard.privacyTag === '是' ? 'yes' : 'no'}">${standard.privacyTag}</span></td>
-                    <td class="text-truncate" title="${standard.description}">${standard.description}</td>
+                    <td>${standard.englishName || '-'}</td>
+                    <td class="text-truncate" title="${standard.validationFormula || ''}">${standard.validationFormula || '-'}</td>
+                    <td>${standard.bpId || '-'}</td>
+                    <td>${standard.bpName || '-'}</td>
+                    <td>${standard.approvalStrategy || '-'}</td>
+                    <td><span class="privacy-tag privacy-${standard.privacyTag === '是' ? 'yes' : 'no'}">${standard.privacyTag || '-'}</span></td>
+                    <td class="text-truncate" title="${standard.description || ''}">${standard.description || '-'}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="ant-btn" onclick="editStandard(${standard.id})">编辑</button>
-                            <button class="ant-btn ant-btn-danger" onclick="deleteStandard(${standard.id})">删除</button>
+                            <button class="ant-btn" onclick="editStandard('${standard.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteStandard('${standard.id}')">删除</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
         }
-        
+
+        async function searchStandards() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadAndRender();
+                return;
+            }
+            
+            const results = await api.searchItems('data_standards.json', 'standards', 'standardCode', searchTerm);
+            const tbody = document.getElementById('standardsTableBody');
+            tbody.innerHTML = '';
+            results.forEach(standard => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${standard.standardCode || '-'}</td>
+                    <td>${standard.businessLine || '-'}</td>
+                    <td>${standard.level1Theme || '-'}</td>
+                    <td>${standard.level2Theme || '-'}</td>
+                    <td><span class="security-level security-${standard.securityLevel}">${standard.securityLevel === 'high' ? '高' : standard.securityLevel === 'medium' ? '中' : '低'}</span></td>
+                    <td>${standard.englishName || '-'}</td>
+                    <td class="text-truncate" title="${standard.validationFormula || ''}">${standard.validationFormula || '-'}</td>
+                    <td>${standard.bpId || '-'}</td>
+                    <td>${standard.bpName || '-'}</td>
+                    <td>${standard.approvalStrategy || '-'}</td>
+                    <td><span class="privacy-tag privacy-${standard.privacyTag === '是' ? 'yes' : 'no'}">${standard.privacyTag || '-'}</span></td>
+                    <td class="text-truncate" title="${standard.description || ''}">${standard.description || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editStandard('${standard.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteStandard('${standard.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
         function showAddModal() {
             editingId = null;
             document.getElementById('modalTitle').textContent = '新增数据标准';
             document.getElementById('standardForm').reset();
             document.getElementById('standardModal').classList.add('show');
         }
-        
-        function editStandard(id) {
-            const standard = standards.find(s => s.id === id);
+
+        async function editStandard(id) {
+            const standard = await api.getItem('data_standards.json', 'standards', id);
             if (standard) {
                 editingId = id;
                 document.getElementById('modalTitle').textContent = '编辑数据标准';
-                document.getElementById('standardCode').value = standard.standardCode;
-                document.getElementById('businessLine').value = standard.businessLine;
-                document.getElementById('level1Theme').value = standard.level1Theme;
-                document.getElementById('level2Theme').value = standard.level2Theme;
-                document.getElementById('securityLevel').value = standard.securityLevel;
-                document.getElementById('englishName').value = standard.englishName;
-                document.getElementById('validationFormula').value = standard.validationFormula;
-                document.getElementById('bpId').value = standard.bpId;
-                document.getElementById('bpName').value = standard.bpName;
-                document.getElementById('approvalStrategy').value = standard.approvalStrategy;
-                document.getElementById('privacyTag').value = standard.privacyTag;
-                document.getElementById('description').value = standard.description;
+                document.getElementById('standardCode').value = standard.standardCode || '';
+                document.getElementById('businessLine').value = standard.businessLine || '';
+                document.getElementById('level1Theme').value = standard.level1Theme || '';
+                document.getElementById('level2Theme').value = standard.level2Theme || '';
+                document.getElementById('securityLevel').value = standard.securityLevel || '';
+                document.getElementById('englishName').value = standard.englishName || '';
+                document.getElementById('validationFormula').value = standard.validationFormula || '';
+                document.getElementById('bpId').value = standard.bpId || '';
+                document.getElementById('bpName').value = standard.bpName || '';
+                document.getElementById('approvalStrategy').value = standard.approvalStrategy || '';
+                document.getElementById('privacyTag').value = standard.privacyTag || '';
+                document.getElementById('description').value = standard.description || '';
                 document.getElementById('standardModal').classList.add('show');
             }
         }
-        
+
         function hideModal() {
             document.getElementById('standardModal').classList.remove('show');
         }
-        
-        function deleteStandard(id) {
+
+        async function deleteStandard(id) {
             if (confirm('确定要删除这个数据标准吗？')) {
-                standards = standards.filter(s => s.id !== id);
-                renderStandards();
-                saveToLocalStorage();
+                const ok = await api.deleteItem('data_standards.json', 'standards', id);
+                if (ok) { await loadAndRender(); }
             }
         }
-        
-        function saveToLocalStorage() {
-            localStorage.setItem('dmDataPlan_standards', JSON.stringify(standards));
-        }
-        
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('dmDataPlan_standards');
-            if (saved) {
-                standards = JSON.parse(saved);
-                renderStandards();
-            }
-        }
-        
-        // 表单提交处理
-        document.getElementById('standardForm').addEventListener('submit', function(e) {
+
+        document.getElementById('standardForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const formData = {
-                standardCode: document.getElementById('standardCode').value,
-                businessLine: document.getElementById('businessLine').value,
-                level1Theme: document.getElementById('level1Theme').value,
-                level2Theme: document.getElementById('level2Theme').value,
+                standardCode: document.getElementById('standardCode').value.trim(),
+                businessLine: document.getElementById('businessLine').value.trim(),
+                level1Theme: document.getElementById('level1Theme').value.trim(),
+                level2Theme: document.getElementById('level2Theme').value.trim(),
                 securityLevel: document.getElementById('securityLevel').value,
-                englishName: document.getElementById('englishName').value,
-                validationFormula: document.getElementById('validationFormula').value,
-                bpId: document.getElementById('bpId').value,
-                bpName: document.getElementById('bpName').value,
+                englishName: document.getElementById('englishName').value.trim(),
+                validationFormula: document.getElementById('validationFormula').value.trim(),
+                bpId: document.getElementById('bpId').value.trim(),
+                bpName: document.getElementById('bpName').value.trim(),
                 approvalStrategy: document.getElementById('approvalStrategy').value,
                 privacyTag: document.getElementById('privacyTag').value,
-                description: document.getElementById('description').value
+                description: document.getElementById('description').value.trim()
             };
             
-            if (editingId) {
-                // 编辑现有标准
-                const index = standards.findIndex(s => s.id === editingId);
-                if (index !== -1) {
-                    standards[index] = { ...standards[index], ...formData };
-                }
-            } else {
-                // 新增标准
-                const newId = Math.max(...standards.map(s => s.id), 0) + 1;
-                standards.push({ id: newId, ...formData });
+            if (!formData.standardCode || !formData.businessLine || !formData.level1Theme || !formData.securityLevel || 
+                !formData.englishName || !formData.validationFormula || !formData.bpId || !formData.bpName || 
+                !formData.approvalStrategy || !formData.privacyTag) {
+                alert('请填写必填字段');
+                return;
             }
             
-            renderStandards();
-            saveToLocalStorage();
-            hideModal();
-        });
-        
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadFromLocalStorage();
+            let ok = false;
+            if (editingId) {
+                ok = await api.updateItem('data_standards.json', 'standards', editingId, formData);
+            } else {
+                ok = await api.addItem('data_standards.json', 'standards', formData);
+            }
+            
+            if (ok) {
+                hideModal();
+                await loadAndRender();
+            }
         });
     </script>
 </body>

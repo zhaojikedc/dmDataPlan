@@ -1,0 +1,12 @@
+{
+  "applications": [
+    {
+      "name": "测试应用2",
+      "owner": "李四",
+      "status": "development",
+      "id": "applications_97c7328e",
+      "created_at": "2025-09-02T14:10:24.161848"
+    }
+  ],
+  "last_updated": "2025-09-02T16:00:12.402576"
+}
