@@ -454,6 +454,7 @@
     
     <script src="js/data-api.js"></script>
     <script>
+<<<<<<< HEAD
         let editingId = null;
         const api = new DataAPI('http://localhost:8080');
 
@@ -462,6 +463,54 @@
         });
 
         async function loadAndRender() {
+=======
+        let themes = [];
+        const API_BASE = 'http://localhost:8000';
+        const CONFIG_NAME = 'themes';
+        
+        async function loadThemesFromServer() {
+            try {
+                const res = await fetch(`${API_BASE}/config/${CONFIG_NAME}`);
+                if (res.ok) {
+                    themes = await res.json();
+                } else if (res.status === 404) {
+                    themes = [];
+                } else {
+                    console.error('加载主题失败', res.status);
+                }
+                renderThemes();
+            } catch (e) {
+                console.error('请求失败', e);
+            }
+        }
+        
+        async function saveThemesToServer() {
+            try {
+                await fetch(`${API_BASE}/config/${CONFIG_NAME}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(themes)
+                });
+            } catch (e) {
+                console.error('保存主题失败', e);
+            }
+        }
+        
+        let editingId = null;
+        
+        function searchThemes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredThemes = themes.filter(theme => 
+                theme.appName.toLowerCase().includes(searchTerm) ||
+                theme.level1Theme.toLowerCase().includes(searchTerm) ||
+                (theme.level2Theme || '').toLowerCase().includes(searchTerm) ||
+                (theme.level3Theme || '').toLowerCase().includes(searchTerm)
+            );
+            renderThemes(filteredThemes);
+        }
+        
+        function renderThemes(themesToRender = themes) {
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
             const tbody = document.getElementById('themeTableBody');
             tbody.innerHTML = '';
             const themes = await api.listItems('theme_management.json', 'themes');
@@ -535,16 +584,28 @@
             if (theme) {
                 editingId = id;
                 document.getElementById('modalTitle').textContent = '编辑主题';
+<<<<<<< HEAD
                 document.getElementById('level').value = theme.level || '';
                 document.getElementById('appId').value = theme.appId || '';
                 document.getElementById('appName').value = theme.appName || '';
                 document.getElementById('level1Theme').value = theme.level1Theme || '';
                 document.getElementById('level1Abbr').value = theme.level1Abbr || '';
+=======
+                document.getElementById('level').value = theme.level;
+                document.getElementById('appId').value = theme.appId;
+                document.getElementById('appName').value = theme.appName;
+                document.getElementById('level1Theme').value = theme.level1Theme;
+                document.getElementById('level1Abbr').value = theme.level1Abbr;
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
                 document.getElementById('level2Theme').value = theme.level2Theme || '';
                 document.getElementById('level2Abbr').value = theme.level2Abbr || '';
                 document.getElementById('level3Theme').value = theme.level3Theme || '';
                 document.getElementById('level3Abbr').value = theme.level3Abbr || '';
+<<<<<<< HEAD
                 document.getElementById('modelLibrary').value = theme.modelLibrary || '';
+=======
+                document.getElementById('modelLibrary').value = theme.modelLibrary;
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
                 document.getElementById('themeModal').classList.add('show');
             }
         }
@@ -552,6 +613,7 @@
         function hideModal() {
             document.getElementById('themeModal').classList.remove('show');
         }
+<<<<<<< HEAD
 
         async function deleteTheme(id) {
             if (confirm('确定要删除这个主题吗？')) {
@@ -560,6 +622,18 @@
             }
         }
 
+=======
+        
+        async function deleteTheme(id) {
+            if (confirm('确定要删除这个主题吗？')) {
+                themes = themes.filter(t => t.id !== id);
+                renderThemes();
+                await saveThemesToServer();
+            }
+        }
+        
+        // 表单提交处理
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
         document.getElementById('themeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -576,6 +650,7 @@
                 modelLibrary: document.getElementById('modelLibrary').value.trim()
             };
             
+<<<<<<< HEAD
             if (!formData.level || !formData.appId || !formData.appName || !formData.level1Theme || !formData.level1Abbr || !formData.modelLibrary) {
                 alert('请填写必填字段');
                 return;
@@ -592,6 +667,26 @@
                 hideModal();
                 await loadAndRender();
             }
+=======
+            if (editingId) {
+                const index = themes.findIndex(t => t.id === editingId);
+                if (index !== -1) {
+                    themes[index] = { ...themes[index], ...formData };
+                }
+            } else {
+                const newId = Math.max(...themes.map(t => t.id || 0), 0) + 1;
+                themes.push({ id: newId, ...formData });
+            }
+            
+            renderThemes();
+            await saveThemesToServer();
+            hideModal();
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadThemesFromServer();
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
         });
     </script>
 </body>

@@ -1,0 +1,8 @@
+{
+  "specifications": [
+    {"id": "spec_retention", "name": "Data Retention", "policy": "retain_3_years", "applies_to": ["logs", "events"], "owner": "compliance"}
+  ],
+  "policies": [
+    {"id": "policy_pii", "name": "PII Handling", "controls": ["masking", "encryption"], "reference": "https://example.org/pii-policy"}
+  ]
+}

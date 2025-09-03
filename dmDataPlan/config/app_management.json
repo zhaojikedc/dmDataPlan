@@ -1,5 +1,6 @@
 {
   "applications": [
+<<<<<<< HEAD
     {
       "name": "1221",
       "serviceOrg": "1212",
@@ -24,3 +25,12 @@
   ],
   "last_updated": "2025-09-02T18:35:42.463352"
 }
+=======
+    {"id": "app_mdms", "name": "Master Data Management", "owner": "data_platform", "status": "active", "themes": ["theme_analytics"]}
+  ],
+  "environments": [
+    {"id": "env_prod", "name": "Production"},
+    {"id": "env_dev", "name": "Development"}
+  ]
+}
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "standards": [],
   "quality_dimensions": [
     "accuracy",
@@ -8,3 +9,10 @@
   ],
   "last_updated": "2025-09-02T18:53:40.056806"
 }
+=======
+  "standards": [
+    {"id": "std_naming", "name": "Naming Convention", "version": "1.0.0", "areas": ["tables", "columns"], "reference": "https://example.org/naming-std"}
+  ],
+  "quality_dimensions": ["accuracy", "completeness", "consistency", "timeliness"]
+}
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593

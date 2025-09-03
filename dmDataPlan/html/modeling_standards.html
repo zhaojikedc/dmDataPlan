@@ -407,11 +407,23 @@
 
     <script src="js/data-api.js"></script>
     <script>
+<<<<<<< HEAD
         let currentEditId = null;
         const api = new DataAPI('http://localhost:8080');
 
         document.addEventListener('DOMContentLoaded', async function() {
             await loadAndRender();
+=======
+        // 数据规范存储
+        const API_BASE = 'http://localhost:8000';
+        const CONFIG_NAME = 'specifications';
+        let specifications = [];
+        let currentEditId = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSpecificationsFromServer();
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
             setupEventListeners();
         });
 
@@ -427,8 +439,42 @@
                 }
             });
         }
+<<<<<<< HEAD
 
         async function loadAndRender() {
+=======
+        
+        async function loadSpecificationsFromServer() {
+            try {
+                const res = await fetch(`${API_BASE}/config/${CONFIG_NAME}`);
+                if (res.ok) {
+                    specifications = await res.json();
+                } else if (res.status === 404) {
+                    specifications = [];
+                } else {
+                    console.error('加载数据规范失败', res.status);
+                }
+                renderSpecificationsTable();
+            } catch (e) {
+                console.error('请求失败', e);
+            }
+        }
+        
+        async function saveSpecificationsToServer() {
+            try {
+                await fetch(`${API_BASE}/config/${CONFIG_NAME}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(specifications)
+                });
+            } catch (e) {
+                console.error('保存数据规范失败', e);
+            }
+        }
+        
+        // 渲染数据规范表格
+        function renderSpecificationsTable(data = null) {
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
             const tableBody = document.getElementById('specificationsTableBody');
             tableBody.innerHTML = '';
             const specifications = await api.listItems('modeling_standards.json', 'specifications');
@@ -505,7 +551,12 @@
                 document.getElementById('specificationModal').style.display = 'block';
             }
         }
+<<<<<<< HEAD
 
+=======
+        
+        // 保存数据规范
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
         async function saveSpecification() {
             const sequenceNumber = parseInt(document.getElementById('sequenceNumber').value);
             const category = document.getElementById('category').value;
@@ -530,6 +581,7 @@
             if (currentEditId) {
                 ok = await api.updateItem('modeling_standards.json', 'specifications', currentEditId, payload);
             } else {
+<<<<<<< HEAD
                 ok = await api.addItem('modeling_standards.json', 'specifications', payload);
             }
             
@@ -543,6 +595,37 @@
             if (!confirm('确定要删除这个数据规范吗？')) return;
             const ok = await api.deleteItem('modeling_standards.json', 'specifications', id);
             if (ok) { await loadAndRender(); }
+=======
+                // 新增模式
+                const newId = Math.max(...specifications.map(s => s.id || 0), 0) + 1;
+                specifications.push({
+                    id: newId,
+                    sequenceNumber,
+                    category,
+                    specificationItem,
+                    isStrongConstraint,
+                    validationLogic
+                });
+            }
+            
+            await saveSpecificationsToServer();
+            renderSpecificationsTable();
+            closeModal();
+            
+            // 显示成功消息
+            const message = currentEditId ? '数据规范更新成功' : '数据规范创建成功';
+            alert(message);
+        }
+        
+        // 删除数据规范
+        async function deleteSpecification(id) {
+            if (!confirm('确定要删除这个数据规范吗？')) return;
+            
+            specifications = specifications.filter(s => s.id !== id);
+            await saveSpecificationsToServer();
+            renderSpecificationsTable();
+            alert('数据规范删除成功');
+>>>>>>> 1950b1f2b48e0df8060b3ebacc70907a3232e593
         }
 
         function closeModal() {
