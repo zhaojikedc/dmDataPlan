@@ -230,8 +230,9 @@
             
             .field-row,
             .field-header {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(4, 1fr) auto auto auto;
                 gap: 8px;
+                overflow-x: auto;
             }
         }
     </style>
@@ -617,9 +618,56 @@
             savedTables.push(tableData);
             localStorage.setItem('dmDataPlan_tables', JSON.stringify(savedTables));
             
-            alert('表结构保存成功！');
+            // 同步更新O线ER图数据（如果当前表是O线相关）
+            if (tableData.businessDomain) {
+              updateERDiagramData(tableData);
+            }
+            
+            // 触发ER图的数据刷新事件（如果页面已打开）
+            try {
+                const event = new CustomEvent('tableDataUpdated', { 
+                    detail: { tableData: tableData }
+                });
+                window.dispatchEvent(event);
+                console.log('已发送表数据更新事件');
+            } catch (e) {
+                console.log('发送事件失败:', e);
+            }
+            
+            alert('表结构保存成功！数据已同步到ER关系图。');
         }
         
+        // 同步更新ER图数据
+        function updateERDiagramData(tableData) {
+            try {
+                // 将新表数据同步到O线ER图中
+                const erData = JSON.parse(localStorage.getItem('dmDataPlan_o_line_er') || '[]');
+                
+                // 创建对应的ER模型记录
+                const erModelExists = erData.some(er => er.name.includes(tableData.chineseName));
+                if (!erModelExists) {
+                    const newErModel = {
+                        id: Math.max(...erData.map(e => e.id), 0) + 1,
+                        code: `O_ER_${String(erData.length + 1).padStart(3, '0')}`,
+                        name: `${tableData.chineseName}模型`,
+                        businessDomain: tableData.businessDomain || 'other',
+                        tableCount: 1,
+                        relationCount: 0,
+                        owner: '系统自动创建',
+                        description: `基于资产表"${tableData.chineseName}"自动创建的ER模型`,
+                        status: 'draft',
+                        createTime: new Date().toLocaleString('zh-CN')
+                    };
+                    
+                    erData.push(newErModel);
+                    localStorage.setItem('dmDataPlan_o_line_er', JSON.stringify(erData));
+                    console.log('已自动创建ER模型:', newErModel);
+                }
+            } catch (error) {
+                console.error('同步ER图数据失败:', error);
+            }
+        }
+
         // 重置表单
         function resetForm() {
             if (confirm('确定要重置表单吗？所有数据将丢失。')) {
