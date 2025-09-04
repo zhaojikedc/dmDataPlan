@@ -507,6 +507,7 @@
     <div class="controls">
       <button id="resetView">重置视图</button>
       <button id="saveView">保存当前视图</button>
+      <button id="refreshData">刷新数据</button>
       <button id="toggleLineType">切换线条类型</button>
       <button id="toggleAllTables">展开/折叠所有表</button>
       <button id="addTextBox">添加文本框</button>
@@ -2122,6 +2123,53 @@ const defaultERData = {
 // 当前使用的数据
 let currentERData = JSON.parse(JSON.stringify(defaultERData));
 
+// 加载动态数据并合并
+function loadDynamicData() {
+  try {
+    // 读取资产表数据
+    const savedTables = JSON.parse(localStorage.getItem('dmDataPlan_tables') || '[]');
+    
+    // 读取M线ER模型数据
+    const mLineERData = JSON.parse(localStorage.getItem('dmDataPlan_m_line_er') || '[]');
+    
+    console.log('加载的资产表数据:', savedTables);
+    console.log('加载的M线ER数据:', mLineERData);
+    
+    // 如果有动态数据，合并到currentERData中
+    if (savedTables.length > 0 || mLineERData.length > 0) {
+      // 合并表数据（仅M线相关的表）
+      savedTables.filter(table => table.businessDomain && !table.businessDomain.includes('o-line')).forEach(table => {
+        // 转换资产表格式到ER图格式
+        const erTable = {
+          name: table.tableName,
+          type: table.tableType === 'dimension' ? 'dim' : 
+                table.tableType === 'fact' ? 'fact' : 'normal',
+          cnName: table.chineseName,
+          fields: table.fields.map(field => ({
+            key: field.name,
+            type: field.dataType.toLowerCase(),
+            pk: field.fieldType === 'primary_key',
+            fk: field.fieldType === 'foreign_key',
+            cn: field.chineseName
+          }))
+        };
+        
+        // 检查是否已存在，如果不存在则添加
+        const existingIndex = currentERData.tables.findIndex(t => t.name === erTable.name);
+        if (existingIndex === -1) {
+          currentERData.tables.push(erTable);
+        } else {
+          currentERData.tables[existingIndex] = erTable;
+        }
+      });
+      
+      console.log('合并后的M线表数据:', currentERData.tables);
+    }
+  } catch (error) {
+    console.error('加载M线动态数据失败:', error);
+  }
+}
+
 // 初始化标题和描述
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('titleInput').value = currentERData.title || '';
@@ -3599,8 +3647,12 @@ function init() {
 
 // DOM加载完成后初始化
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDynamicData();
+    init();
+  });
 } else {
+  loadDynamicData();
   init();
 }
 
@@ -3659,6 +3711,16 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSelectionBtn.addEventListener('click', clearSelection);
   }
   
+  // 刷新数据按钮
+  const refreshDataBtn = document.getElementById('refreshData');
+  if (refreshDataBtn) {
+    refreshDataBtn.addEventListener('click', () => {
+      loadDynamicData();
+      init();
+      alert('数据刷新成功！已加载最新的表和关系数据。');
+    });
+  }
+
   // 添加文本框按钮
   const addTextBoxBtn = document.getElementById('addTextBox');
   if (addTextBoxBtn) {

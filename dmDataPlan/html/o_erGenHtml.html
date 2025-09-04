@@ -507,6 +507,7 @@
     <div class="controls">
       <button id="resetView">重置视图</button>
       <button id="saveView">保存当前视图</button>
+      <button id="refreshData">刷新数据</button>
       <button id="toggleLineType">切换线条类型</button>
       <button id="toggleAllTables">展开/折叠所有表</button>
       <button id="addTextBox">添加文本框</button>
@@ -2130,8 +2131,86 @@ const defaultERData = {
 // 当前使用的数据
 let currentERData = JSON.parse(JSON.stringify(defaultERData));
 
+// 加载动态数据并合并
+function loadDynamicData() {
+  try {
+    // 读取资产表数据
+    const savedTables = JSON.parse(localStorage.getItem('dmDataPlan_tables') || '[]');
+    
+    // 读取O线ER模型数据
+    const oLineERData = JSON.parse(localStorage.getItem('dmDataPlan_o_line_er') || '[]');
+    
+    console.log('加载的资产表数据:', savedTables);
+    console.log('加载的O线ER数据:', oLineERData);
+    
+            // 如果有动态数据，合并到currentERData中
+    if (savedTables.length > 0 || oLineERData.length > 0) {
+      // 合并表数据
+      savedTables.forEach(table => {
+        // 转换资产表格式到ER图格式
+        const erTable = {
+          name: table.tableName,
+          type: table.tableType === 'dimension' ? 'dim' : 
+                table.tableType === 'fact' ? 'fact' : 'normal',
+          cnName: table.chineseName,
+          fields: table.fields.map(field => ({
+            key: field.name,
+            type: field.dataType.toLowerCase(),
+            pk: field.fieldType === 'primary_key',
+            fk: field.fieldType === 'foreign_key',
+            cn: field.chineseName
+          }))
+        };
+        
+        // 检查是否已存在，如果不存在则添加
+        const existingIndex = currentERData.tables.findIndex(t => t.name === erTable.name);
+        if (existingIndex === -1) {
+          currentERData.tables.push(erTable);
+        } else {
+          currentERData.tables[existingIndex] = erTable;
+        }
+      });
+      
+      // 加载O线关系定义数据
+      const oLineRelations = JSON.parse(localStorage.getItem('dmDataPlan_o_line_relations') || '[]');
+      
+      // 合并关系数据
+      oLineRelations.forEach(rel => {
+        const erRelation = {
+          source: rel.sourceTable,
+          target: rel.targetTable,
+          sourceField: rel.sourceField,
+          targetField: rel.targetField,
+          type: rel.relationType,
+          isFactDim: rel.isFactDim
+        };
+        
+        // 检查关系是否已存在
+        const existingRelation = currentERData.relations.find(r => 
+          r.source === erRelation.source && 
+          r.target === erRelation.target &&
+          r.sourceField === erRelation.sourceField &&
+          r.targetField === erRelation.targetField
+        );
+        
+        if (!existingRelation) {
+          currentERData.relations.push(erRelation);
+        }
+      });
+      
+      console.log('合并后的表数据:', currentERData.tables);
+      console.log('合并后的关系数据:', currentERData.relations);
+    }
+  } catch (error) {
+    console.error('加载动态数据失败:', error);
+  }
+}
+
 // 初始化标题和描述
 document.addEventListener('DOMContentLoaded', () => {
+  // 先加载动态数据
+  loadDynamicData();
+  
   document.getElementById('titleInput').value = currentERData.title || '';
   document.getElementById('descriptionInput').value = currentERData.description || '';
   
@@ -3712,8 +3791,21 @@ async function exportImage() {
  **********************************************************************/
 function init() {
   console.log('初始化开始');
+  
+  // 重新转换数据格式（包含动态加载的数据）
+  const convertedData = convertDataFormat(currentERData);
+  tables = convertedData.tables;
+  customRelations = convertedData.customRelations;
+  factDimRelations = convertedData.factDimRelations;
+  
+  // 重新构建关系
+  relations = buildRelations();
+  
   console.log('表格数据:', tables);
   console.log('关系数据:', relations);
+  
+  // 清除现有的节点
+  document.querySelectorAll('.node-wrapper').forEach(node => node.remove());
   
   // 恢复保存的视图状态
   restoreViewState();
@@ -3735,8 +3827,12 @@ function init() {
 
 // DOM加载完成后初始化
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDynamicData();
+    init();
+  });
 } else {
+  loadDynamicData();
   init();
 }
 
@@ -3815,6 +3911,16 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSelectionBtn.addEventListener('click', clearSelection);
   }
   
+  // 刷新数据按钮
+  const refreshDataBtn = document.getElementById('refreshData');
+  if (refreshDataBtn) {
+    refreshDataBtn.addEventListener('click', () => {
+      loadDynamicData();
+      init();
+      alert('数据刷新成功！已加载最新的表和关系数据。');
+    });
+  }
+
   // 添加文本框按钮
   const addTextBoxBtn = document.getElementById('addTextBox');
   if (addTextBoxBtn) {

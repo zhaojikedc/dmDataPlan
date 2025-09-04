@@ -354,7 +354,8 @@
             
             <div class="tab-container">
                 <div class="tab-header">
-                    <div class="tab-item active">O线模型ER关系</div>
+                    <div class="tab-item active" onclick="switchTab('er')">O线模型ER关系</div>
+                    <div class="tab-item" onclick="switchTab('relations')">关系定义管理</div>
                 </div>
                 
                 <!-- O线模型ER关系内容 -->
@@ -389,11 +390,113 @@
                         </table>
                     </div>
                 </div>
+                
+                <!-- 关系定义管理内容 -->
+                <div id="relations-tab" class="tab-content">
+                    <div class="content-card">
+                        <div class="toolbar">
+                            <div class="search-box">
+                                <input type="text" id="relationSearchInput" class="ant-input" placeholder="搜索关系...">
+                                <button class="ant-btn" onclick="searchRelations()">搜索</button>
+                                <button class="ant-btn" onclick="resetRelationSearch()">重置</button>
+                            </div>
+                            <button class="ant-btn ant-btn-primary" onclick="showAddRelationModal()">新增关系</button>
+                        </div>
+                        
+                        <table class="ant-table">
+                            <thead>
+                                <tr>
+                                    <th>源表</th>
+                                    <th>目标表</th>
+                                    <th>源字段</th>
+                                    <th>目标字段</th>
+                                    <th>关系类型</th>
+                                    <th>是否事实维度关系</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="relationTableBody">
+                                <!-- 数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
 
+
+    <!-- 新增/编辑关系模态框 -->
+    <div id="relationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="relationModalTitle">新增表关系</h3>
+                <button class="close-btn" onclick="closeRelationModal()">&times;</button>
+            </div>
+            
+            <form id="relationForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源表 *</label>
+                        <select id="sourceTable" class="form-input" required onchange="loadTableFields('source')">
+                            <option value="">请选择源表</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">目标表 *</label>
+                        <select id="targetTable" class="form-input" required onchange="loadTableFields('target')">
+                            <option value="">请选择目标表</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源字段 *</label>
+                        <select id="sourceField" class="form-input" required>
+                            <option value="">请选择源字段</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">目标字段 *</label>
+                        <select id="targetField" class="form-input" required>
+                            <option value="">请选择目标字段</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="relationType" class="form-input" required>
+                            <option value="">请选择关系类型</option>
+                            <option value="1-1">一对一</option>
+                            <option value="1-N">一对多</option>
+                            <option value="N-N">多对多</option>
+                            <option value="self">自关联</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">是否事实维度关系</label>
+                        <select id="isFactDim" class="form-input">
+                            <option value="false">否</option>
+                            <option value="true">是</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeRelationModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- 新增/编辑ER模型模态框 -->
     <div id="erModal" class="modal">
@@ -461,6 +564,9 @@
         // 数据存储
         let erData = [];
         let currentEREditId = null;
+        let relationData = [];
+        let currentRelationEditId = null;
+        let availableTables = [];
         
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -486,6 +592,8 @@
         // 加载数据
         function loadData() {
             loadERData();
+            loadRelationData();
+            loadAvailableTables();
         }
         
         // 加载ER模型数据
@@ -697,14 +805,244 @@
             currentEREditId = null;
         }
         
+        // Tab切换功能
+        function switchTab(tabName) {
+            // 切换tab样式
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'er') {
+                document.querySelector('.tab-item:first-child').classList.add('active');
+                document.getElementById('er-tab').classList.add('active');
+            } else if (tabName === 'relations') {
+                document.querySelector('.tab-item:nth-child(2)').classList.add('active');
+                document.getElementById('relations-tab').classList.add('active');
+                renderRelationTable();
+            }
+        }
+
+        // 加载关系数据
+        function loadRelationData() {
+            const savedData = localStorage.getItem('dmDataPlan_o_line_relations');
+            if (savedData) {
+                relationData = JSON.parse(savedData);
+            } else {
+                relationData = [];
+            }
+            renderRelationTable();
+        }
+
+        // 加载可用表数据
+        function loadAvailableTables() {
+            const savedTables = JSON.parse(localStorage.getItem('dmDataPlan_tables') || '[]');
+            availableTables = savedTables.map(table => ({
+                name: table.tableName,
+                chineseName: table.chineseName,
+                fields: table.fields
+            }));
+        }
+
+        // 渲染关系表格
+        function renderRelationTable(data = null) {
+            const tableBody = document.getElementById('relationTableBody');
+            const displayData = data || relationData;
+            
+            tableBody.innerHTML = displayData.map(rel => `
+                <tr>
+                    <td>${rel.sourceTable}</td>
+                    <td>${rel.targetTable}</td>
+                    <td>${rel.sourceField}</td>
+                    <td>${rel.targetField}</td>
+                    <td>${rel.relationType}</td>
+                    <td>${rel.isFactDim ? '是' : '否'}</td>
+                    <td>${rel.createTime}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editRelation(${rel.id})">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteRelation(${rel.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 保存关系数据
+        function saveRelationDataToStorage() {
+            localStorage.setItem('dmDataPlan_o_line_relations', JSON.stringify(relationData));
+        }
+
+        // 显示新增关系模态框
+        function showAddRelationModal() {
+            currentRelationEditId = null;
+            document.getElementById('relationModalTitle').textContent = '新增表关系';
+            document.getElementById('relationForm').reset();
+            
+            // 加载表选项
+            loadTableOptions();
+            
+            document.getElementById('relationModal').style.display = 'block';
+        }
+
+        // 加载表选项
+        function loadTableOptions() {
+            const sourceSelect = document.getElementById('sourceTable');
+            const targetSelect = document.getElementById('targetTable');
+            
+            const options = availableTables.map(table => 
+                `<option value="${table.name}">${table.chineseName} (${table.name})</option>`
+            ).join('');
+            
+            sourceSelect.innerHTML = '<option value="">请选择源表</option>' + options;
+            targetSelect.innerHTML = '<option value="">请选择目标表</option>' + options;
+        }
+
+        // 加载字段选项
+        function loadTableFields(type) {
+            const tableSelect = document.getElementById(type + 'Table');
+            const fieldSelect = document.getElementById(type + 'Field');
+            
+            const selectedTable = availableTables.find(table => table.name === tableSelect.value);
+            
+            if (selectedTable && selectedTable.fields) {
+                const options = selectedTable.fields.map(field => 
+                    `<option value="${field.name}">${field.chineseName} (${field.name})</option>`
+                ).join('');
+                fieldSelect.innerHTML = '<option value="">请选择' + (type === 'source' ? '源' : '目标') + '字段</option>' + options;
+            } else {
+                fieldSelect.innerHTML = '<option value="">请选择' + (type === 'source' ? '源' : '目标') + '字段</option>';
+            }
+        }
+
+        // 保存关系
+        function saveRelation() {
+            const sourceTable = document.getElementById('sourceTable').value;
+            const targetTable = document.getElementById('targetTable').value;
+            const sourceField = document.getElementById('sourceField').value;
+            const targetField = document.getElementById('targetField').value;
+            const relationType = document.getElementById('relationType').value;
+            const isFactDim = document.getElementById('isFactDim').value === 'true';
+            
+            if (!sourceTable || !targetTable || !sourceField || !targetField || !relationType) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            const now = new Date().toLocaleString('zh-CN');
+            
+            if (currentRelationEditId) {
+                const index = relationData.findIndex(r => r.id === currentRelationEditId);
+                if (index !== -1) {
+                    relationData[index] = {
+                        ...relationData[index],
+                        sourceTable, targetTable, sourceField, targetField, relationType, isFactDim
+                    };
+                }
+            } else {
+                const newId = Math.max(...relationData.map(r => r.id), 0) + 1;
+                relationData.push({
+                    id: newId,
+                    sourceTable,
+                    targetTable,
+                    sourceField,
+                    targetField,
+                    relationType,
+                    isFactDim,
+                    createTime: now
+                });
+            }
+            
+            saveRelationDataToStorage();
+            renderRelationTable();
+            closeRelationModal();
+            alert(currentRelationEditId ? '关系更新成功' : '关系创建成功');
+        }
+
+        // 删除关系
+        function deleteRelation(id) {
+            if (!confirm('确定要删除这个关系吗？')) return;
+            
+            relationData = relationData.filter(r => r.id !== id);
+            saveRelationDataToStorage();
+            renderRelationTable();
+            alert('关系删除成功');
+        }
+
+        // 编辑关系
+        function editRelation(id) {
+            const relation = relationData.find(r => r.id === id);
+            if (!relation) return;
+            
+            currentRelationEditId = id;
+            document.getElementById('relationModalTitle').textContent = '编辑表关系';
+            
+            loadTableOptions();
+            
+            document.getElementById('sourceTable').value = relation.sourceTable;
+            document.getElementById('targetTable').value = relation.targetTable;
+            
+            // 加载字段选项
+            loadTableFields('source');
+            loadTableFields('target');
+            
+            setTimeout(() => {
+                document.getElementById('sourceField').value = relation.sourceField;
+                document.getElementById('targetField').value = relation.targetField;
+                document.getElementById('relationType').value = relation.relationType;
+                document.getElementById('isFactDim').value = relation.isFactDim.toString();
+            }, 100);
+            
+            document.getElementById('relationModal').style.display = 'block';
+        }
+
+        // 关闭关系模态框
+        function closeRelationModal() {
+            document.getElementById('relationModal').style.display = 'none';
+            currentRelationEditId = null;
+        }
+
+        // 搜索关系
+        function searchRelations() {
+            const searchTerm = document.getElementById('relationSearchInput').value.toLowerCase().trim();
+            if (!searchTerm) {
+                renderRelationTable();
+                return;
+            }
+            
+            const filteredData = relationData.filter(rel => 
+                rel.sourceTable.toLowerCase().includes(searchTerm) ||
+                rel.targetTable.toLowerCase().includes(searchTerm) ||
+                rel.sourceField.toLowerCase().includes(searchTerm) ||
+                rel.targetField.toLowerCase().includes(searchTerm)
+            );
+            
+            renderRelationTable(filteredData);
+        }
+
+        // 重置关系搜索
+        function resetRelationSearch() {
+            document.getElementById('relationSearchInput').value = '';
+            renderRelationTable();
+        }
+
         // 点击模态框外部关闭
         window.onclick = function(event) {
             const erModal = document.getElementById('erModal');
+            const relationModal = document.getElementById('relationModal');
             
             if (event.target === erModal) {
                 closeERModal();
+            } else if (event.target === relationModal) {
+                closeRelationModal();
             }
         }
+
+        // 为关系表单添加事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('relationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveRelation();
+            });
+        });
     </script>
 </body>
 </html>
