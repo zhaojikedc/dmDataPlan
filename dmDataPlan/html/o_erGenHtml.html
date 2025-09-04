@@ -508,6 +508,7 @@
       <button id="resetView">重置视图</button>
       <button id="saveView">保存当前视图</button>
       <button id="refreshData">刷新数据</button>
+      <button id="addTestRelation">添加测试关系</button>
       <button id="toggleLineType">切换线条类型</button>
       <button id="toggleAllTables">展开/折叠所有表</button>
       <button id="addTextBox">添加文本框</button>
@@ -2173,8 +2174,12 @@ function loadDynamicData() {
       
       // 加载O线关系定义数据
       const oLineRelations = JSON.parse(localStorage.getItem('dmDataPlan_o_line_relations') || '[]');
+      const oLineERRelations = JSON.parse(localStorage.getItem('dmDataPlan_o_line_er_relations') || '[]');
       
-      // 合并关系数据
+      // 先清空默认关系，只保留动态关系
+      currentERData.relations = [];
+      
+      // 合并关系管理页面的关系数据
       oLineRelations.forEach(rel => {
         const erRelation = {
           source: rel.sourceTable,
@@ -2185,16 +2190,20 @@ function loadDynamicData() {
           isFactDim: rel.isFactDim
         };
         
-        // 检查关系是否已存在
+        currentERData.relations.push(erRelation);
+      });
+      
+      // 合并专门的ER关系数据
+      oLineERRelations.forEach(rel => {
         const existingRelation = currentERData.relations.find(r => 
-          r.source === erRelation.source && 
-          r.target === erRelation.target &&
-          r.sourceField === erRelation.sourceField &&
-          r.targetField === erRelation.targetField
+          r.source === rel.source && 
+          r.target === rel.target &&
+          r.sourceField === rel.sourceField &&
+          r.targetField === rel.targetField
         );
         
         if (!existingRelation) {
-          currentERData.relations.push(erRelation);
+          currentERData.relations.push(rel);
         }
       });
       
@@ -3004,8 +3013,23 @@ function createSVGElements() {
   const svg = document.getElementById('svg-container');
   svg.innerHTML = '';
   
-  console.log('创建SVG元素，关系数量:', relations.length);
-  console.log('关系数据:', relations);
+  // 过滤掉无效的关系（源表或目标表不存在）
+  const validRelations = relations.filter(rel => {
+    const sourceExists = Object.keys(tables).includes(rel.source);
+    const targetExists = Object.keys(tables).includes(rel.target);
+    
+    if (!sourceExists || !targetExists) {
+      console.log('过滤无效关系:', rel, { sourceExists, targetExists });
+      return false;
+    }
+    return true;
+  });
+  
+  console.log('创建SVG元素，总关系数量:', relations.length, '有效关系数量:', validRelations.length);
+  console.log('有效关系数据:', validRelations);
+  
+  // 使用有效关系重新赋值
+  relations = validRelations;
   
   // 设置viewBox - 使用更大的尺寸以支持更大的移动范围
   svg.setAttribute('viewBox', '0 0 5000 4000');
@@ -3238,13 +3262,20 @@ function createSVGElements() {
 function updateSVGLines() {
   console.log('更新SVG线条，关系数量:', relations.length);
   console.log('表格矩形:', tableRects);
+  console.log('可用表格:', Object.keys(tableRects));
   
   relations.forEach(rel => {
+    console.log('处理关系:', rel);
     const rect1 = tableRects[rel.source];
     const rect2 = tableRects[rel.target];
     
     if (!rect1 || !rect2) {
-      console.log('跳过关系', rel.id, '因为缺少表格矩形:', { source: rel.source, target: rel.target });
+      console.log('跳过关系', rel.id, '因为缺少表格矩形:', { 
+        source: rel.source, 
+        target: rel.target,
+        hasSourceRect: !!rect1,
+        hasTargetRect: !!rect2
+      });
       return;
     }
     
@@ -3803,15 +3834,16 @@ function init() {
   
   console.log('表格数据:', tables);
   console.log('关系数据:', relations);
+  console.log('customRelations:', customRelations);
   
   // 清除现有的节点
   document.querySelectorAll('.node-wrapper').forEach(node => node.remove());
   
-  // 恢复保存的视图状态
-  restoreViewState();
-  
   // 创建表格节点
   Object.keys(tables).forEach(name => createNode(name, tables[name]));
+  
+  // 恢复保存的视图状态（放在表格创建之后，避免覆盖关系数据）
+  restoreViewState();
   
   // 初始化SVG
   setTimeout(() => {
@@ -3821,9 +3853,17 @@ function init() {
     updateSVGLines();
     updateZoomLevel();
     updateStatusIndicator(); // 更新状态指示器
-    console.log('SVG初始化完成');
+    console.log('SVG初始化完成，实际关系数量:', relations.length);
   }, 100);
 }
+
+// 监听表数据更新事件
+window.addEventListener('tableDataUpdated', function(event) {
+  console.log('收到表数据更新事件:', event.detail);
+  // 重新加载数据并刷新ER图
+  loadDynamicData();
+  init();
+});
 
 // DOM加载完成后初始化
 if (document.readyState === 'loading') {
@@ -3915,9 +3955,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const refreshDataBtn = document.getElementById('refreshData');
   if (refreshDataBtn) {
     refreshDataBtn.addEventListener('click', () => {
+      console.log('用户点击刷新数据按钮');
+      // 重新加载原始数据
+      currentERData = JSON.parse(JSON.stringify(defaultERData));
       loadDynamicData();
+      
+      // 清除SVG内容
+      const svg = document.getElementById('svg-container');
+      if (svg) svg.innerHTML = '';
+      
       init();
       alert('数据刷新成功！已加载最新的表和关系数据。');
+    });
+  }
+
+  // 添加测试关系按钮
+  const addTestRelationBtn = document.getElementById('addTestRelation');
+  if (addTestRelationBtn) {
+    addTestRelationBtn.addEventListener('click', () => {
+      // 获取当前可用的表
+      const tableNames = Object.keys(tables);
+      console.log('当前可用表:', tableNames);
+      
+      if (tableNames.length >= 2) {
+        // 创建测试关系
+        const testRelation = {
+          id: `test-rel-${Date.now()}`,
+          source: tableNames[0],
+          target: tableNames[1],
+          label: '1-1',
+          description: '测试关系',
+          sourceField: 'test_field',
+          targetField: 'test_field',
+          relationType: 'normal',
+          controlPoint: null,
+          curvature: 0.3
+        };
+        
+        console.log('添加测试关系:', testRelation);
+        relations.push(testRelation);
+        
+        // 重新绘制
+        setTimeout(() => {
+          updateTableRects();
+          createSVGElements();
+          updateSVGLines();
+        }, 100);
+        
+        alert('已添加测试关系！');
+      } else {
+        alert('需要至少2个表才能创建关系！');
+      }
     });
   }
 

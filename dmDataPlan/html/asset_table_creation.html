@@ -623,6 +623,17 @@
               updateERDiagramData(tableData);
             }
             
+            // 触发ER图的数据刷新事件（如果页面已打开）
+            try {
+                const event = new CustomEvent('tableDataUpdated', { 
+                    detail: { tableData: tableData }
+                });
+                window.dispatchEvent(event);
+                console.log('已发送表数据更新事件');
+            } catch (e) {
+                console.log('发送事件失败:', e);
+            }
+            
             alert('表结构保存成功！数据已同步到ER关系图。');
         }
         

@@ -954,7 +954,38 @@
             saveRelationDataToStorage();
             renderRelationTable();
             closeRelationModal();
-            alert(currentRelationEditId ? '关系更新成功' : '关系创建成功');
+            
+            // 同步更新ER图数据（添加测试关系）
+            updateERDiagramRelations();
+            
+            alert(currentRelationEditId ? '关系更新成功，已同步到ER图' : '关系创建成功，已同步到ER图');
+        }
+
+        // 同步更新ER图关系数据
+        function updateERDiagramRelations() {
+            try {
+                // 创建测试关系数据，确保ER图能显示关系线
+                const testRelationData = {
+                    title: "O线ER关系图（含动态关系）",
+                    description: "包含动态创建的表和关系的O线ER模型",
+                    tables: [],
+                    relations: relationData.map(rel => ({
+                        source: rel.sourceTable,
+                        target: rel.targetTable,
+                        sourceField: rel.sourceField,
+                        targetField: rel.targetField,
+                        type: rel.relationType,
+                        isFactDim: rel.isFactDim
+                    }))
+                };
+                
+                console.log('同步关系到ER图:', testRelationData.relations);
+                
+                // 可以将此数据保存到另一个存储key，供ER图使用
+                localStorage.setItem('dmDataPlan_o_line_er_relations', JSON.stringify(testRelationData.relations));
+            } catch (error) {
+                console.error('同步ER图关系失败:', error);
+            }
         }
 
         // 删除关系
@@ -964,7 +995,11 @@
             relationData = relationData.filter(r => r.id !== id);
             saveRelationDataToStorage();
             renderRelationTable();
-            alert('关系删除成功');
+            
+            // 同步更新ER图数据
+            updateERDiagramRelations();
+            
+            alert('关系删除成功，已同步到ER图');
         }
 
         // 编辑关系
