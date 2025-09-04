@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O线模型管理 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+            min-height: calc(100vh - 112px);
+        }
+        
+        .tab-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        
+        .tab-header {
+            display: flex;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .tab-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .tab-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            background: white;
+        }
+        
+        .tab-item:hover {
+            color: #1890ff;
+        }
+        
+        .tab-content {
+            padding: 24px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .ant-input {
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .ant-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        
+        .ant-btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ant-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .ant-btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        
+        .ant-btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+        
+        .ant-btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+        
+        .ant-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .ant-table th,
+        .ant-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .ant-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .ant-table tr:hover {
+            background: #fafafa;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            min-width: 600px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .er-preview {
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 16px;
+            background: #fafafa;
+            margin-top: 16px;
+        }
+        
+        .er-preview h4 {
+            margin: 0 0 12px 0;
+            color: #262626;
+        }
+        
+        .er-preview p {
+            margin: 0 0 8px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="app-title">数据仓库数据模型管理系统</div>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="app-content">
+            <div class="tab-container">
+                <div class="tab-header">
+                    <div class="tab-item active" onclick="switchTab('er')">模型表关系创建</div>
+                    <div class="tab-item" onclick="switchTab('o-er')">O线ER关系说明</div>
+                </div>
+                
+                <!-- O线模型ER关系内容 -->
+                <div id="er-tab" class="tab-content active">
+                    <div style="display: flex; gap: 20px; height: 80vh;">
+                        <!-- 左侧表选择区域 -->
+                        <div style="flex: 0 0 400px; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                            <h3 style="margin: 0 0 20px 0; color: #262626; font-size: 16px;">表选择</h3>
+                            
+                            <!-- 数据库选择 -->
+                            <div class="form-group">
+                                <label class="form-label">选择数据库</label>
+                                <select id="databaseSelect" class="form-input" onchange="loadTables()">
+                                    <option value="">请选择数据库</option>
+                                    <option value="dw_ods">ODS数据库</option>
+                                    <option value="dw_dwd">DWD数据库</option>
+                                    <option value="dw_dws">DWS数据库</option>
+                                    <option value="dw_ads">ADS数据库</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 表搜索 -->
+                            <div class="form-group">
+                                <label class="form-label">搜索表名</label>
+                                <input type="text" id="tableSearchInput" class="form-input" placeholder="输入表名搜索..." onkeyup="filterTables()">
+                            </div>
+                            
+                            <!-- 表列表 -->
+                            <div class="form-group">
+                                <label class="form-label">表列表</label>
+                                <div id="tableList" style="height: 400px; border: 1px solid #d9d9d9; border-radius: 6px; overflow-y: auto; padding: 8px;">
+                                    <div style="text-align: center; color: #999; padding: 20px;">请先选择数据库</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 批量添加 -->
+                            <div class="form-group">
+                                <label class="form-label">批量添加表</label>
+                                <textarea id="batchTableInput" class="form-textarea" placeholder="请输入表名，每行一个，支持复制粘贴..."></textarea>
+                                <button class="ant-btn" onclick="batchAddTables()" style="margin-top: 8px; width: 100%;">批量添加</button>
+                            </div>
+                            
+                            <!-- 已选表 -->
+                            <div class="form-group">
+                                <label class="form-label">已选表 (<span id="selectedTableCount">0</span>)</label>
+                                <div id="selectedTables" style="height: 330px; border: 1px solid #d9d9d9; border-radius: 6px; overflow-y: auto; padding: 8px; background: #fafafa;">
+                                    <div style="text-align: center; color: #999; padding: 20px;">暂无选中表</div>
+                                </div>
+                                <button class="ant-btn ant-btn-danger" onclick="clearSelectedTables()" style="margin-top: 8px; width: 100%;">清空选择</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧关系管理区域 -->
+                        <div style="flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                            <div class="toolbar">
+                                <div class="search-box">
+                                    <input type="text" id="erSearchInput" class="ant-input" placeholder="搜索源表/目标表/字段...">
+                                    <button class="ant-btn" onclick="searchER()">搜索</button>
+                                    <button class="ant-btn" onclick="resetERSearch()">重置</button>
+                                </div>
+                                <div class="toolbar-actions">
+                                    <button class="ant-btn ant-btn-primary" onclick="showAddERModal()">新增表关系</button>
+                                    <button class="ant-btn" onclick="generateTableInfoJSON()" style="margin-left: 8px;">生成表信息JSON</button>
+                                    <button class="ant-btn" onclick="generateRelationInfoJSON()" style="margin-left: 8px;">生成关系信息JSON</button>
+                                    <button class="ant-btn" onclick="viewRelationJSON()" style="margin-left: 8px;">查看关系JSON</button>
+                                    <button class="ant-btn ant-btn-success" onclick="initSampleRelations()" style="margin-left: 8px;">初始化示例关系</button>
+                                    <button class="ant-btn" onclick="refreshRelationsFromFile()" style="margin-left: 8px;">刷新关系数据</button>
+                                    <button class="ant-btn" onclick="exportDataToJSON()" style="margin-left: 8px;">导出完整数据</button>
+                                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importDataFromJSON(event)">
+                                    <button class="ant-btn" onclick="document.getElementById('importFile').click()" style="margin-left: 8px;">导入数据</button>
+                                    <button class="ant-btn" onclick="saveDataToStorage()" style="margin-left: 8px;">手动同步</button>
+                                </div>
+                            </div>
+                            
+                            <table class="ant-table">
+                                <thead>
+                                    <tr>
+                                        <th>源表</th>
+                                        <th>目标表</th>
+                                        <th>源表字段</th>
+                                        <th>目标表字段</th>
+                                        <th>关系类型</th>
+                                        <th>是否事实维度关系</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="erTableBody">
+                                    <!-- 数据将通过JavaScript动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- O线ER关系说明内容 -->
+                <div id="o-er-tab" class="tab-content">
+                    <div class="content-card" style="padding: 0;">
+                        <iframe src="o_erGenHtml.html" 
+                                style="width: 100%; height: 80vh; border: none; border-radius: 8px;"
+                                title="O线ER关系图">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新增/编辑ER模型模态框 -->
+    <div id="erModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="erModalTitle">新增ER模型</h3>
+                <button class="close-btn" onclick="closeERModal()">&times;</button>
+            </div>
+            
+            <form id="erForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源表 *</label>
+                        <select id="erSourceTable" class="form-input" required>
+                            <option value="">请选择源表</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标表 *</label>
+                        <select id="erTargetTable" class="form-input" required>
+                            <option value="">请选择目标表</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">源表字段 *</label>
+                        <input type="text" id="erSourceField" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标表字段 *</label>
+                        <input type="text" id="erTargetField" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">关系类型 *</label>
+                        <select id="erRelationType" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="one-to-one">一对一</option>
+                            <option value="one-to-many">一对多</option>
+                            <option value="many-to-one">多对一</option>
+                            <option value="many-to-many">多对多</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">是否事实维度关系 *</label>
+                        <select id="erIsFactDim" class="form-input" required>
+                            <option value="">请选择</option>
+                            <option value="fact">事实关系</option>
+                            <option value="dimension">维度关系</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="ant-btn" onclick="closeERModal()">取消</button>
+                    <button type="submit" class="ant-btn ant-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/data-api.js"></script>
+    <script>
+        let currentEREditId = null;
+        const api = new DataAPI('http://localhost:8080');
+        
+        // 表选择相关变量
+        let selectedTables = [];
+        let allTables = [];
+        let filteredTables = [];
+        let tableMetadata = null; // 存储表元数据
+        
+        // 数据同步相关
+        const STORAGE_KEY = 'o_line_er_data';
+        const TABLES_KEY = 'o_line_tables';
+        const RELATIONS_KEY = 'o_line_relations';
+        
+        // 关系数据变量
+        let erRelations = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            loadDataFromStorage(); // 先从localStorage加载数据
+            await loadTableMetadata(); // 加载表元数据
+            await loadRelationsFromFile(); // 自动加载关系数据文件
+            await loadERData();
+            setupEventListeners();
+            
+            // 确保关系表格被渲染
+            setTimeout(() => {
+                renderERTable();
+                syncToERDiagramPage();
+            }, 500);
+        });
+        
+        function setupEventListeners() {
+            document.getElementById('erForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await saveER();
+            });
+            
+            document.getElementById('erSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchER();
+                }
+            });
+        }
+
+        // Tab切换功能
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有tab项的active类
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 显示选中的tab内容
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // 激活选中的tab项
+            event.target.classList.add('active');
+        }
+
+        // 渲染关系表格
+        function renderERTable() {
+            try {
+                const tableBody = document.getElementById('erTableBody');
+                if (!tableBody) {
+                    console.error('找不到关系表格元素');
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                
+                if (!erRelations || erRelations.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="8" style="text-align: center; color: #999;">暂无关系数据</td>';
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                erRelations.forEach(r => {
+                    const row = document.createElement('tr');
+                    // 调试信息
+                    console.log('渲染关系数据:', r);
+                    console.log('isFactDim值:', r.isFactDim);
+                    
+                    row.innerHTML = `
+                        <td>${r.sourceTable || '-'}</td>
+                        <td>${r.targetTable || '-'}</td>
+                        <td>${r.sourceField || '-'}</td>
+                        <td>${r.targetField || '-'}</td>
+                        <td>${getRelationTypeName(r.relationType) || '-'}</td>
+                        <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                        <td>${r.createTime || r.createdTime || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                console.log(`渲染了 ${erRelations.length} 条关系数据`);
+            } catch (error) {
+                console.error('渲染关系表格失败:', error);
+            }
+        }
+
+        // ER模型相关功能
+        async function loadERData() {
+            try {
+                const tableBody = document.getElementById('erTableBody');
+                tableBody.innerHTML = '';
+                const relations = await api.listItems('o_line_er_relations.json', 'erRelations');
+                relations.forEach(r => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${r.sourceTable || '-'}</td>
+                        <td>${r.targetTable || '-'}</td>
+                        <td>${r.sourceField || '-'}</td>
+                        <td>${r.targetField || '-'}</td>
+                        <td>${getRelationTypeName(r.relationType)}</td>
+                        <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                        <td>${r.createTime || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                                <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('加载数据时出错:', error);
+                alert('加载数据失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function searchER() {
+            const searchTerm = document.getElementById('erSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                await loadERData();
+                return;
+            }
+            
+            const all = await api.listItems('o_line_er_relations.json', 'erRelations');
+            const tableBody = document.getElementById('erTableBody');
+            tableBody.innerHTML = '';
+            const results = all.filter(r => (r.sourceTable||'').toLowerCase().includes(searchTerm) || (r.targetTable||'').toLowerCase().includes(searchTerm) || (r.sourceField||'').toLowerCase().includes(searchTerm) || (r.targetField||'').toLowerCase().includes(searchTerm));
+            results.forEach(r => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${r.sourceTable || '-'}</td>
+                    <td>${r.targetTable || '-'}</td>
+                    <td>${r.sourceField || '-'}</td>
+                    <td>${r.targetField || '-'}</td>
+                    <td>${getRelationTypeName(r.relationType)}</td>
+                    <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                    <td>${r.createTime || '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="ant-btn" onclick="editER('${r.id}')">编辑</button>
+                            <button class="ant-btn ant-btn-danger" onclick="deleteER('${r.id}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function resetERSearch() {
+            document.getElementById('erSearchInput').value = '';
+            loadERData();
+        }
+        
+        function showAddERModal() {
+            currentEREditId = null;
+            document.getElementById('erModalTitle').textContent = '新增表关系';
+            document.getElementById('erForm').reset();
+            
+            // 更新源表和目标表的下拉选项
+            updateTableSelectOptions();
+            
+            document.getElementById('erModal').style.display = 'block';
+        }
+        
+        function updateTableSelectOptions() {
+            const sourceSelect = document.getElementById('erSourceTable');
+            const targetSelect = document.getElementById('erTargetTable');
+            
+            // 清空现有选项（保留第一个默认选项）
+            sourceSelect.innerHTML = '<option value="">请选择源表</option>';
+            targetSelect.innerHTML = '<option value="">请选择目标表</option>';
+            
+            // 添加已选中的表到下拉选项
+            selectedTables.forEach(table => {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = table;
+                sourceOption.textContent = table;
+                sourceSelect.appendChild(sourceOption);
+                
+                const targetOption = document.createElement('option');
+                targetOption.value = table;
+                targetOption.textContent = table;
+                targetSelect.appendChild(targetOption);
+            });
+            
+            // 如果没有选中的表，显示提示
+            if (selectedTables.length === 0) {
+                sourceSelect.innerHTML = '<option value="">请先在左侧选择表</option>';
+                targetSelect.innerHTML = '<option value="">请先在左侧选择表</option>';
+            }
+        }
+
+        async function editER(id) {
+            const rel = await api.getItem('o_line_er_relations.json', 'erRelations', id);
+            if (rel) {
+                currentEREditId = id;
+                document.getElementById('erModalTitle').textContent = '编辑表关系';
+                document.getElementById('erSourceTable').value = rel.sourceTable || '';
+                document.getElementById('erTargetTable').value = rel.targetTable || '';
+                document.getElementById('erSourceField').value = rel.sourceField || '';
+                document.getElementById('erTargetField').value = rel.targetField || '';
+                document.getElementById('erRelationType').value = rel.relationType || '';
+                document.getElementById('erIsFactDim').value = rel.isFactDim || '';
+                document.getElementById('erModal').style.display = 'block';
+            }
+        }
+
+        async function saveER() {
+            try {
+                const formData = {
+                    sourceTable: document.getElementById('erSourceTable').value.trim(),
+                    targetTable: document.getElementById('erTargetTable').value.trim(),
+                    sourceField: document.getElementById('erSourceField').value.trim(),
+                    targetField: document.getElementById('erTargetField').value.trim(),
+                    relationType: document.getElementById('erRelationType').value,
+                    isFactDim: document.getElementById('erIsFactDim').value,
+                    createTime: new Date().toLocaleString('zh-CN')
+                };
+                
+                if (!formData.sourceTable || !formData.targetTable || !formData.sourceField || !formData.targetField || !formData.relationType || !formData.isFactDim) {
+                    alert('请填写必填字段');
+                    return;
+                }
+                
+                let ok = false;
+                if (currentEREditId) {
+                    ok = await api.updateItem('o_line_er_relations.json', 'erRelations', currentEREditId, formData);
+                } else {
+                    ok = await api.addItem('o_line_er_relations.json', 'erRelations', formData);
+                }
+                
+                if (ok) {
+                    closeERModal();
+                    await loadERData();
+                    saveDataToStorage(); // 同步保存数据
+                    syncToERDiagramPage(); // 同步到关系说明页面
+                    alert('保存成功！');
+            } else {
+                    alert('保存失败，请重试！');
+                }
+            } catch (error) {
+                console.error('保存数据时出错:', error);
+                alert('保存失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        async function deleteER(id) {
+            if (!confirm('确定要删除这个表关系吗？')) return;
+            try {
+                // 从本地数据中删除
+                erRelations = erRelations.filter(r => r.id !== id);
+                
+                // 重新渲染关系表格
+                renderERTable();
+                
+                // 保存到localStorage
+                saveDataToStorage();
+                
+                // 同步到关系说明页面
+                syncToERDiagramPage();
+                
+                alert('删除成功！');
+            } catch (error) {
+                console.error('删除数据时出错:', error);
+                alert('删除失败，请检查网络连接或联系管理员！');
+            }
+        }
+
+        function closeERModal() {
+            document.getElementById('erModal').style.display = 'none';
+            currentEREditId = null;
+        }
+
+        // 加载表元数据
+        async function loadTableMetadata() {
+            try {
+                const response = await fetch('../config/table_metadata.json');
+                if (!response.ok) {
+                    throw new Error('无法加载表元数据文件');
+                }
+                
+                tableMetadata = await response.json();
+                console.log('表元数据加载成功:', tableMetadata);
+                
+                // 初始化数据库下拉列表
+                initDatabaseSelect();
+                
+            } catch (error) {
+                console.error('加载表元数据失败:', error);
+                alert('加载表元数据失败，请检查文件路径！');
+            }
+        }
+        
+        // 初始化数据库下拉列表
+        function initDatabaseSelect() {
+            if (!tableMetadata || !tableMetadata.tables) {
+                return;
+            }
+            
+            const databaseSelect = document.getElementById('databaseSelect');
+            if (!databaseSelect) {
+                return;
+            }
+            
+            // 获取所有唯一的数据库名称
+            const databases = [...new Set(tableMetadata.tables.map(table => table.database))];
+            
+            // 清空现有选项
+            databaseSelect.innerHTML = '<option value="">请选择数据库</option>';
+            
+            // 添加数据库选项
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db;
+                option.textContent = db;
+                databaseSelect.appendChild(option);
+            });
+            
+            console.log('数据库下拉列表初始化完成:', databases);
+        }
+        
+        // 表选择相关函数
+        async function loadTables() {
+            const database = document.getElementById('databaseSelect').value;
+            if (!database) {
+                document.getElementById('tableList').innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">请先选择数据库</div>';
+                return;
+            }
+            
+            try {
+                if (!tableMetadata) {
+                    throw new Error('表元数据未加载');
+                }
+                
+                // 根据选择的数据库过滤表
+                const tables = tableMetadata.tables.filter(table => table.database === database);
+                allTables = tables.map(table => table.name);
+                filteredTables = [...allTables];
+                renderTableList();
+                
+                console.log(`数据库 ${database} 的表加载完成，共 ${allTables.length} 个表`);
+                
+            } catch (error) {
+                console.error('加载表列表失败:', error);
+                alert('加载表列表失败，请重试！');
+            }
+        }
+        
+        function filterTables() {
+            const searchTerm = document.getElementById('tableSearchInput').value.toLowerCase();
+            if (!searchTerm) {
+                filteredTables = [...allTables];
+            } else {
+                filteredTables = allTables.filter(table => table.toLowerCase().includes(searchTerm));
+            }
+            renderTableList();
+        }
+        
+        function renderTableList() {
+            const tableList = document.getElementById('tableList');
+            if (filteredTables.length === 0) {
+                tableList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无表数据</div>';
+                return;
+            }
+            
+            tableList.innerHTML = filteredTables.map(table => `
+                <div class="table-item" style="padding: 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" 
+                     onclick="selectTable('${table}')">
+                    <span style="font-size: 13px;">${table}</span>
+                    <span style="color: #1890ff; font-size: 12px;">+ 选择</span>
+                </div>
+            `).join('');
+        }
+        
+        function selectTable(tableName) {
+            if (!selectedTables.includes(tableName)) {
+                selectedTables.push(tableName);
+                updateSelectedTablesDisplay();
+                saveDataToStorage(); // 同步保存数据
+            }
+        }
+        
+        function removeSelectedTable(tableName) {
+            selectedTables = selectedTables.filter(table => table !== tableName);
+            updateSelectedTablesDisplay();
+            saveDataToStorage(); // 同步保存数据
+        }
+        
+        function updateSelectedTablesDisplay() {
+            const selectedTablesDiv = document.getElementById('selectedTables');
+            const countSpan = document.getElementById('selectedTableCount');
+            
+            countSpan.textContent = selectedTables.length;
+            
+            if (selectedTables.length === 0) {
+                selectedTablesDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无选中表</div>';
+                return;
+            }
+            
+            selectedTablesDiv.innerHTML = selectedTables.map(table => `
+                <div style="padding: 6px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                    <span>${table}</span>
+                    <span style="color: #ff4d4f; cursor: pointer;" onclick="removeSelectedTable('${table}')">×</span>
+                </div>
+            `).join('');
+        }
+        
+        function batchAddTables() {
+            const batchInput = document.getElementById('batchTableInput').value.trim();
+            if (!batchInput) {
+                alert('请输入要添加的表名');
+                return;
+            }
+            
+            const tables = batchInput.split('\n').map(table => table.trim()).filter(table => table);
+            let addedCount = 0;
+            
+            tables.forEach(table => {
+                if (!selectedTables.includes(table)) {
+                    selectedTables.push(table);
+                    addedCount++;
+                }
+            });
+            
+            if (addedCount > 0) {
+                updateSelectedTablesDisplay();
+                document.getElementById('batchTableInput').value = '';
+                alert(`成功添加 ${addedCount} 个表`);
+            } else {
+                alert('没有新表被添加（可能已存在）');
+            }
+        }
+        
+        function clearSelectedTables() {
+            if (selectedTables.length === 0) {
+                alert('没有选中的表');
+                return;
+            }
+            
+            if (confirm(`确定要清空所有选中的表吗？共 ${selectedTables.length} 个表`)) {
+                selectedTables = [];
+                updateSelectedTablesDisplay();
+                saveDataToStorage(); // 同步保存数据
+            }
+        }
+        
+        // 数据同步相关函数
+        function saveDataToStorage() {
+            try {
+                // 保存表信息
+                const tablesData = {
+                    selectedTables: selectedTables,
+                    allTables: allTables,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(TABLES_KEY, JSON.stringify(tablesData));
+                
+                // 保存关系数据
+                const relationsData = {
+                    relations: erRelations,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(RELATIONS_KEY, JSON.stringify(relationsData));
+                
+                // 保存完整数据包
+                const fullData = {
+                    tables: tablesData,
+                    relations: relationsData,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(fullData));
+                
+                console.log('数据已同步到localStorage');
+            } catch (error) {
+                console.error('保存数据到localStorage失败:', error);
+            }
+        }
+        
+        // 生成表信息JSON文件
+        async function generateTableInfoJSON() {
+            try {
+                if (!tableMetadata) {
+                    throw new Error('表元数据未加载');
+                }
+                
+                if (selectedTables.length === 0) {
+                    alert('请先选择表！');
+                    return;
+                }
+                
+                // 过滤出已选择的表
+                const selectedTableInfo = tableMetadata.tables.filter(table => 
+                    selectedTables.includes(table.name)
+                );
+                
+                // 生成表信息JSON
+                const tableInfoData = {
+                    title: "O线数据表信息",
+                    description: "基于关系创建页面选择的表信息",
+                    tables: selectedTableInfo,
+                    selectedTables: selectedTables,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 下载JSON文件
+                const dataStr = JSON.stringify(tableInfoData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `o_line_table_info_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                alert(`表信息JSON文件生成成功！包含 ${selectedTables.length} 个表`);
+            } catch (error) {
+                console.error('生成表信息JSON失败:', error);
+                alert('生成表信息JSON失败！');
+            }
+        }
+        
+        // 生成关系信息JSON文件
+        function generateRelationInfoJSON() {
+            try {
+                if (erRelations.length === 0) {
+                    alert('当前没有表关系数据！');
+                    return;
+                }
+                
+                const relationInfoData = {
+                    title: "O线数据关系信息",
+                    description: "基于关系创建页面创建的表关系信息",
+                    relations: erRelations,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 下载JSON文件
+                const dataStr = JSON.stringify(relationInfoData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `o_line_relation_info_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                alert(`关系信息JSON文件生成成功！包含 ${erRelations.length} 个关系`);
+            } catch (error) {
+                console.error('生成关系信息JSON失败:', error);
+                alert('生成关系信息JSON失败！');
+            }
+        }
+        
+        // 查看关系JSON数据
+        function viewRelationJSON() {
+            try {
+                if (erRelations.length === 0) {
+                    alert('当前没有表关系数据！');
+                    return;
+                }
+                
+                const relationInfoData = {
+                    title: "O线数据关系信息",
+                    description: "基于关系创建页面创建的表关系信息",
+                    relations: erRelations,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 在新窗口中显示JSON数据
+                const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>表关系JSON数据</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+                            .header { margin-bottom: 20px; }
+                            .stats { background: #e6f7ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>表关系JSON数据</h1>
+                            <div class="stats">
+                                <strong>统计信息：</strong>
+                                关系数量: ${erRelations.length} 个<br>
+                                生成时间: ${new Date().toLocaleString('zh-CN')}
+                            </div>
+                        </div>
+                        <pre>${JSON.stringify(relationInfoData, null, 2)}</pre>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+                
+            } catch (error) {
+                console.error('查看关系JSON失败:', error);
+                alert('查看关系JSON失败！');
+            }
+        }
+
+        // 同步数据到ER关系图页面
+        function syncToERDiagramPage() {
+            try {
+                // 将关系数据同步到localStorage，供ER关系图页面使用
+                const erData = {
+                    tables: selectedTables.map(tableName => {
+                        const table = tableMetadata.tables.find(t => t.name === tableName);
+                        return table ? {
+                            name: table.name,
+                            database: table.database,
+                            type: table.type,
+                            description: table.description,
+                            fields: table.fields
+                        } : null;
+                    }).filter(Boolean),
+                    relations: erRelations.map(rel => ({
+                        id: rel.id,
+                        sourceTable: rel.sourceTable,
+                        targetTable: rel.targetTable,
+                        sourceField: rel.sourceField,
+                        targetField: rel.targetField,
+                        relationType: rel.relationType,
+                        relationDesc: rel.relationDesc || rel.description,
+                        createdBy: rel.createdBy || 'system',
+                        createdTime: rel.createdTime || rel.createTime
+                    })),
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 保存到localStorage，供ER关系图页面读取
+                localStorage.setItem('erDiagramData', JSON.stringify(erData));
+                
+                console.log('关系数据已同步到ER关系图页面');
+            } catch (error) {
+                console.error('同步数据到ER关系图页面失败:', error);
+            }
+        }
+
+        // 从文件加载关系数据
+        async function loadRelationsFromFile() {
+            try {
+                console.log('正在从文件加载关系数据...');
+                showStatusMessage('正在从文件加载关系数据...', 'info');
+                
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    console.log('关系数据文件不存在或无法访问，使用默认数据');
+                    showStatusMessage('关系数据文件不存在或无法访问', 'warning');
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('从文件加载的原始数据:', data);
+                console.log('erModels数据:', data.erModels);
+                if (data.erModels && data.erModels.length > 0) {
+                    console.log('第一个关系数据的isFactDim:', data.erModels[0].isFactDim);
+                }
+                
+                if (data.erModels && data.erModels.length > 0) {
+                    // 将文件中的关系数据合并到当前关系数据中
+                    const existingIds = new Set(erRelations.map(r => r.id));
+                    const newRelations = data.erModels.filter(r => !existingIds.has(r.id));
+                    
+                    console.log(`现有关系数量: ${erRelations.length}`);
+                    console.log(`文件中的关系数量: ${data.erModels.length}`);
+                    console.log(`新关系数量: ${newRelations.length}`);
+                    
+                    if (newRelations.length > 0) {
+                        erRelations = [...erRelations, ...newRelations];
+                        console.log(`从文件加载了 ${newRelations.length} 条新关系数据`);
+                        
+                        // 保存到localStorage
+                        saveDataToStorage();
+                        
+                        // 重新渲染关系表格
+                        renderERTable();
+                        
+                        // 显示加载成功提示
+                        showStatusMessage(`✅ 成功从文件加载了 ${newRelations.length} 条关系数据`, 'success');
+                    } else {
+                        console.log('没有新的关系数据需要加载，但会渲染现有数据');
+                        // 即使没有新数据，也要渲染现有数据
+                        renderERTable();
+                        showStatusMessage(`✅ 关系数据已是最新，共 ${erRelations.length} 条`, 'success');
+                    }
+                } else {
+                    console.log('文件中没有关系数据');
+                    // 渲染现有数据
+                    renderERTable();
+                    showStatusMessage('文件中没有关系数据', 'warning');
+                }
+            } catch (error) {
+                console.error('从文件加载关系数据失败:', error);
+                showStatusMessage(`❌ 从文件加载关系数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 手动刷新关系数据
+        async function refreshRelationsFromFile() {
+            try {
+                showStatusMessage('正在刷新关系数据...', 'info');
+                await loadRelationsFromFile();
+            } catch (error) {
+                console.error('刷新关系数据失败:', error);
+                showStatusMessage('刷新关系数据失败', 'error');
+            }
+        }
+
+        // 初始化示例关系数据
+        function initSampleRelations() {
+            try {
+                // 检查是否已有关系数据
+                if (erRelations.length > 0) {
+                    if (!confirm('当前已有关系数据，是否要覆盖现有数据？')) {
+                        return;
+                    }
+                }
+                
+                // 示例关系数据
+                const sampleRelations = [
+                    {
+                        "id": "rel_001",
+                        "name": "航空全货机维度表与流向配置关系",
+                        "description": "航空全货机维度表与流向配置宽表之间的关联关系",
+                        "sourceTable": "dim.dim_tp_air_full_cargo_di",
+                        "targetTable": "dm_pass_atp.tm_air_flow_config_wide",
+                        "sourceField": "deprt_city_code",
+                        "targetField": "src_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个始发城市代码可以对应多个流向配置",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_002", 
+                        "name": "航空全货机维度表与流向配置关系2",
+                        "description": "航空全货机维度表与流向配置宽表之间的关联关系",
+                        "sourceTable": "dim.dim_tp_air_full_cargo_di",
+                        "targetTable": "dm_pass_atp.tm_air_flow_config_wide",
+                        "sourceField": "arrive_city_code",
+                        "targetField": "dest_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个目的地城市代码可以对应多个流向配置",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_003",
+                        "name": "流向配置与流向重量汇总关系",
+                        "description": "流向配置宽表与流向重量汇总事实表之间的关联关系",
+                        "sourceTable": "dm_pass_atp.tm_air_flow_config_wide",
+                        "targetTable": "dm_tp.dm_tp_air_flow_weight_sum_di",
+                        "sourceField": "city_flow",
+                        "targetField": "flight_flow",
+                        "relationType": "1:N",
+                        "relationDesc": "一个城市流向可以对应多个航班流向记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_004",
+                        "name": "流向重量汇总与全流向汇总关系",
+                        "description": "流向重量汇总事实表与全流向汇总事实表之间的关联关系",
+                        "sourceTable": "dm_tp.dm_tp_air_flow_weight_sum_di",
+                        "targetTable": "dm_tp.dm_tp_air_full_flow_sum_di",
+                        "sourceField": "flight_task_id",
+                        "targetField": "send_flight_task_id",
+                        "relationType": "1:1",
+                        "relationDesc": "一个飞行任务ID对应一个发送航班任务ID",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_005",
+                        "name": "全流向汇总与时效达成汇总关系",
+                        "description": "全流向汇总事实表与时效达成汇总事实表之间的关联关系",
+                        "sourceTable": "dm_tp.dm_tp_air_full_flow_sum_di",
+                        "targetTable": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+                        "sourceField": "flight_flow",
+                        "targetField": "flight_flow",
+                        "relationType": "1:N",
+                        "relationDesc": "一个航班流向可以对应多个时效达成记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_006",
+                        "name": "时效达成汇总与价格明细关系",
+                        "description": "时效达成汇总事实表与价格明细事实表之间的关联关系",
+                        "sourceTable": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+                        "targetTable": "dm_tp.dm_tp_air_get_price_dtl_di",
+                        "sourceField": "src_city_code",
+                        "targetField": "depart_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个始发城市代码可以对应多个价格明细记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_007",
+                        "name": "时效达成汇总与价格明细关系2",
+                        "description": "时效达成汇总事实表与价格明细事实表之间的关联关系",
+                        "sourceTable": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+                        "targetTable": "dm_tp.dm_tp_air_get_price_dtl_di",
+                        "sourceField": "dest_city_code",
+                        "targetField": "arrive_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个目的地城市代码可以对应多个价格明细记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_008",
+                        "name": "航空全货机维度表与流向重量汇总关系",
+                        "description": "航空全货机维度表与流向重量汇总事实表之间的关联关系",
+                        "sourceTable": "dim.dim_tp_air_full_cargo_di",
+                        "targetTable": "dm_tp.dm_tp_air_flow_weight_sum_di",
+                        "sourceField": "cpct_name",
+                        "targetField": "flight_no",
+                        "relationType": "1:N",
+                        "relationDesc": "一个运力名称可以对应多个航班号",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_009",
+                        "name": "流向配置与时效达成汇总关系",
+                        "description": "流向配置宽表与时效达成汇总事实表之间的关联关系",
+                        "sourceTable": "dm_pass_atp.tm_air_flow_config_wide",
+                        "targetTable": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+                        "sourceField": "src_city_code",
+                        "targetField": "src_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个寄件城市代码可以对应多个时效达成记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    },
+                    {
+                        "id": "rel_010",
+                        "name": "流向配置与时效达成汇总关系2",
+                        "description": "流向配置宽表与时效达成汇总事实表之间的关联关系",
+                        "sourceTable": "dm_pass_atp.tm_air_flow_config_wide",
+                        "targetTable": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+                        "sourceField": "dest_city_code",
+                        "targetField": "dest_city_code",
+                        "relationType": "1:N",
+                        "relationDesc": "一个派件城市代码可以对应多个时效达成记录",
+                        "createdBy": "system",
+                        "createdTime": new Date().toISOString()
+                    }
+                ];
+                
+                // 设置关系数据
+                erRelations = sampleRelations;
+                
+                // 重新渲染关系表格
+                renderERTable();
+                
+                // 保存到localStorage
+                saveDataToStorage();
+                
+                alert(`✅ 示例关系数据初始化成功！\n\n已创建 ${sampleRelations.length} 条关系数据，包括：\n\n• 航空全货机维度表与流向配置关系\n• 流向配置与流向重量汇总关系\n• 流向重量汇总与全流向汇总关系\n• 全流向汇总与时效达成汇总关系\n• 时效达成汇总与价格明细关系\n\n数据已自动保存到本地存储。`);
+                
+            } catch (error) {
+                console.error('初始化示例关系数据失败:', error);
+                alert('初始化示例关系数据失败！');
+            }
+        }
+        
+        function loadDataFromStorage() {
+            try {
+                // 加载表数据
+                const tablesData = localStorage.getItem(TABLES_KEY);
+                if (tablesData) {
+                    const parsed = JSON.parse(tablesData);
+                    selectedTables = parsed.selectedTables || [];
+                    allTables = parsed.allTables || [];
+                    updateSelectedTablesDisplay();
+                }
+                
+                // 加载关系数据
+                const relationsData = localStorage.getItem(RELATIONS_KEY);
+                if (relationsData) {
+                    const parsed = JSON.parse(relationsData);
+                    erRelations = parsed.relations || [];
+                }
+                
+                console.log('从localStorage加载数据成功');
+            } catch (error) {
+                console.error('从localStorage加载数据失败:', error);
+            }
+        }
+        
+        function exportDataToJSON() {
+            try {
+                const data = {
+                    tables: {
+                        selectedTables: selectedTables,
+                        allTables: allTables
+                    },
+                    relations: erRelations,
+                    exportTime: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `o_line_er_data_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                alert('数据导出成功！');
+            } catch (error) {
+                console.error('导出数据失败:', error);
+                alert('导出数据失败！');
+            }
+        }
+        
+        function importDataFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.tables) {
+                        selectedTables = data.tables.selectedTables || [];
+                        allTables = data.tables.allTables || [];
+                        updateSelectedTablesDisplay();
+                    }
+                    
+                    if (data.relations) {
+                        erRelations = data.relations || [];
+                        renderERTable();
+                    }
+                    
+                    // 保存到localStorage
+                    saveDataToStorage();
+                    
+                    alert('数据导入成功！');
+                } catch (error) {
+                    console.error('导入数据失败:', error);
+                    alert('导入数据失败，请检查文件格式！');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 显示状态消息
+        function showStatusMessage(message, type = 'info') {
+            // 创建状态消息元素
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 4px;
+                color: white;
+                font-size: 14px;
+                z-index: 9999;
+                max-width: 400px;
+                word-wrap: break-word;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            `;
+            
+            // 根据类型设置背景色
+            switch (type) {
+                case 'success':
+                    statusDiv.style.backgroundColor = '#52c41a';
+                    break;
+                case 'error':
+                    statusDiv.style.backgroundColor = '#ff4d4f';
+                    break;
+                case 'warning':
+                    statusDiv.style.backgroundColor = '#faad14';
+                    break;
+                default:
+                    statusDiv.style.backgroundColor = '#1890ff';
+            }
+            
+            statusDiv.textContent = message;
+            document.body.appendChild(statusDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 3000);
+        }
+
+        // 辅助函数
+        function getRelationTypeName(type) {
+            const typeMap = {
+                'one-to-one': '一对一',
+                'one-to-many': '一对多',
+                'many-to-one': '多对一',
+                'many-to-many': '多对多'
+            };
+            return typeMap[type] || type || '-';
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const erModal = document.getElementById('erModal');
+            
+            if (event.target === erModal) {
+                closeERModal();
+            }
+        }
+    </script>
+</body>
+</html>

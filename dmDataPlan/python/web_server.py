@@ -40,6 +40,14 @@ class WebAPIHandler(BaseHTTPRequestHandler):
                 self.handle_get_specific_data(path, query_params)
             elif path.startswith('/html/'):
                 self.handle_static_file(path)
+            elif path.startswith('/config/'):
+                self.handle_config_file(path)
+            elif path == '/api/load-table-info':
+                self.handle_load_table_info()
+            elif path == '/api/load-relation':
+                self.handle_load_relation()
+            elif path == '/api/merge-er-data':
+                self.handle_merge_er_data()
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
@@ -56,6 +64,12 @@ class WebAPIHandler(BaseHTTPRequestHandler):
                 self.handle_post_data()
             elif path.startswith('/api/data/'):
                 self.handle_post_specific_data(path)
+            elif path == '/api/save-table-info':
+                self.handle_save_table_info()
+            elif path == '/api/save-relation':
+                self.handle_save_relation()
+            elif path == '/api/save-selected-tables':
+                self.handle_save_selected_tables()
             else:
                 self.send_error(404, "Not Found")
         except Exception as e:
@@ -240,6 +254,194 @@ class WebAPIHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404, "File Not Found")
     
+    def handle_config_file(self, path):
+        """处理配置文件请求"""
+        # 移除 /config/ 前缀
+        file_path = path[8:]  # 移除 '/config/'
+        
+        # 构建完整文件路径
+        config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+        full_path = os.path.join(config_dir, file_path)
+        
+        # 安全检查：确保文件在config目录内
+        if not os.path.abspath(full_path).startswith(os.path.abspath(config_dir)):
+            self.send_error(403, "Forbidden")
+            return
+        
+        if os.path.exists(full_path) and os.path.isfile(full_path):
+            # 获取MIME类型
+            mime_type, _ = mimetypes.guess_type(full_path)
+            if mime_type is None:
+                mime_type = 'application/octet-stream'
+            
+            # 读取文件内容
+            try:
+                with open(full_path, 'rb') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-Type', mime_type)
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(content)
+                
+            except Exception as e:
+                logger.error(f"读取配置文件失败 {full_path}: {e}")
+                self.send_error(500, "Internal Server Error")
+        else:
+            self.send_error(404, "File Not Found")
+    
+    def handle_save_table_info(self):
+        """处理保存表信息数据请求"""
+        try:
+            # 读取请求体
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            # 保存到文件
+            config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+            file_path = os.path.join(config_dir, 'o_line_table_info.json')
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"表信息数据已保存到: {file_path}")
+            self.send_json_response({"success": True, "message": "表信息数据保存成功"})
+            
+        except Exception as e:
+            logger.error(f"保存表信息数据失败: {e}")
+            self.send_error(500, f"保存失败: {str(e)}")
+    
+    def handle_save_relation(self):
+        """处理保存关系数据请求"""
+        try:
+            # 读取请求体
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            # 保存到文件
+            config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+            file_path = os.path.join(config_dir, 'o_line_relations.json')
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"关系数据已保存到: {file_path}")
+            self.send_json_response({"success": True, "message": "关系数据保存成功"})
+            
+        except Exception as e:
+            logger.error(f"保存关系数据失败: {e}")
+            self.send_error(500, f"保存失败: {str(e)}")
+    
+    def handle_load_table_info(self):
+        """处理加载表信息数据请求"""
+        try:
+            config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+            file_path = os.path.join(config_dir, 'o_line_table_info.json')
+            
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                self.send_error(404, "表信息数据文件不存在")
+                
+        except Exception as e:
+            logger.error(f"加载表信息数据失败: {e}")
+            self.send_error(500, f"加载失败: {str(e)}")
+    
+    def handle_load_relation(self):
+        """处理加载关系数据请求"""
+        try:
+            config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+            file_path = os.path.join(config_dir, 'o_line_relations.json')
+            
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.send_json_response(data)
+            else:
+                self.send_error(404, "关系数据文件不存在")
+                
+        except Exception as e:
+            logger.error(f"加载关系数据失败: {e}")
+            self.send_error(500, f"加载失败: {str(e)}")
+    
+    def handle_merge_er_data(self):
+        """处理合并ER数据请求"""
+        try:
+            import subprocess
+            import sys
+            
+            # 获取脚本路径
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            merge_script = os.path.join(script_dir, 'merge_er_data.py')
+            
+            if not os.path.exists(merge_script):
+                self.send_error(404, "合并脚本不存在")
+                return
+            
+            # 设置环境变量确保UTF-8编码
+            env = os.environ.copy()
+            env['PYTHONIOENCODING'] = 'utf-8'
+            
+            # 执行合并脚本
+            result = subprocess.run([sys.executable, merge_script], 
+                                  capture_output=True, text=True, 
+                                  encoding='utf-8', errors='replace',
+                                  env=env)
+            
+            if result.returncode == 0:
+                # 读取合并后的数据
+                config_dir = os.path.join(os.path.dirname(script_dir), 'config')
+                merged_file = os.path.join(config_dir, 'merged_er_data.json')
+                
+                if os.path.exists(merged_file):
+                    with open(merged_file, 'r', encoding='utf-8') as f:
+                        merged_data = json.load(f)
+                    
+                    logger.info("ER数据合并成功")
+                    self.send_json_response({
+                        "success": True, 
+                        "message": "数据合并成功",
+                        "data": merged_data,
+                        "output": result.stdout
+                    })
+                else:
+                    self.send_error(500, "合并文件未生成")
+            else:
+                logger.error(f"合并脚本执行失败: {result.stderr}")
+                self.send_error(500, f"合并失败: {result.stderr}")
+                
+        except Exception as e:
+            logger.error(f"合并ER数据失败: {e}")
+            self.send_error(500, f"合并失败: {str(e)}")
+    
+    def handle_save_selected_tables(self):
+        """处理保存已选表信息请求"""
+        try:
+            # 读取请求体
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            # 保存到文件
+            config_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config')
+            file_path = os.path.join(config_dir, 'selected_tables.json')
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"已选表信息已保存到: {file_path}")
+            self.send_json_response({"success": True, "message": "已选表信息保存成功"})
+            
+        except Exception as e:
+            logger.error(f"保存已选表信息失败: {e}")
+            self.send_error(500, f"保存失败: {str(e)}")
+    
     def send_json_response(self, data):
         """发送JSON响应"""
         self.send_response(200)
@@ -274,8 +476,14 @@ def start_server(host='localhost', port=8080):
     logger.info("  GET  /api/data?file=filename&type=item_type - 获取数据")
     logger.info("  GET  /api/data/filename/type/id - 获取特定项目")
     logger.info("  GET  /api/stats?file=filename - 获取统计信息")
+    logger.info("  GET  /api/load-table-info - 加载表信息数据")
+    logger.info("  GET  /api/load-relation - 加载关系数据")
+    logger.info("  GET  /api/merge-er-data - 合并ER数据")
     logger.info("  POST /api/data - 添加数据")
     logger.info("  POST /api/data/filename/type/id - 更新数据")
+    logger.info("  POST /api/save-table-info - 保存表信息数据")
+    logger.info("  POST /api/save-relation - 保存关系数据")
+    logger.info("  POST /api/save-selected-tables - 保存已选表信息")
     logger.info("  DELETE /api/data/filename/type/id - 删除数据")
     
     try:

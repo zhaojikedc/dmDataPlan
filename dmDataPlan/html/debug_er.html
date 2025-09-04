@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ER调试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #log { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; height: 300px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>ER调试页面</h1>
+    
+    <div class="debug-section">
+        <h3>1. 测试API连接</h3>
+        <button onclick="testAPI()">测试API</button>
+        <button onclick="testDataLoad()">测试数据载入</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. 测试数据转换</h3>
+        <button onclick="testDataConversion()">测试数据转换</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. 测试ER页面</h3>
+        <button onclick="openERPage()">打开ER页面</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>调试日志</h3>
+        <button onclick="clearLog()">清空日志</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // 重写console.log来捕获日志
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addLog(message, type = 'log') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? 'red' : type === 'warn' ? 'orange' : 'black';
+            logEntry.textContent = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog(args.join(' '), 'warn');
+        };
+        
+        async function testAPI() {
+            try {
+                console.log('开始测试API...');
+                const response = await fetch('/api/merge-er-data');
+                console.log('API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API响应数据:', data);
+                console.log('表数量:', data.data.tables.length);
+                console.log('关系数量:', data.data.relations.length);
+                
+            } catch (error) {
+                console.error('API测试失败:', error.message);
+            }
+        }
+        
+        async function testDataLoad() {
+            try {
+                console.log('开始测试数据载入...');
+                const response = await fetch('/api/merge-er-data');
+                const data = await response.json();
+                const importData = data.data;
+                
+                console.log('原始数据:', importData);
+                
+                // 模拟数据转换过程
+                if (!importData.tables || !Array.isArray(importData.tables)) {
+                    throw new Error('缺少tables字段');
+                }
+                
+                if (!importData.relations || !Array.isArray(importData.relations)) {
+                    console.warn('缺少relations字段，使用空数组');
+                    importData.relations = [];
+                }
+                
+                console.log('数据验证通过');
+                console.log('表数量:', importData.tables.length);
+                console.log('关系数量:', importData.relations.length);
+                
+            } catch (error) {
+                console.error('数据载入测试失败:', error.message);
+            }
+        }
+        
+        function testDataConversion() {
+            try {
+                console.log('测试数据转换...');
+                
+                // 模拟转换过程
+                const mockData = {
+                    tables: [
+                        { name: 'test_table', fields: [] }
+                    ],
+                    relations: [
+                        { source: 'table1', target: 'table2', type: '1-N' }
+                    ]
+                };
+                
+                console.log('模拟数据:', mockData);
+                console.log('数据转换测试完成');
+                
+            } catch (error) {
+                console.error('数据转换测试失败:', error.message);
+            }
+        }
+        
+        function openERPage() {
+            console.log('打开ER页面...');
+            window.open('/html/o_erGenHtml.html', '_blank');
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // 页面加载完成
+        console.log('调试页面加载完成');
+    </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合并数据测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #log { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; height: 400px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>合并数据测试</h1>
+    
+    <button onclick="testMergeAPI()">测试合并API</button>
+    <button onclick="testDirectFile()">直接读取合并文件</button>
+    <button onclick="clearLog()">清空日志</button>
+    
+    <div id="log"></div>
+
+    <script>
+        function addLog(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        async function testMergeAPI() {
+            try {
+                addLog('开始测试合并API...');
+                const response = await fetch('/api/merge-er-data');
+                
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                addLog('API响应成功');
+                
+                if (data.success && data.data) {
+                    const mergedData = data.data;
+                    addLog(`tables数量: ${mergedData.tables ? mergedData.tables.length : 'undefined'}`);
+                    addLog(`relations数量: ${mergedData.relations ? mergedData.relations.length : 'undefined'}`);
+                    
+                    if (mergedData.tables && mergedData.tables.length > 0) {
+                        addLog('tables列表:');
+                        mergedData.tables.forEach((table, index) => {
+                            addLog(`  ${index + 1}. ${table.name} (${table.type})`);
+                        });
+                    }
+                    
+                    if (mergedData.relations && mergedData.relations.length > 0) {
+                        addLog('relations详情:');
+                        mergedData.relations.forEach((rel, index) => {
+                            addLog(`  关系${index + 1}: ${rel.source} -> ${rel.target} (${rel.type})`);
+                            addLog(`    字段: ${rel.sourceField} -> ${rel.targetField}`);
+                            addLog(`    事实维度: ${rel.isFactDim}`);
+                        });
+                    } else {
+                        addLog('⚠️ relations为空或未定义');
+                    }
+                } else {
+                    addLog('❌ API返回失败: ' + (data.message || '未知错误'));
+                }
+                
+            } catch (error) {
+                addLog('❌ 测试失败: ' + error.message);
+            }
+        }
+        
+        async function testDirectFile() {
+            try {
+                addLog('开始直接读取合并文件...');
+                const response = await fetch('/config/merged_er_data.json');
+                
+                if (!response.ok) {
+                    throw new Error(`文件读取错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                addLog('文件读取成功');
+                
+                addLog(`tables数量: ${data.tables ? data.tables.length : 'undefined'}`);
+                addLog(`relations数量: ${data.relations ? data.relations.length : 'undefined'}`);
+                
+                if (data.tables && data.tables.length > 0) {
+                    addLog('tables列表:');
+                    data.tables.forEach((table, index) => {
+                        addLog(`  ${index + 1}. ${table.name} (${table.type})`);
+                    });
+                }
+                
+                if (data.relations && data.relations.length > 0) {
+                    addLog('relations详情:');
+                    data.relations.forEach((rel, index) => {
+                        addLog(`  关系${index + 1}: ${rel.source} -> ${rel.target} (${rel.type})`);
+                        addLog(`    字段: ${rel.sourceField} -> ${rel.targetField}`);
+                        addLog(`    事实维度: ${rel.isFactDim}`);
+                    });
+                } else {
+                    addLog('⚠️ relations为空或未定义');
+                }
+                
+            } catch (error) {
+                addLog('❌ 文件读取失败: ' + error.message);
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // 页面加载完成
+        addLog('合并数据测试页面加载完成');
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据同步测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .data-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .status.error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数据同步测试页面</h1>
+        <p>此页面用于测试"模型表关系创建"页面和"O线ER关系说明"页面之间的数据同步功能。</p>
+        
+        <div class="section">
+            <h3>1. 测试数据操作</h3>
+            <button onclick="addTestData()">添加测试数据</button>
+            <button onclick="clearTestData()">清空测试数据</button>
+            <button onclick="loadDataFromStorage()">从localStorage加载数据</button>
+            <button onclick="saveDataToStorage()">保存数据到localStorage</button>
+        </div>
+        
+        <div class="section">
+            <h3>2. 当前localStorage数据</h3>
+            <button onclick="displayStorageData()">显示存储数据</button>
+            <div id="storageData" class="data-display">点击"显示存储数据"查看</div>
+        </div>
+        
+        <div class="section">
+            <h3>3. 页面跳转测试</h3>
+            <button onclick="openRelationPage()">打开关系创建页面</button>
+            <button onclick="openERPage()">打开ER关系图页面</button>
+        </div>
+        
+        <div class="section">
+            <h3>4. 操作状态</h3>
+            <div id="status" class="status">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        // 数据同步相关常量
+        const STORAGE_KEY = 'o_line_er_data';
+        const TABLES_KEY = 'o_line_tables';
+        const RELATIONS_KEY = 'o_line_relations';
+        
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function addTestData() {
+            try {
+                // 添加测试表数据
+                const testTables = {
+                    selectedTables: ['ods_user_info', 'dwd_user_dim', 'dws_user_summary'],
+                    allTables: ['ods_user_info', 'ods_order_detail', 'dwd_user_dim', 'dwd_order_fact', 'dws_user_summary'],
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(TABLES_KEY, JSON.stringify(testTables));
+                
+                // 添加测试关系数据
+                const testRelations = {
+                    relations: [
+                        {
+                            sourceTable: 'ods_user_info',
+                            targetTable: 'dwd_user_dim',
+                            sourceField: 'user_id',
+                            targetField: 'user_id',
+                            relationType: 'one-to-one',
+                            isFactDim: '是',
+                            createTime: new Date().toLocaleString('zh-CN')
+                        },
+                        {
+                            sourceTable: 'dwd_user_dim',
+                            targetTable: 'dws_user_summary',
+                            sourceField: 'user_id',
+                            targetField: 'user_id',
+                            relationType: 'one-to-many',
+                            isFactDim: '否',
+                            createTime: new Date().toLocaleString('zh-CN')
+                        }
+                    ],
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(RELATIONS_KEY, JSON.stringify(testRelations));
+                
+                // 保存完整数据包
+                const fullData = {
+                    tables: testTables,
+                    relations: testRelations,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(fullData));
+                
+                showStatus('测试数据添加成功！');
+            } catch (error) {
+                showStatus('添加测试数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function clearTestData() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(TABLES_KEY);
+                localStorage.removeItem(RELATIONS_KEY);
+                showStatus('测试数据清空成功！');
+            } catch (error) {
+                showStatus('清空测试数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function loadDataFromStorage() {
+            try {
+                const fullData = localStorage.getItem(STORAGE_KEY);
+                if (fullData) {
+                    const parsed = JSON.parse(fullData);
+                    showStatus('数据加载成功！表数量: ' + (parsed.tables?.selectedTables?.length || 0) + ', 关系数量: ' + (parsed.relations?.relations?.length || 0));
+                } else {
+                    showStatus('没有找到存储的数据', 'error');
+                }
+            } catch (error) {
+                showStatus('加载数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function saveDataToStorage() {
+            try {
+                // 这里可以添加保存逻辑
+                showStatus('数据保存功能已触发！');
+            } catch (error) {
+                showStatus('保存数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function displayStorageData() {
+            try {
+                const fullData = localStorage.getItem(STORAGE_KEY);
+                const tablesData = localStorage.getItem(TABLES_KEY);
+                const relationsData = localStorage.getItem(RELATIONS_KEY);
+                
+                const displayData = {
+                    fullData: fullData ? JSON.parse(fullData) : null,
+                    tablesData: tablesData ? JSON.parse(tablesData) : null,
+                    relationsData: relationsData ? JSON.parse(relationsData) : null
+                };
+                
+                document.getElementById('storageData').textContent = JSON.stringify(displayData, null, 2);
+                showStatus('存储数据已显示');
+            } catch (error) {
+                showStatus('显示存储数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function openRelationPage() {
+            window.open('o_line_management.html', '_blank');
+        }
+        
+        function openERPage() {
+            window.open('o_erGenHtml.html', '_blank');
+        }
+        
+        // 页面加载时显示当前状态
+        window.addEventListener('load', () => {
+            const fullData = localStorage.getItem(STORAGE_KEY);
+            if (fullData) {
+                const parsed = JSON.parse(fullData);
+                showStatus('页面加载完成，发现存储数据。表数量: ' + (parsed.tables?.selectedTables?.length || 0) + ', 关系数量: ' + (parsed.relations?.relations?.length || 0));
+            } else {
+                showStatus('页面加载完成，没有发现存储数据');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+{
+  "title": "O线ER关系图",
+  "description": "本图展示了系统数据库的实体关系模型，包括事实表和维度表及其关联关系。",
+  "tables": [
+    {
+      "name": "dim.dim_tp_air_full_cargo_di",
+      "type": "dim",
+      "fields": [
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "cpct_name",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "运力名称"
+        },
+        {
+          "key": "deprt_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发地城市code"
+        },
+        {
+          "key": "arrive_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的地城市code"
+        }
+      ]
+    },
+    {
+      "name": "dm_pass_atp.tm_air_flow_config_wide",
+      "type": "dim",
+      "fields": [
+        {
+          "key": "id",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "ID"
+        },
+        {
+          "key": "city_flow",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "城市流向"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件城市代码"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "派件城市代码"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "type": "fact",
+      "fields": [
+        {
+          "key": "flight_task_id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "飞行任务ID"
+        },
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班号"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发地代码"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的地代码"
+        }
+      ]
+    }
+  ],
+  "relations": [],
+  "textBoxes": [],
+  "collapseStates": {}
+}

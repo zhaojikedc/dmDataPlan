@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单功能测试</title>
+    <script src="js/data-api.js"></script>
+</head>
+<body>
+    <h1>简单功能测试</h1>
+    <div id="status">正在测试...</div>
+    
+    <h2>数据库选择</h2>
+    <select id="databaseSelect">
+        <option value="">请选择数据库</option>
+    </select>
+    
+    <h2>表列表</h2>
+    <div id="tableList">请先选择数据库</div>
+    
+    <h2>已选表</h2>
+    <div id="selectedTables">暂无选中表</div>
+    
+    <h2>关系数据</h2>
+    <div id="relations">正在加载...</div>
+    
+    <script>
+        const api = new DataAPI('http://localhost:8080');
+        let tableMetadata = null;
+        let erRelations = [];
+        
+        async function testAll() {
+            try {
+                console.log('开始测试所有功能...');
+                
+                // 1. 测试表元数据加载
+                console.log('1. 加载表元数据...');
+                tableMetadata = await api.getData('table_metadata.json');
+                console.log('表元数据加载成功:', tableMetadata);
+                document.getElementById('status').innerHTML = '✅ 表元数据加载成功';
+                
+                // 2. 初始化数据库选择
+                console.log('2. 初始化数据库选择...');
+                initDatabaseSelect();
+                
+                // 3. 测试关系数据加载
+                console.log('3. 加载关系数据...');
+                const relationsData = await api.getData('o_line_relations.json');
+                erRelations = relationsData.relations || [];
+                console.log('关系数据加载成功:', erRelations);
+                document.getElementById('relations').innerHTML = `✅ 关系数据加载成功，共 ${erRelations.length} 条`;
+                
+            } catch (error) {
+                console.error('测试失败:', error);
+                document.getElementById('status').innerHTML = `❌ 测试失败: ${error.message}`;
+            }
+        }
+        
+        function initDatabaseSelect() {
+            if (!tableMetadata || !tableMetadata.tables) {
+                console.log('表元数据不存在');
+                return;
+            }
+            
+            const databaseSelect = document.getElementById('databaseSelect');
+            const databases = [...new Set(tableMetadata.tables.map(table => {
+                if (table.database) {
+                    return table.database;
+                } else if (table.name && table.name.includes('.')) {
+                    return table.name.split('.')[0];
+                }
+                return null;
+            }).filter(db => db))];
+            
+            console.log('找到数据库:', databases);
+            
+            databases.forEach(db => {
+                const option = document.createElement('option');
+                option.value = db;
+                option.textContent = db;
+                databaseSelect.appendChild(option);
+            });
+            
+            // 添加事件监听器
+            databaseSelect.addEventListener('change', loadTables);
+        }
+        
+        function loadTables() {
+            const database = document.getElementById('databaseSelect').value;
+            if (!database) {
+                document.getElementById('tableList').innerHTML = '请先选择数据库';
+                return;
+            }
+            
+            if (!tableMetadata) {
+                document.getElementById('tableList').innerHTML = '表元数据未加载';
+                return;
+            }
+            
+            const tables = tableMetadata.tables.filter(table => {
+                if (table.database) {
+                    return table.database === database;
+                } else if (table.name && table.name.includes('.')) {
+                    const tableDb = table.name.split('.')[0];
+                    return tableDb === database;
+                }
+                return false;
+            });
+            
+            console.log(`数据库 ${database} 的表:`, tables);
+            
+            const tableList = document.getElementById('tableList');
+            tableList.innerHTML = '';
+            
+            tables.forEach(table => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 5px; border: 1px solid #ddd; margin: 2px; cursor: pointer;';
+                div.textContent = table.name;
+                div.onclick = () => selectTable(table.name);
+                tableList.appendChild(div);
+            });
+        }
+        
+        function selectTable(tableName) {
+            const selectedDiv = document.getElementById('selectedTables');
+            const existing = selectedDiv.querySelector(`[data-table="${tableName}"]`);
+            
+            if (existing) {
+                existing.remove();
+            } else {
+                const div = document.createElement('div');
+                div.setAttribute('data-table', tableName);
+                div.style.cssText = 'padding: 5px; background: #e6f7ff; border: 1px solid #91d5ff; margin: 2px;';
+                div.textContent = tableName;
+                selectedDiv.appendChild(div);
+            }
+        }
+        
+        // 页面加载完成后开始测试
+        document.addEventListener('DOMContentLoaded', testAll);
+    </script>
+</body>
+</html>

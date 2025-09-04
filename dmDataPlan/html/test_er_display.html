@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ER图显示测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>ER图显示测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 测试合并API</h3>
+        <button onclick="testMergeAPI()">测试合并API</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 测试数据载入</h3>
+        <button onclick="testDataLoad()">测试数据载入</button>
+        <div id="loadResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 打开ER页面</h3>
+        <button onclick="openERPage()">打开ER关系说明页面</button>
+    </div>
+
+    <script>
+        async function testMergeAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch('/api/merge-er-data');
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `✅ API测试成功！<br>表数量: ${data.data.tables.length}<br>关系数量: ${data.data.relations.length}`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ API测试失败: ${error.message}`;
+            }
+        }
+        
+        async function testDataLoad() {
+            const resultDiv = document.getElementById('loadResult');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                // 模拟数据载入过程
+                const response = await fetch('/api/merge-er-data');
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const importData = data.data;
+                
+                // 检查数据结构
+                if (!importData.tables || !Array.isArray(importData.tables)) {
+                    throw new Error('无效的数据结构：tables必须是数组');
+                }
+                
+                if (!importData.relations || !Array.isArray(importData.relations)) {
+                    throw new Error('无效的数据结构：relations必须是数组');
+                }
+                
+                resultDiv.innerHTML = `✅ 数据载入测试成功！<br>表数量: ${importData.tables.length}<br>关系数量: ${importData.relations.length}<br>数据结构验证通过`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ 数据载入测试失败: ${error.message}`;
+            }
+        }
+        
+        function openERPage() {
+            window.open('/html/o_erGenHtml.html', '_blank');
+        }
+    </script>
+</body>
+</html>

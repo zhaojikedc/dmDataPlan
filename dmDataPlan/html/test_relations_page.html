@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关系页面测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>关系页面测试</h1>
+    
+    <button class="btn" onclick="testRelationsPage()">测试关系页面逻辑</button>
+    <button class="btn" onclick="clearResults()">清空结果</button>
+    
+    <div id="results"></div>
+    <div id="relationsTable"></div>
+
+    <script>
+        // 模拟关系页面的变量和函数
+        let erRelations = [];
+        
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        // 模拟loadRelationsFromFile函数
+        async function loadRelationsFromFile() {
+            try {
+                showResult('正在从文件加载关系数据...', 'info');
+                
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showResult('✅ 成功获取JSON数据', 'success');
+                
+                if (data.erModels && data.erModels.length > 0) {
+                    // 将文件中的关系数据合并到当前关系数据中
+                    const existingIds = new Set(erRelations.map(r => r.id));
+                    const newRelations = data.erModels.filter(r => !existingIds.has(r.id));
+                    
+                    showResult(`现有关系数量: ${erRelations.length}`, 'info');
+                    showResult(`文件中的关系数量: ${data.erModels.length}`, 'info');
+                    showResult(`新关系数量: ${newRelations.length}`, 'info');
+                    
+                    if (newRelations.length > 0) {
+                        erRelations = [...erRelations, ...newRelations];
+                        showResult(`✅ 成功合并关系数据，总数量: ${erRelations.length}`, 'success');
+                    } else {
+                        showResult('✅ 没有新关系需要添加', 'success');
+                    }
+                } else {
+                    showResult('⚠️ 文件中没有关系数据', 'info');
+                }
+                
+                return erRelations;
+            } catch (error) {
+                showResult(`❌ 加载关系数据失败: ${error.message}`, 'error');
+                return [];
+            }
+        }
+
+        // 模拟renderERTable函数
+        function renderERTable() {
+            try {
+                const tableBody = document.getElementById('relationsTable');
+                if (!tableBody) {
+                    showResult('❌ 找不到关系表格元素', 'error');
+                    return;
+                }
+                
+                tableBody.innerHTML = '';
+                
+                if (!erRelations || erRelations.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="8" style="text-align: center; color: #999;">暂无关系数据</td>';
+                    tableBody.appendChild(row);
+                    showResult('⚠️ 没有关系数据可显示', 'info');
+                    return;
+                }
+                
+                // 创建表格
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>源表</th>
+                            <th>目标表</th>
+                            <th>源表字段</th>
+                            <th>目标表字段</th>
+                            <th>关系类型</th>
+                            <th>是否事实维度关系</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="erTableBody">
+                    </tbody>
+                `;
+                
+                const tbody = table.querySelector('#erTableBody');
+                
+                erRelations.forEach(r => {
+                    const row = document.createElement('tr');
+                    // 调试信息
+                    console.log('渲染关系数据:', r);
+                    console.log('isFactDim值:', r.isFactDim);
+                    
+                    row.innerHTML = `
+                        <td>${r.sourceTable || '-'}</td>
+                        <td>${r.targetTable || '-'}</td>
+                        <td>${r.sourceField || '-'}</td>
+                        <td>${r.targetField || '-'}</td>
+                        <td>${r.relationType || '-'}</td>
+                        <td>${r.isFactDim === 'fact' ? '事实关系' : (r.isFactDim === 'dimension' ? '维度关系' : '-')}</td>
+                        <td>${r.createTime || r.createdTime || '-'}</td>
+                        <td>测试</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                tableBody.appendChild(table);
+                showResult(`✅ 成功渲染 ${erRelations.length} 条关系数据`, 'success');
+                
+            } catch (error) {
+                showResult(`❌ 渲染关系表格失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRelationsPage() {
+            try {
+                showResult('开始测试关系页面逻辑...', 'info');
+                
+                // 1. 加载关系数据
+                await loadRelationsFromFile();
+                
+                // 2. 渲染关系表格
+                renderERTable();
+                
+                // 3. 检查结果
+                if (erRelations.length > 0) {
+                    const firstRelation = erRelations[0];
+                    showResult(`第一个关系的isFactDim: ${firstRelation.isFactDim}`, 'info');
+                    showResult(`第一个关系显示: ${firstRelation.isFactDim === 'fact' ? '事实关系' : (firstRelation.isFactDim === 'dimension' ? '维度关系' : '-')}`, 'info');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('relationsTable').innerHTML = '';
+            erRelations = [];
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('页面已加载，点击"测试关系页面逻辑"开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON导入测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .json-textarea { width: 100%; height: 200px; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>JSON导入测试</h1>
+    
+    <div class="status info">
+        <strong>测试说明:</strong> 测试O线ER关系说明页面的JSON导入功能
+    </div>
+    
+    <h3>测试JSON数据</h3>
+    <textarea id="testJson" class="json-textarea" placeholder="粘贴JSON数据...">{
+  "title": "测试ER图",
+  "description": "这是一个测试ER图",
+  "tables": [
+    {
+      "name": "test_table1",
+      "type": "fact",
+      "fields": [
+        {"name": "id", "type": "int", "primary": true},
+        {"name": "name", "type": "varchar", "length": 100}
+      ]
+    },
+    {
+      "name": "test_table2", 
+      "type": "dim",
+      "fields": [
+        {"name": "id", "type": "int", "primary": true},
+        {"name": "description", "type": "varchar", "length": 200}
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "source": "test_table2",
+      "target": "test_table1",
+      "type": "1-N",
+      "sourceField": "id",
+      "targetField": "id",
+      "isFactDim": true
+    }
+  ]
+}</textarea>
+    
+    <button class="btn" onclick="testJsonImport()">测试JSON导入</button>
+    <button class="btn" onclick="clearResults()">清空结果</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testJsonImport() {
+            try {
+                showResult('开始测试JSON导入...', 'info');
+                
+                const jsonInput = document.getElementById('testJson').value.trim();
+                
+                if (!jsonInput) {
+                    showResult('❌ 请输入JSON数据！', 'error');
+                    return;
+                }
+                
+                // 解析JSON
+                const importData = JSON.parse(jsonInput);
+                showResult('✅ JSON解析成功', 'success');
+                
+                // 验证数据结构
+                if (!importData.tables || !Array.isArray(importData.tables)) {
+                    throw new Error('无效的数据结构：tables必须是数组');
+                }
+                
+                if (!importData.relations || !Array.isArray(importData.relations)) {
+                    throw new Error('无效的数据结构：relations必须是数组');
+                }
+                
+                showResult('✅ 数据结构验证通过', 'success');
+                
+                // 检查表格数据
+                showResult(`📊 表格数量: ${importData.tables.length}`, 'info');
+                importData.tables.forEach((table, index) => {
+                    showResult(`表格 ${index + 1}: ${table.name} (${table.type})`, 'info');
+                });
+                
+                // 检查关系数据
+                showResult(`📊 关系数量: ${importData.relations.length}`, 'info');
+                importData.relations.forEach((rel, index) => {
+                    showResult(`关系 ${index + 1}: ${rel.source} -> ${rel.target} (${rel.type})`, 'info');
+                });
+                
+                // 检查标题和描述
+                if (importData.title) {
+                    showResult(`📝 标题: ${importData.title}`, 'info');
+                }
+                if (importData.description) {
+                    showResult(`📝 描述: ${importData.description}`, 'info');
+                }
+                
+                showResult('✅ JSON导入测试完成，数据格式正确！', 'success');
+                
+            } catch (error) {
+                showResult(`❌ JSON导入测试失败: ${error.message}`, 'error');
+                console.error('JSON导入测试失败:', error);
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('页面已加载，点击"测试JSON导入"开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

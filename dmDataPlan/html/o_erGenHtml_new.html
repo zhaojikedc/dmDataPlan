@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O线ER关系说明 - 数据仓库数据模型管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        
+        .app-header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .app-content {
+            margin: 24px;
+        }
+        
+        .page-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .page-header {
+            background: #fafafa;
+            padding: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0 0 8px 0;
+        }
+        
+        .page-description {
+            color: #8c8c8c;
+            margin: 0;
+        }
+        
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .left-panel {
+            width: 300px;
+            border-right: 1px solid #f0f0f0;
+            background: #fafafa;
+            padding: 24px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 24px;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: #1890ff;
+            margin-right: 8px;
+        }
+        
+        .data-load-section {
+            margin-bottom: 24px;
+        }
+        
+        .load-button {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            margin-bottom: 12px;
+        }
+        
+        .load-button:hover {
+            background: #40a9ff;
+        }
+        
+        .load-button:disabled {
+            background: #d9d9d9;
+            cursor: not-allowed;
+        }
+        
+        .data-info {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .data-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .data-info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .data-info-label {
+            font-weight: 500;
+            color: #262626;
+        }
+        
+        .data-info-value {
+            color: #1890ff;
+            font-weight: 500;
+        }
+        
+        .status-message {
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .status-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        
+        .status-error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        
+        .status-info {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        .canvas-area {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+            overflow: auto;
+        }
+        
+        .canvas-content {
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+            width: max-content;
+            height: max-content;
+        }
+        
+        .toolbar {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .toolbar-item {
+            font-size: 12px;
+            color: #595959;
+        }
+        
+        .toolbar-value {
+            color: #1890ff;
+            font-weight: 500;
+        }
+        
+        #tables-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+            min-width: 5000px;
+            min-height: 4000px;
+        }
+        
+        #tables-container > div {
+            pointer-events: auto;
+        }
+        
+        #svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            pointer-events: none;
+            min-width: 5000px;
+            min-height: 4000px;
+        }
+        
+        .er-wrapper {
+            position: absolute;
+            border: 2px solid #95a5a6;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 6px;
+            overflow: visible;
+            transition: box-shadow 0.3s;
+            cursor: move;
+        }
+        
+        .er-wrapper:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .er-wrapper.fact-table {
+            border: 3px solid #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .er-wrapper.dim-table {
+            border: 3px solid #3498db;
+            background: #f0f8ff;
+        }
+        
+        .er-table {
+            border-collapse: collapse;
+            font-size: 12px;
+            width: 100%;
+        }
+        
+        .er-table th {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 10px;
+            user-select: none;
+            text-align: left;
+            font-weight: 500;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .fact-table .er-table th {
+            background: #e74c3c;
+        }
+        
+        .dim-table .er-table th {
+            background: #3498db;
+        }
+        
+        .er-table td {
+            border-top: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+        
+        .pk {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .fk {
+            color: #2980b9;
+            font-weight: 600;
+        }
+        
+        .pk-fk {
+            color: #9b59b6;
+            font-weight: 600;
+        }
+        
+        .table-type-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #52c41a;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .table-type-badge.dim-badge {
+            background: #1890ff;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #8c8c8c;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state-desc {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">数据仓库数据模型管理系统</div>
+        <a href="dm_planning.html" class="back-btn">返回首页</a>
+    </div>
+
+    <div class="app-content">
+        <div class="page-container">
+            <div class="page-header">
+                <h1 class="page-title">O线ER关系说明</h1>
+                <p class="page-description">加载模型关系创建页面的数据，生成ER关系图</p>
+            </div>
+
+            <div class="main-content">
+                <!-- 左侧面板：数据加载控制 -->
+                <div class="left-panel">
+                    <div class="panel-title">数据加载</div>
+                    
+                    <!-- 状态消息 -->
+                    <div id="statusMessage" class="status-message" style="display: none;"></div>
+                    
+                    <!-- 数据载入按钮 -->
+                    <div class="data-load-section">
+                        <button class="load-button" onclick="loadERData()" id="loadButton">
+                            数据载入
+                        </button>
+                        <button class="load-button" onclick="refreshERData()" id="refreshButton" style="background: #52c41a;">
+                            刷新数据
+                        </button>
+                    </div>
+                    
+                    <!-- 数据信息 -->
+                    <div class="data-info" id="dataInfo" style="display: none;">
+                        <div class="data-info-item">
+                            <span class="data-info-label">标题:</span>
+                            <span class="data-info-value" id="dataTitle">-</span>
+                        </div>
+                        <div class="data-info-item">
+                            <span class="data-info-label">表格数量:</span>
+                            <span class="data-info-value" id="dataTableCount">0</span>
+                        </div>
+                        <div class="data-info-item">
+                            <span class="data-info-label">关系数量:</span>
+                            <span class="data-info-value" id="dataRelationCount">0</span>
+                        </div>
+                        <div class="data-info-item">
+                            <span class="data-info-label">最后更新:</span>
+                            <span class="data-info-value" id="dataLastUpdate">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作说明 -->
+                    <div class="data-info">
+                        <div style="font-weight: 500; margin-bottom: 8px; color: #262626;">操作说明:</div>
+                        <div style="font-size: 12px; color: #595959; line-height: 1.5;">
+                            1. 点击"数据载入"自动合并selected_tables.json和o_line_relations.json<br>
+                            2. 系统会生成完整的ER关系图数据<br>
+                            3. 直接呈现ER关系图内容<br>
+                            4. 支持拖拽、缩放等交互操作
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧面板：ER关系图 -->
+                <div class="right-panel">
+                    <div class="canvas-area">
+                        <!-- 工具栏 -->
+                        <div class="toolbar">
+                            <div class="toolbar-item">
+                                缩放: <span class="toolbar-value" id="zoomLevel">100%</span>
+                            </div>
+                            <div class="toolbar-item">
+                                线条类型: <span class="toolbar-value" id="lineType">曲线</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 画布内容 -->
+                        <div class="canvas-content">
+                            <svg id="svg-container"></svg>
+                            <div id="tables-container"></div>
+                        </div>
+                        
+                        <!-- 加载状态 -->
+                        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                            <div class="loading-spinner"></div>
+                        </div>
+                        
+                        <!-- 空状态 -->
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-state-icon">📊</div>
+                            <div class="empty-state-text">暂无ER关系图数据</div>
+                            <div class="empty-state-desc">请先加载ER数据</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let erData = null;
+        let tables = {};
+        let relations = [];
+        let tableRects = {};
+        let wrappers = {};
+        let zoomLevel = 1;
+        let lineType = 'curve';
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCanvas();
+        });
+
+        // 初始化画布
+        function initializeCanvas() {
+            const canvasContent = document.querySelector('.canvas-content');
+            const svgContainer = document.getElementById('svg-container');
+            const tablesContainer = document.getElementById('tables-container');
+            
+            // 设置容器样式
+            svgContainer.style.position = 'absolute';
+            svgContainer.style.top = '0';
+            svgContainer.style.left = '0';
+            svgContainer.style.zIndex = '3';
+            svgContainer.style.pointerEvents = 'none';
+            svgContainer.style.minWidth = '5000px';
+            svgContainer.style.minHeight = '4000px';
+            
+            tablesContainer.style.position = 'absolute';
+            tablesContainer.style.top = '0';
+            tablesContainer.style.left = '0';
+            tablesContainer.style.zIndex = '2';
+            tablesContainer.style.pointerEvents = 'none';
+            tablesContainer.style.minWidth = '5000px';
+            tablesContainer.style.minHeight = '4000px';
+        }
+
+
+        async function loadERData() {
+            showLoading(true);
+            showStatusMessage('正在载入ER数据...', 'info');
+            
+            try {
+                // 调用合并数据API，直接获取完整的ER数据
+                const mergeResponse = await fetch('/api/merge-er-data');
+                
+                if (!mergeResponse.ok) {
+                    throw new Error(`数据载入失败: ${mergeResponse.status}`);
+                }
+                
+                const mergeResult = await mergeResponse.json();
+                
+                if (!mergeResult.success) {
+                    throw new Error(mergeResult.message || '数据载入失败');
+                }
+                
+                const mergedData = mergeResult.data;
+                console.log('载入的ER数据:', mergedData);
+                
+                // 直接使用合并后的数据
+                erData = mergedData;
+                
+                // 渲染ER图
+                renderERDiagram();
+                updateDataInfo();
+                
+                // 显示载入信息
+                showStatusMessage(`数据载入成功！表数量: ${mergedData.tables.length}, 关系数量: ${mergedData.relations.length}`, 'success');
+                
+            } catch (error) {
+                console.error('载入ER数据失败:', error);
+                showStatusMessage(`载入失败: ${error.message}`, 'error');
+                
+                // 如果载入失败，尝试从本地文件加载
+                await loadFromLocalFiles();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 从本地文件加载
+        async function loadFromLocalFiles() {
+            try {
+                // 尝试加载示例数据
+                const response = await fetch('../config/o_line_er_models.json');
+                if (response.ok) {
+                    erData = await response.json();
+                    renderERDiagram();
+                    updateDataInfo();
+                    showStatusMessage('从本地文件加载ER数据成功', 'success');
+                } else {
+                    showStatusMessage('没有找到ER数据文件', 'error');
+                }
+            } catch (error) {
+                showStatusMessage('从本地文件加载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 合并ER数据
+        function mergeERData(tableInfoData, relationData) {
+            const mergedData = {
+                title: "O线ER关系图",
+                description: "本图展示了系统数据库的实体关系模型，包括事实表和维度表及其关联关系。",
+                tables: [],
+                relations: [],
+                textBoxes: [],
+                collapseStates: {}
+            };
+            
+            // 合并表信息
+            if (tableInfoData && tableInfoData.tables) {
+                mergedData.tables = tableInfoData.tables;
+                mergedData.title = tableInfoData.title || mergedData.title;
+                mergedData.description = tableInfoData.description || mergedData.description;
+            }
+            
+            // 合并关系数据
+            if (relationData && relationData.relations) {
+                mergedData.relations = relationData.relations;
+            }
+            
+            return mergedData;
+        }
+
+        // 渲染ER关系图
+        function renderERDiagram() {
+            if (!erData) {
+                showEmptyState(true);
+                return;
+            }
+            
+            showEmptyState(false);
+            
+            // 清空画布
+            clearCanvas();
+            
+            // 处理表格数据
+            tables = {};
+            erData.tables.forEach(table => {
+                tables[table.name] = table.fields || [];
+            });
+            
+            // 处理关系数据
+            relations = erData.relations || [];
+            
+            // 创建表格节点
+            createTableNodes();
+            
+            // 创建关系连线
+            createRelationLines();
+            
+            // 更新工具栏信息
+            updateToolbar();
+        }
+
+        // 清空画布
+        function clearCanvas() {
+            const svgContainer = document.getElementById('svg-container');
+            const tablesContainer = document.getElementById('tables-container');
+            
+            svgContainer.innerHTML = '';
+            tablesContainer.innerHTML = '';
+            
+            tableRects = {};
+            wrappers = {};
+        }
+
+        // 创建表格节点
+        function createTableNodes() {
+            const tablesContainer = document.getElementById('tables-container');
+            
+            Object.keys(tables).forEach((tableName, index) => {
+                const fields = tables[tableName];
+                const tableInfo = erData.tables.find(t => t.name === tableName);
+                const tableType = tableInfo ? tableInfo.type : 'normal';
+                
+                // 创建表格包装器
+                const wrapper = document.createElement('div');
+                wrapper.className = 'er-wrapper';
+                wrapper.id = `wrap-${tableName}`;
+                
+                // 设置表格类型样式
+                if (tableType === 'fact') {
+                    wrapper.classList.add('fact-table');
+                } else if (tableType === 'dim') {
+                    wrapper.classList.add('dim-table');
+                }
+                
+                // 创建表格
+                const table = document.createElement('table');
+                table.className = 'er-table';
+                
+                // 创建表头
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+                const headerCell = headerRow.insertCell();
+                headerCell.colSpan = 4;
+                headerCell.textContent = tableName;
+                headerCell.style.fontWeight = 'bold';
+                headerCell.style.textAlign = 'center';
+                headerCell.style.background = tableType === 'fact' ? '#e74c3c' : 
+                                            tableType === 'dim' ? '#3498db' : '#95a5a6';
+                headerCell.style.color = 'white';
+                
+                // 创建表体
+                const tbody = table.createTBody();
+                fields.forEach(field => {
+                    const row = tbody.insertRow();
+                    
+                    // 类型列
+                    const typeCell = row.insertCell();
+                    const isPrimary = field.pk || field.primary;
+                    const isForeign = field.fk || field.foreign;
+                    
+                    if (isPrimary && isForeign) {
+                        typeCell.textContent = 'PK/FK';
+                        typeCell.className = 'pk-fk';
+                    } else if (isPrimary) {
+                        typeCell.textContent = 'PK';
+                        typeCell.className = 'pk';
+                    } else if (isForeign) {
+                        typeCell.textContent = 'FK';
+                        typeCell.className = 'fk';
+                    } else {
+                        typeCell.textContent = '';
+                    }
+                    
+                    // 字段名列
+                    const nameCell = row.insertCell();
+                    nameCell.textContent = field.key || field.name;
+                    
+                    // 字段类型列
+                    const typeFieldCell = row.insertCell();
+                    typeFieldCell.textContent = field.type;
+                    
+                    // 注释列
+                    const commentCell = row.insertCell();
+                    commentCell.textContent = field.cn || field.comment || '';
+                });
+                
+                wrapper.appendChild(table);
+                
+                // 添加表格类型标识
+                if (tableType !== 'normal') {
+                    const badge = document.createElement('div');
+                    badge.className = 'table-type-badge';
+                    if (tableType === 'dim') {
+                        badge.classList.add('dim-badge');
+                    }
+                    badge.textContent = tableType === 'fact' ? '事实表' : '维度表';
+                    wrapper.appendChild(badge);
+                }
+                
+                // 设置位置
+                const x = 100 + (index % 3) * 350;
+                const y = 100 + Math.floor(index / 3) * 300;
+                wrapper.style.left = x + 'px';
+                wrapper.style.top = y + 'px';
+                
+                tablesContainer.appendChild(wrapper);
+                wrappers[tableName] = wrapper;
+            });
+            
+            // 更新表格矩形信息
+            updateTableRects();
+        }
+
+        // 更新表格矩形信息
+        function updateTableRects() {
+            const tablesContainer = document.getElementById('tables-container');
+            const container = tablesContainer.getBoundingClientRect();
+            
+            Object.keys(wrappers).forEach(tableName => {
+                const wrapper = wrappers[tableName];
+                const rect = wrapper.getBoundingClientRect();
+                
+                tableRects[tableName] = {
+                    x: rect.left - container.left,
+                    y: rect.top - container.top,
+                    width: rect.width,
+                    height: rect.height
+                };
+            });
+        }
+
+        // 创建关系连线
+        function createRelationLines() {
+            const svgContainer = document.getElementById('svg-container');
+            
+            // 清空SVG
+            svgContainer.innerHTML = '';
+            
+            // 设置SVG属性
+            svgContainer.setAttribute('width', '5000');
+            svgContainer.setAttribute('height', '4000');
+            svgContainer.setAttribute('viewBox', '0 0 5000 4000');
+            
+            // 创建箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#333');
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svgContainer.appendChild(defs);
+            
+            // 创建关系线
+            relations.forEach((relation, index) => {
+                const sourceRect = tableRects[relation.source];
+                const targetRect = tableRects[relation.target];
+                
+                if (!sourceRect || !targetRect) {
+                    console.warn(`跳过关系 ${relation.source} -> ${relation.target}，缺少表格矩形`);
+                    return;
+                }
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                
+                // 计算连线起点和终点
+                const startX = sourceRect.x + sourceRect.width;
+                const startY = sourceRect.y + sourceRect.height / 2;
+                const endX = targetRect.x;
+                const endY = targetRect.y + targetRect.height / 2;
+                
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', endX);
+                line.setAttribute('y2', endY);
+                line.setAttribute('stroke', relation.isFactDim ? '#52c41a' : '#1890ff');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                
+                svgContainer.appendChild(line);
+            });
+        }
+
+        // 更新工具栏信息
+        function updateToolbar() {
+            document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
+            document.getElementById('lineType').textContent = lineType === 'curve' ? '曲线' : '直线';
+        }
+
+        // 更新数据信息
+        function updateDataInfo() {
+            if (!erData) return;
+            
+            document.getElementById('dataTitle').textContent = erData.title || '-';
+            document.getElementById('dataTableCount').textContent = erData.tables ? erData.tables.length : 0;
+            document.getElementById('dataRelationCount').textContent = erData.relations ? erData.relations.length : 0;
+            document.getElementById('dataLastUpdate').textContent = new Date().toLocaleString();
+            
+            document.getElementById('dataInfo').style.display = 'block';
+        }
+
+
+        function refreshERData() {
+            loadERData();
+        }
+
+        // 显示加载状态
+        function showLoading(show) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadButton = document.getElementById('loadButton');
+            const refreshButton = document.getElementById('refreshButton');
+            
+            loadingOverlay.style.display = show ? 'flex' : 'none';
+            loadButton.disabled = show;
+            refreshButton.disabled = show;
+        }
+
+        // 显示空状态
+        function showEmptyState(show) {
+            const emptyState = document.getElementById('emptyState');
+            const canvasContent = document.querySelector('.canvas-content');
+            
+            emptyState.style.display = show ? 'flex' : 'none';
+            canvasContent.style.display = show ? 'none' : 'block';
+        }
+
+        // 显示状态消息
+        function showStatusMessage(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

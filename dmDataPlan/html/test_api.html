@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+</head>
+<body>
+    <h1>API测试页面</h1>
+    <button onclick="testMergeAPI()">测试合并API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testMergeAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                console.log('开始测试合并API...');
+                const response = await fetch('/api/merge-er-data');
+                console.log('响应状态:', response.status);
+                console.log('响应头:', response.headers);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API错误:', errorText);
+                    resultDiv.innerHTML = `API错误: ${response.status} - ${errorText}`;
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('API响应数据:', data);
+                resultDiv.innerHTML = `API测试成功！<br>表数量: ${data.data.tables.length}<br>关系数量: ${data.data.relations.length}`;
+                
+            } catch (error) {
+                console.error('测试失败:', error);
+                resultDiv.innerHTML = `测试失败: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

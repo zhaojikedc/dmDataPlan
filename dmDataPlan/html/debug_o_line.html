@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O线ER图调试页面</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            background: #001529;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .toolbar {
+            padding: 15px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary { background: #1890ff; color: white; }
+        .btn-success { background: #52c41a; color: white; }
+        .btn-danger { background: #ff4d4f; color: white; }
+        
+        .canvas-area {
+            height: 600px;
+            position: relative;
+            overflow: auto;
+            background: #f5f7fa;
+            border: 2px solid #d0d0d0;
+        }
+        
+        .canvas-content {
+            position: relative;
+            min-width: 2000px;
+            min-height: 1500px;
+            width: max-content;
+            height: max-content;
+        }
+        
+        #tables-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            min-width: 2000px;
+            min-height: 1500px;
+        }
+        
+        #svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            min-width: 2000px;
+            min-height: 1500px;
+            pointer-events: none;
+        }
+        
+        #svg-container * { pointer-events: auto; }
+        
+        .er-wrapper {
+            position: absolute;
+            border: 2px solid #95a5a6;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: move;
+            z-index: 10;
+        }
+        
+        .er-wrapper.fact-table {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .er-wrapper.dim-table {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+        
+        .er-table {
+            border-collapse: collapse;
+            font-size: 12px;
+            width: 100%;
+        }
+        
+        .er-table th {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .fact-table .er-table th { background: #e74c3c; }
+        .dim-table .er-table th { background: #3498db; }
+        
+        .er-table td {
+            border-top: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+        
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        .log-entry { margin: 2px 0; }
+        .log-success { color: #81c784; }
+        .log-error { color: #f48fb1; }
+        .log-info { color: #4fc3f7; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>O线ER图调试页面</h1>
+        <p>逐步调试表格和线条显示问题</p>
+    </div>
+    
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="testStep1()">步骤1: 测试基础元素</button>
+        <button class="btn btn-primary" onclick="testStep2()">步骤2: 测试数据加载</button>
+        <button class="btn btn-primary" onclick="testStep3()">步骤3: 测试表格创建</button>
+        <button class="btn btn-primary" onclick="testStep4()">步骤4: 测试线条创建</button>
+        <button class="btn btn-success" onclick="testAll()">测试全部</button>
+        <button class="btn btn-danger" onclick="clearAll()">清除</button>
+    </div>
+    
+    <div class="canvas-area">
+        <div class="canvas-content">
+            <div id="tables-container"></div>
+            <svg id="svg-container"></svg>
+        </div>
+    </div>
+    
+    <div class="log" id="logContainer">
+        <div class="log-entry log-info">[INFO] 调试页面已加载</div>
+    </div>
+
+    <script>
+        let tables = {};
+        let relations = [];
+        let wrappers = {};
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function clearAll() {
+            document.getElementById('tables-container').innerHTML = '';
+            document.getElementById('svg-container').innerHTML = '';
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry log-info">[INFO] 已清除所有内容</div>';
+            tables = {};
+            relations = [];
+            wrappers = {};
+        }
+        
+        function testStep1() {
+            log('=== 步骤1: 测试基础元素 ===', 'info');
+            
+            // 测试DIV
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = 'position: absolute; top: 50px; left: 50px; width: 100px; height: 50px; background: red; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 1000;';
+            testDiv.textContent = '测试DIV';
+            document.getElementById('tables-container').appendChild(testDiv);
+            log('✅ 添加红色测试DIV', 'success');
+            
+            // 测试SVG
+            const svg = document.getElementById('svg-container');
+            svg.setAttribute('width', '2000');
+            svg.setAttribute('height', '1500');
+            svg.setAttribute('viewBox', '0 0 2000 1500');
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '100');
+            line.setAttribute('y1', '200');
+            line.setAttribute('x2', '300');
+            line.setAttribute('y2', '200');
+            line.setAttribute('stroke', 'blue');
+            line.setAttribute('stroke-width', '3');
+            svg.appendChild(line);
+            log('✅ 添加蓝色测试线条', 'success');
+        }
+        
+        async function testStep2() {
+            log('=== 步骤2: 测试数据加载 ===', 'info');
+            
+            try {
+                const response = await fetch('/api/data?file=merged_er_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(`✅ 数据加载成功: ${JSON.stringify(data).length} 字符`, 'success');
+                
+                // 解析数据
+                tables = {};
+                if (data.tables) {
+                    data.tables.forEach(table => {
+                        tables[table.name] = table.fields || [];
+                    });
+                }
+                
+                relations = [];
+                if (data.relations) {
+                    relations = data.relations.map(rel => ({
+                        id: rel.id || `rel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        source: rel.source,
+                        target: rel.target,
+                        sourceField: rel.sourceField,
+                        targetField: rel.targetField,
+                        type: rel.type
+                    }));
+                }
+                
+                log(`✅ 数据解析完成: ${Object.keys(tables).length} 个表格, ${relations.length} 个关系`, 'success');
+                
+                // 显示表格信息
+                Object.keys(tables).forEach(tableName => {
+                    log(`  - 表格: ${tableName} (${tables[tableName].length} 个字段)`, 'info');
+                });
+                
+                // 显示关系信息
+                relations.forEach(rel => {
+                    log(`  - 关系: ${rel.source} -> ${rel.target}`, 'info');
+                });
+                
+            } catch (error) {
+                log(`❌ 数据加载失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function testStep3() {
+            log('=== 步骤3: 测试表格创建 ===', 'info');
+            
+            if (Object.keys(tables).length === 0) {
+                log('❌ 没有表格数据，请先执行步骤2', 'error');
+                return;
+            }
+            
+            const container = document.getElementById('tables-container');
+            const tableNames = Object.keys(tables);
+            
+            tableNames.forEach((tableName, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'er-wrapper';
+                wrapper.id = `table-${tableName}`;
+                
+                // 判断表格类型
+                const isFact = tableName.includes('fact') || tableName.includes('sum') || tableName.includes('dtl');
+                if (isFact) {
+                    wrapper.classList.add('fact-table');
+                } else {
+                    wrapper.classList.add('dim-table');
+                }
+                
+                // 创建表格
+                const table = document.createElement('table');
+                table.className = 'er-table';
+                
+                // 表头
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const headerCell = document.createElement('th');
+                headerCell.textContent = tableName;
+                headerCell.colSpan = 2;
+                headerRow.appendChild(headerCell);
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // 表体
+                const tbody = document.createElement('tbody');
+                const fields = tables[tableName];
+                if (fields && fields.length > 0) {
+                    fields.forEach(field => {
+                        const row = document.createElement('tr');
+                        
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = field.key || field.name;
+                        if (field.pk) nameCell.style.color = '#e74c3c';
+                        if (field.fk) nameCell.style.color = '#2980b9';
+                        
+                        const typeCell = document.createElement('td');
+                        typeCell.textContent = field.type || '';
+                        
+                        row.appendChild(nameCell);
+                        row.appendChild(typeCell);
+                        tbody.appendChild(row);
+                    });
+                }
+                
+                table.appendChild(tbody);
+                wrapper.appendChild(table);
+                
+                // 设置位置
+                const x = 100 + (index % 3) * 300;
+                const y = 100 + Math.floor(index / 3) * 200;
+                wrapper.style.left = x + 'px';
+                wrapper.style.top = y + 'px';
+                wrapper.style.position = 'absolute';
+                wrapper.style.zIndex = '10';
+                
+                container.appendChild(wrapper);
+                wrappers[tableName] = wrapper;
+                
+                log(`✅ 创建表格: ${tableName} 位置: (${x}, ${y})`, 'success');
+            });
+            
+            log(`✅ 表格创建完成: ${tableNames.length} 个表格`, 'success');
+        }
+        
+        function testStep4() {
+            log('=== 步骤4: 测试线条创建 ===', 'info');
+            
+            if (relations.length === 0) {
+                log('❌ 没有关系数据，请先执行步骤2', 'error');
+                return;
+            }
+            
+            const svg = document.getElementById('svg-container');
+            svg.innerHTML = '';
+            svg.setAttribute('width', '2000');
+            svg.setAttribute('height', '1500');
+            svg.setAttribute('viewBox', '0 0 2000 1500');
+            
+            // 创建箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrow');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '10');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3');
+            marker.setAttribute('orient', 'auto');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+            path.setAttribute('fill', '#333');
+            
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            
+            // 创建关系线
+            relations.forEach((rel, index) => {
+                const sourceWrapper = wrappers[rel.source];
+                const targetWrapper = wrappers[rel.target];
+                
+                if (sourceWrapper && targetWrapper) {
+                    const sourceRect = sourceWrapper.getBoundingClientRect();
+                    const targetRect = targetWrapper.getBoundingClientRect();
+                    const containerRect = document.getElementById('tables-container').getBoundingClientRect();
+                    
+                    const x1 = sourceRect.right - containerRect.left;
+                    const y1 = sourceRect.top + sourceRect.height / 2 - containerRect.top;
+                    const x2 = targetRect.left - containerRect.left;
+                    const y2 = targetRect.top + targetRect.height / 2 - containerRect.top;
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', '#333');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('marker-end', 'url(#arrow)');
+                    
+                    svg.appendChild(line);
+                    log(`✅ 创建关系线 ${index + 1}: ${rel.source} -> ${rel.target}`, 'success');
+                } else {
+                    log(`❌ 缺少表格: ${rel.source} 或 ${rel.target}`, 'error');
+                }
+            });
+            
+            log(`✅ 线条创建完成: ${relations.length} 条关系线`, 'success');
+        }
+        
+        async function testAll() {
+            log('=== 开始完整测试 ===', 'info');
+            clearAll();
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            testStep1();
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testStep2();
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            testStep3();
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            testStep4();
+            
+            log('=== 完整测试完成 ===', 'success');
+        }
+        
+        // 页面加载完成后自动测试
+        document.addEventListener('DOMContentLoaded', function() {
+            log('页面加载完成，可以开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

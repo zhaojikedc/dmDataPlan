@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线条调试页面</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #svg-container { border: 1px solid #ccc; width: 100%; height: 600px; }
+        .debug-info { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>ER关系线条调试</h1>
+    
+    <div class="debug-info">
+        <button onclick="loadData()">加载数据</button>
+        <button onclick="createTables()">创建表格</button>
+        <button onclick="createLines()">创建线条</button>
+        <button onclick="debugInfo()">调试信息</button>
+    </div>
+    
+    <div id="svg-container"></div>
+    
+    <div id="debug-output"></div>
+
+    <script>
+        let erData = null;
+        let tableRects = {};
+        
+        async function loadData() {
+            try {
+                const response = await fetch('/api/data?file=merged_er_data.json');
+                erData = await response.json();
+                console.log('数据加载成功:', erData);
+                document.getElementById('debug-output').innerHTML += '<p>✅ 数据加载成功，表数量: ' + erData.tables.length + ', 关系数量: ' + erData.relations.length + '</p>';
+            } catch (error) {
+                console.error('数据加载失败:', error);
+                document.getElementById('debug-output').innerHTML += '<p>❌ 数据加载失败: ' + error.message + '</p>';
+            }
+        }
+        
+        function createTables() {
+            if (!erData) {
+                alert('请先加载数据');
+                return;
+            }
+            
+            const svg = document.getElementById('svg-container');
+            svg.innerHTML = '';
+            svg.setAttribute('viewBox', '0 0 1000 600');
+            
+            // 创建表格
+            erData.tables.forEach((table, index) => {
+                const x = 50 + (index % 3) * 300;
+                const y = 50 + Math.floor(index / 3) * 200;
+                
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', 200);
+                rect.setAttribute('height', 100);
+                rect.setAttribute('fill', '#e0e0e0');
+                rect.setAttribute('stroke', '#333');
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + 10);
+                text.setAttribute('y', y + 20);
+                text.setAttribute('font-size', '12');
+                text.textContent = table.name;
+                
+                svg.appendChild(rect);
+                svg.appendChild(text);
+                
+                // 记录表格位置
+                tableRects[table.name] = { x, y, width: 200, height: 100 };
+            });
+            
+            console.log('表格位置:', tableRects);
+            document.getElementById('debug-output').innerHTML += '<p>✅ 表格创建完成，位置: ' + JSON.stringify(tableRects) + '</p>';
+        }
+        
+        function createLines() {
+            if (!erData || Object.keys(tableRects).length === 0) {
+                alert('请先加载数据并创建表格');
+                return;
+            }
+            
+            const svg = document.getElementById('svg-container');
+            
+            // 创建箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrow');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '10');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3');
+            marker.setAttribute('orient', 'auto');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+            path.setAttribute('fill', '#333');
+            
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+            
+            // 创建关系线
+            erData.relations.forEach((rel, index) => {
+                console.log('处理关系:', rel);
+                
+                const sourceRect = tableRects[rel.source];
+                const targetRect = tableRects[rel.target];
+                
+                if (!sourceRect || !targetRect) {
+                    console.warn('缺少表格位置:', rel.source, rel.target);
+                    document.getElementById('debug-output').innerHTML += '<p>⚠️ 缺少表格位置: ' + rel.source + ' -> ' + rel.target + '</p>';
+                    return;
+                }
+                
+                // 计算连接点
+                const x1 = sourceRect.x + sourceRect.width;
+                const y1 = sourceRect.y + sourceRect.height / 2;
+                const x2 = targetRect.x;
+                const y2 = targetRect.y + targetRect.height / 2;
+                
+                // 创建线条
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                line.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
+                line.setAttribute('stroke', '#333');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', 'url(#arrow)');
+                line.setAttribute('id', `line-${index}`);
+                
+                svg.appendChild(line);
+                
+                console.log(`线条 ${index}: M${x1},${y1} L${x2},${y2}`);
+                document.getElementById('debug-output').innerHTML += '<p>✅ 线条 ' + index + ': ' + rel.source + ' -> ' + rel.target + ' (' + rel.sourceField + ' -> ' + rel.targetField + ')</p>';
+            });
+        }
+        
+        function debugInfo() {
+            const lines = document.querySelectorAll('path[id^="line-"]');
+            document.getElementById('debug-output').innerHTML += '<p>🔍 调试信息:</p>';
+            document.getElementById('debug-output').innerHTML += '<p>- 表格数量: ' + Object.keys(tableRects).length + '</p>';
+            document.getElementById('debug-output').innerHTML += '<p>- 线条数量: ' + lines.length + '</p>';
+            document.getElementById('debug-output').innerHTML += '<p>- 关系数量: ' + (erData ? erData.relations.length : 0) + '</p>';
+        }
+    </script>
+</body>
+</html>

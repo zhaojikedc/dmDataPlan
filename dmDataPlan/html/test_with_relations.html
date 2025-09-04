@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>带关系的ER图测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .json-textarea { width: 100%; height: 200px; font-family: monospace; font-size: 12px; }
+        .test-container { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .canvas-area { 
+            position: relative; 
+            width: 100%; 
+            height: 500px; 
+            border: 1px solid #ccc; 
+            background: #f9f9f9; 
+            overflow: auto;
+        }
+        .canvas-content {
+            position: relative;
+            min-width: 100%;
+            min-height: 100%;
+            width: max-content;
+            height: max-content;
+        }
+        #tables-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+            min-width: 5000px;
+            min-height: 4000px;
+        }
+        #tables-container > div {
+            pointer-events: auto;
+        }
+        #svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            pointer-events: none;
+            min-width: 5000px;
+            min-height: 4000px;
+        }
+        .er-wrapper { 
+            position: absolute; 
+            border: 2px solid #333; 
+            background: white; 
+            padding: 10px; 
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .er-table { 
+            border-collapse: collapse; 
+            width: 100%; 
+        }
+        .er-table th, .er-table td { 
+            border: 1px solid #ddd; 
+            padding: 5px; 
+            text-align: left; 
+        }
+        .er-table th { 
+            background-color: #f5f5f5; 
+            font-weight: bold; 
+        }
+        .pk { background-color: #ffeb3b; }
+        .fk { background-color: #4caf50; color: white; }
+        .pk-fk { background-color: #ff9800; color: white; }
+    </style>
+</head>
+<body>
+    <h1>带关系的ER图测试</h1>
+    
+    <div class="status info">
+        <strong>测试说明:</strong> 测试表格列数和关系连线显示
+    </div>
+    
+    <div class="test-container">
+        <h3>您的JSON数据</h3>
+        <textarea id="testJson" class="json-textarea" placeholder="粘贴您的JSON数据..."></textarea>
+        
+        <button class="btn" onclick="testWithRelations()">测试带关系的ER图</button>
+        <button class="btn" onclick="addSampleRelations()">添加示例关系</button>
+        <button class="btn" onclick="clearTest()">清空测试</button>
+    </div>
+    
+    <div class="canvas-area">
+        <div class="canvas-content">
+            <svg id="svg-container"></svg>
+            <div id="tables-container"></div>
+        </div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testWithRelations() {
+            try {
+                showResult('开始测试带关系的ER图...', 'info');
+                
+                const jsonInput = document.getElementById('testJson').value.trim();
+                
+                if (!jsonInput) {
+                    showResult('❌ 请输入JSON数据！', 'error');
+                    return;
+                }
+                
+                // 解析JSON
+                const importData = JSON.parse(jsonInput);
+                showResult('✅ JSON解析成功', 'success');
+                
+                // 检查关系数据
+                if (!importData.relations || importData.relations.length === 0) {
+                    showResult('⚠️ 没有关系数据，将添加示例关系', 'error');
+                    importData.relations = generateSampleRelations(importData.tables);
+                }
+                
+                // 转换数据格式
+                const convertedData = convertDataFormat(importData);
+                showResult('✅ 数据格式转换成功', 'success');
+                
+                // 清空画布
+                const canvasContent = document.querySelector('.canvas-content');
+                canvasContent.innerHTML = '';
+                
+                // 重新创建容器
+                const svgContainer = document.createElement('svg');
+                svgContainer.id = 'svg-container';
+                svgContainer.style.position = 'absolute';
+                svgContainer.style.top = '0';
+                svgContainer.style.left = '0';
+                svgContainer.style.zIndex = '3';
+                svgContainer.style.pointerEvents = 'none';
+                svgContainer.style.minWidth = '5000px';
+                svgContainer.style.minHeight = '4000px';
+                canvasContent.appendChild(svgContainer);
+                
+                const tablesContainer = document.createElement('div');
+                tablesContainer.id = 'tables-container';
+                tablesContainer.style.position = 'absolute';
+                tablesContainer.style.top = '0';
+                tablesContainer.style.left = '0';
+                tablesContainer.style.zIndex = '2';
+                tablesContainer.style.pointerEvents = 'none';
+                tablesContainer.style.minWidth = '5000px';
+                tablesContainer.style.minHeight = '4000px';
+                canvasContent.appendChild(tablesContainer);
+                
+                // 创建表格
+                let tableCount = 0;
+                Object.keys(convertedData.tables).forEach(tableName => {
+                    const fields = convertedData.tables[tableName];
+                    showResult(`创建表格: ${tableName}, 字段数量: ${fields.length}`, 'info');
+                    
+                    const table = createTable(tableName, fields, 100 + tableCount * 300, 100);
+                    tablesContainer.appendChild(table);
+                    tableCount++;
+                });
+                
+                // 创建关系线
+                if (convertedData.customRelations.length > 0) {
+                    showResult(`创建 ${convertedData.customRelations.length} 个关系连线`, 'info');
+                    createRelations(svgContainer, convertedData.customRelations, convertedData.tables);
+                }
+                
+                showResult('✅ 带关系的ER图创建完成！', 'success');
+                
+            } catch (error) {
+                showResult(`❌ 测试失败: ${error.message}`, 'error');
+                console.error('测试失败:', error);
+            }
+        }
+
+        function addSampleRelations() {
+            const jsonInput = document.getElementById('testJson').value.trim();
+            if (!jsonInput) {
+                showResult('❌ 请先输入JSON数据！', 'error');
+                return;
+            }
+            
+            try {
+                const importData = JSON.parse(jsonInput);
+                importData.relations = generateSampleRelations(importData.tables);
+                
+                document.getElementById('testJson').value = JSON.stringify(importData, null, 2);
+                showResult('✅ 已添加示例关系数据', 'success');
+            } catch (error) {
+                showResult(`❌ 添加关系失败: ${error.message}`, 'error');
+            }
+        }
+
+        function generateSampleRelations(tables) {
+            const relations = [];
+            const tableNames = tables.map(t => t.name);
+            
+            // 为每对相邻的表格创建关系
+            for (let i = 0; i < tableNames.length - 1; i++) {
+                const source = tableNames[i];
+                const target = tableNames[i + 1];
+                
+                relations.push({
+                    source: source,
+                    target: target,
+                    type: '1:N',
+                    sourceField: 'id',
+                    targetField: `${source}_id`,
+                    isFactDim: false
+                });
+            }
+            
+            return relations;
+        }
+
+        function createTable(name, fields, x, y) {
+            const wrap = document.createElement('div');
+            wrap.className = 'er-wrapper';
+            wrap.id = `wrap-${name}`;
+            wrap.style.left = x + 'px';
+            wrap.style.top = y + 'px';
+            
+            const table = document.createElement('table');
+            table.className = 'er-table';
+            
+            // 创建表头
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            const headerCell = headerRow.insertCell();
+            headerCell.colSpan = 4; // 4列：类型、字段名、字段类型、注释
+            headerCell.textContent = name;
+            headerCell.style.fontWeight = 'bold';
+            headerCell.style.textAlign = 'center';
+            headerCell.style.background = '#e0e0e0';
+            
+            // 创建表体
+            const tbody = table.createTBody();
+            fields.forEach(field => {
+                const row = tbody.insertRow();
+                
+                // 第1列：类型列（PK/FK标识）
+                const typeCell = row.insertCell();
+                const isPrimary = field.primary || field.pk;
+                const isForeign = field.foreign || field.fk;
+                if (isPrimary && isForeign) {
+                    typeCell.textContent = 'PK/FK';
+                    typeCell.className = 'pk-fk';
+                } else if (isPrimary) {
+                    typeCell.textContent = 'PK';
+                    typeCell.className = 'pk';
+                } else if (isForeign) {
+                    typeCell.textContent = 'FK';
+                    typeCell.className = 'fk';
+                } else {
+                    typeCell.textContent = '';
+                }
+                
+                // 第2列：字段名列
+                const nameCell = row.insertCell();
+                nameCell.textContent = field.name || field.key;
+                
+                // 第3列：字段类型列
+                const typeFieldCell = row.insertCell();
+                typeFieldCell.textContent = field.type;
+                
+                // 第4列：注释列
+                const commentCell = row.insertCell();
+                commentCell.textContent = field.comment || field.cn || '';
+            });
+            
+            wrap.appendChild(table);
+            return wrap;
+        }
+
+        function createRelations(svgContainer, relations, tables) {
+            relations.forEach((relation, index) => {
+                const sourceTable = document.getElementById(`wrap-${relation.source}`);
+                const targetTable = document.getElementById(`wrap-${relation.target}`);
+                
+                if (sourceTable && targetTable) {
+                    const sourceRect = sourceTable.getBoundingClientRect();
+                    const targetRect = targetTable.getBoundingClientRect();
+                    const svgRect = svgContainer.getBoundingClientRect();
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sourceRect.right - svgRect.left);
+                    line.setAttribute('y1', sourceRect.top + sourceRect.height / 2 - svgRect.top);
+                    line.setAttribute('x2', targetRect.left - svgRect.left);
+                    line.setAttribute('y2', targetRect.top + targetRect.height / 2 - svgRect.top);
+                    line.setAttribute('stroke', '#333');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('marker-end', 'url(#arrowhead)');
+                    
+                    svgContainer.appendChild(line);
+                }
+            });
+            
+            // 添加箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#333');
+            
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svgContainer.appendChild(defs);
+        }
+
+        // 模拟convertDataFormat函数
+        function convertDataFormat(data) {
+            const tables = {};
+            const factDimRelations = {};
+            
+            // 转换表格数据
+            data.tables.forEach(table => {
+                // 转换字段格式：支持两种格式
+                let convertedFields;
+                if (table.fields && table.fields.length > 0) {
+                    // 检查字段格式
+                    const firstField = table.fields[0];
+                    if (firstField.key) {
+                        // 新格式：{key, type, pk, fk, cn}
+                        convertedFields = table.fields.map(field => ({
+                            name: field.key,
+                            type: field.type,
+                            primary: field.pk || false,
+                            foreign: field.fk || false,
+                            comment: field.cn || ''
+                        }));
+                    } else if (firstField.name) {
+                        // 旧格式：{name, type, primary}
+                        convertedFields = table.fields;
+                    } else {
+                        // 兼容其他格式
+                        convertedFields = table.fields;
+                    }
+                } else {
+                    convertedFields = [];
+                }
+                
+                tables[table.name] = convertedFields;
+            });
+            
+            // 转换关系数据
+            const customRelations = data.relations.map(rel => ({
+                source: rel.source,
+                target: rel.target,
+                label: rel.type,
+                description: rel.isFactDim ? '维度-事实' : 
+                             rel.type === '1-1' || rel.type === '1:1' ? '一对一' :
+                             rel.type === '1-N' || rel.type === '1:N' ? '一对多' :
+                             rel.type === 'N-N' || rel.type === 'N:N' ? '多对多' :
+                             rel.type === 'self' ? '自关联' : '关系',
+                sourceField: rel.sourceField,
+                targetField: rel.targetField,
+                relationType: rel.isFactDim ? 'fact-dim' : 'normal'
+            }));
+            
+            return { tables, customRelations, factDimRelations };
+        }
+
+        function clearTest() {
+            const canvasContent = document.querySelector('.canvas-content');
+            canvasContent.innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+            showResult('测试已清空', 'info');
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('带关系的ER图测试页面已加载', 'info');
+        });
+    </script>
+</body>
+</html>

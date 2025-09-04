@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单ER图测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #1890ff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .toolbar {
+            padding: 15px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #52c41a;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+        }
+        
+        .canvas-area {
+            height: 600px;
+            position: relative;
+            overflow: auto;
+            background: #f5f7fa;
+            border: 2px solid #d0d0d0;
+        }
+        
+        .canvas-content {
+            position: relative;
+            min-width: 2000px;
+            min-height: 1500px;
+            width: max-content;
+            height: max-content;
+        }
+        
+        #tables-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            min-width: 2000px;
+            min-height: 1500px;
+        }
+        
+        #svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            min-width: 2000px;
+            min-height: 1500px;
+            pointer-events: none;
+        }
+        
+        #svg-container * {
+            pointer-events: auto;
+        }
+        
+        .er-wrapper {
+            position: absolute;
+            border: 2px solid #95a5a6;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: move;
+            z-index: 10;
+        }
+        
+        .er-wrapper.fact-table {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .er-wrapper.dim-table {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+        
+        .er-table {
+            border-collapse: collapse;
+            font-size: 12px;
+            width: 100%;
+        }
+        
+        .er-table th {
+            background: #95a5a6;
+            color: white;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .fact-table .er-table th {
+            background: #e74c3c;
+        }
+        
+        .dim-table .er-table th {
+            background: #3498db;
+        }
+        
+        .er-table td {
+            border-top: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            white-space: nowrap;
+        }
+        
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+        }
+        
+        .log-success { color: #81c784; }
+        .log-error { color: #f48fb1; }
+        .log-info { color: #4fc3f7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>简单ER图测试页面</h1>
+            <p>测试表格和关系线的显示</p>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="testBasicElements()">测试基础元素</button>
+            <button class="btn btn-success" onclick="testTables()">测试表格创建</button>
+            <button class="btn btn-primary" onclick="testLines()">测试关系线</button>
+            <button class="btn btn-danger" onclick="clearAll()">清除所有</button>
+        </div>
+        
+        <div class="canvas-area">
+            <div class="canvas-content">
+                <div id="tables-container"></div>
+                <svg id="svg-container"></svg>
+            </div>
+        </div>
+        
+        <div class="log" id="logContainer">
+            <div class="log-entry log-info">[INFO] 测试页面已加载</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearAll() {
+            document.getElementById('tables-container').innerHTML = '';
+            document.getElementById('svg-container').innerHTML = '';
+            document.getElementById('logContainer').innerHTML = '<div class="log-entry log-info">[INFO] 已清除所有内容</div>';
+        }
+        
+        function testBasicElements() {
+            log('开始测试基础元素...', 'info');
+            
+            const tablesContainer = document.getElementById('tables-container');
+            const svgContainer = document.getElementById('svg-container');
+            
+            // 测试1: 添加一个简单的div
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = 'position: absolute; top: 50px; left: 50px; width: 100px; height: 50px; background: red; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 1000;';
+            testDiv.textContent = '测试DIV';
+            tablesContainer.appendChild(testDiv);
+            log('✅ 添加了红色测试DIV', 'success');
+            
+            // 测试2: 添加一个简单的SVG线条
+            const svg = svgContainer;
+            svg.setAttribute('width', '2000');
+            svg.setAttribute('height', '1500');
+            svg.setAttribute('viewBox', '0 0 2000 1500');
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '100');
+            line.setAttribute('y1', '200');
+            line.setAttribute('x2', '300');
+            line.setAttribute('y2', '200');
+            line.setAttribute('stroke', 'blue');
+            line.setAttribute('stroke-width', '3');
+            svg.appendChild(line);
+            log('✅ 添加了蓝色测试线条', 'success');
+            
+            log('基础元素测试完成', 'success');
+        }
+        
+        function testTables() {
+            log('开始测试表格创建...', 'info');
+            
+            const tablesContainer = document.getElementById('tables-container');
+            
+            // 创建测试表格数据
+            const testTables = [
+                {
+                    name: 'dim.test_table_1',
+                    type: 'dim',
+                    fields: [
+                        { key: 'id', type: 'int', pk: true },
+                        { key: 'name', type: 'varchar', pk: false },
+                        { key: 'code', type: 'varchar', pk: false }
+                    ]
+                },
+                {
+                    name: 'fact.test_table_2',
+                    type: 'fact',
+                    fields: [
+                        { key: 'id', type: 'int', pk: true },
+                        { key: 'amount', type: 'decimal', pk: false },
+                        { key: 'date', type: 'date', pk: false }
+                    ]
+                }
+            ];
+            
+            testTables.forEach((table, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'er-wrapper';
+                wrapper.id = `table-${table.name}`;
+                
+                if (table.type === 'fact') {
+                    wrapper.classList.add('fact-table');
+                } else {
+                    wrapper.classList.add('dim-table');
+                }
+                
+                // 创建表格
+                const tableElement = document.createElement('table');
+                tableElement.className = 'er-table';
+                
+                // 表头
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const headerCell = document.createElement('th');
+                headerCell.textContent = table.name;
+                headerCell.colSpan = 2;
+                headerRow.appendChild(headerCell);
+                thead.appendChild(headerRow);
+                tableElement.appendChild(thead);
+                
+                // 表体
+                const tbody = document.createElement('tbody');
+                table.fields.forEach(field => {
+                    const row = document.createElement('tr');
+                    
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = field.key;
+                    if (field.pk) nameCell.style.color = '#e74c3c';
+                    
+                    const typeCell = document.createElement('td');
+                    typeCell.textContent = field.type;
+                    
+                    row.appendChild(nameCell);
+                    row.appendChild(typeCell);
+                    tbody.appendChild(row);
+                });
+                
+                tableElement.appendChild(tbody);
+                wrapper.appendChild(tableElement);
+                
+                // 设置位置
+                const x = 100 + index * 250;
+                const y = 100;
+                wrapper.style.left = x + 'px';
+                wrapper.style.top = y + 'px';
+                wrapper.style.position = 'absolute';
+                wrapper.style.zIndex = '10';
+                
+                tablesContainer.appendChild(wrapper);
+                log(`✅ 创建表格: ${table.name} 位置: (${x}, ${y})`, 'success');
+            });
+            
+            log('表格创建测试完成', 'success');
+        }
+        
+        function testLines() {
+            log('开始测试关系线创建...', 'info');
+            
+            const svgContainer = document.getElementById('svg-container');
+            
+            // 清空SVG
+            svgContainer.innerHTML = '';
+            svgContainer.setAttribute('width', '2000');
+            svgContainer.setAttribute('height', '1500');
+            svgContainer.setAttribute('viewBox', '0 0 2000 1500');
+            
+            // 创建箭头标记
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrow');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '10');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3');
+            marker.setAttribute('orient', 'auto');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+            path.setAttribute('fill', '#333');
+            
+            marker.appendChild(path);
+            defs.appendChild(marker);
+            svgContainer.appendChild(defs);
+            
+            // 创建测试线条
+            const lines = [
+                { x1: 200, y1: 150, x2: 350, y2: 150, color: 'red' },
+                { x1: 200, y1: 200, x2: 350, y2: 200, color: 'green' },
+                { x1: 200, y1: 250, x2: 350, y2: 250, color: 'blue' }
+            ];
+            
+            lines.forEach((line, index) => {
+                const lineElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lineElement.setAttribute('x1', line.x1);
+                lineElement.setAttribute('y1', line.y1);
+                lineElement.setAttribute('x2', line.x2);
+                lineElement.setAttribute('y2', line.y2);
+                lineElement.setAttribute('stroke', line.color);
+                lineElement.setAttribute('stroke-width', '2');
+                lineElement.setAttribute('marker-end', 'url(#arrow)');
+                
+                svgContainer.appendChild(lineElement);
+                log(`✅ 创建线条 ${index + 1}: (${line.x1},${line.y1}) -> (${line.x2},${line.y2})`, 'success');
+            });
+            
+            log('关系线创建测试完成', 'success');
+        }
+        
+        // 页面加载完成后自动运行基础测试
+        document.addEventListener('DOMContentLoaded', function() {
+            log('页面加载完成，开始自动测试...', 'info');
+            setTimeout(() => {
+                testBasicElements();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

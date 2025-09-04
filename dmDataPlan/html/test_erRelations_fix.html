@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>erRelations变量修复测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .code { background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>erRelations变量修复测试</h1>
+    
+    <div class="status info">
+        <strong>测试说明:</strong> 这个页面测试erRelations变量是否正确声明和初始化
+    </div>
+    
+    <button class="btn" onclick="testErRelationsVariable()">测试erRelations变量</button>
+    <button class="btn" onclick="testLoadRelationsFromFile()">测试loadRelationsFromFile函数</button>
+    <button class="btn" onclick="clearResults()">清空结果</button>
+    
+    <div id="results"></div>
+
+    <script>
+        // 模拟关系页面的变量声明
+        let erRelations = [];
+        let tableMetadata = null;
+        
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testErRelationsVariable() {
+            try {
+                showResult('开始测试erRelations变量...', 'info');
+                
+                // 测试变量是否已声明
+                if (typeof erRelations !== 'undefined') {
+                    showResult('✅ erRelations变量已正确声明', 'success');
+                } else {
+                    showResult('❌ erRelations变量未声明', 'error');
+                    return;
+                }
+                
+                // 测试变量是否为数组
+                if (Array.isArray(erRelations)) {
+                    showResult('✅ erRelations是数组类型', 'success');
+                } else {
+                    showResult('❌ erRelations不是数组类型', 'error');
+                    return;
+                }
+                
+                // 测试初始值
+                showResult(`✅ erRelations初始长度: ${erRelations.length}`, 'success');
+                
+                // 测试添加数据
+                erRelations.push({
+                    id: 'test_001',
+                    name: '测试关系',
+                    sourceTable: 'test_source',
+                    targetTable: 'test_target'
+                });
+                
+                showResult(`✅ 添加测试数据后长度: ${erRelations.length}`, 'success');
+                showResult(`✅ 测试数据: ${JSON.stringify(erRelations[0])}`, 'success');
+                
+            } catch (error) {
+                showResult(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLoadRelationsFromFile() {
+            try {
+                showResult('开始测试loadRelationsFromFile函数...', 'info');
+                
+                // 模拟loadRelationsFromFile函数的逻辑
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showResult('✅ 成功获取JSON数据', 'success');
+                
+                if (data.erModels && data.erModels.length > 0) {
+                    // 模拟合并逻辑
+                    const existingIds = new Set(erRelations.map(r => r.id));
+                    const newRelations = data.erModels.filter(r => !existingIds.has(r.id));
+                    
+                    showResult(`✅ 现有关系数量: ${erRelations.length}`, 'success');
+                    showResult(`✅ 文件中的关系数量: ${data.erModels.length}`, 'success');
+                    showResult(`✅ 新关系数量: ${newRelations.length}`, 'success');
+                    
+                    if (newRelations.length > 0) {
+                        erRelations = [...erRelations, ...newRelations];
+                        showResult(`✅ 成功合并关系数据，总数量: ${erRelations.length}`, 'success');
+                    } else {
+                        showResult('✅ 没有新关系需要添加', 'success');
+                    }
+                } else {
+                    showResult('⚠️ 文件中没有关系数据', 'info');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示初始状态
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('页面已加载，erRelations变量已初始化', 'info');
+            showResult(`erRelations初始状态: ${JSON.stringify(erRelations)}`, 'info');
+        });
+    </script>
+</body>
+</html>

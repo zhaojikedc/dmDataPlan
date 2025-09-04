@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关系数据简单测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>关系数据简单测试</h1>
+    
+    <button class="btn" onclick="loadAndDisplayRelations()">加载并显示关系数据</button>
+    <button class="btn" onclick="clearDisplay()">清空显示</button>
+    
+    <div id="status"></div>
+    <div id="dataInfo"></div>
+    <div id="relationsTable"></div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function loadAndDisplayRelations() {
+            try {
+                showStatus('正在加载关系数据...', 'info');
+                
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const relations = data.erModels || [];
+                
+                // 显示数据信息
+                document.getElementById('dataInfo').innerHTML = `
+                    <h3>数据信息</h3>
+                    <p><strong>总关系数量:</strong> ${relations.length}</p>
+                    <p><strong>加载时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+                
+                // 显示关系表格
+                if (relations.length > 0) {
+                    let tableHTML = `
+                        <h3>关系数据表格</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>关系名称</th>
+                                    <th>源表</th>
+                                    <th>目标表</th>
+                                    <th>源字段</th>
+                                    <th>目标字段</th>
+                                    <th>关系类型</th>
+                                    <th>创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    relations.forEach(relation => {
+                        tableHTML += `
+                            <tr>
+                                <td>${relation.id || '-'}</td>
+                                <td>${relation.name || '-'}</td>
+                                <td>${relation.sourceTable || '-'}</td>
+                                <td>${relation.targetTable || '-'}</td>
+                                <td>${relation.sourceField || '-'}</td>
+                                <td>${relation.targetField || '-'}</td>
+                                <td>${relation.relationType || '-'}</td>
+                                <td>${relation.createdTime || '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += '</tbody></table>';
+                    document.getElementById('relationsTable').innerHTML = tableHTML;
+                    
+                    showStatus(`✅ 成功加载并显示 ${relations.length} 条关系数据`, 'success');
+                } else {
+                    document.getElementById('relationsTable').innerHTML = '<p>没有关系数据</p>';
+                    showStatus('⚠️ 文件中没有关系数据', 'info');
+                }
+                
+            } catch (error) {
+                console.error('加载关系数据失败:', error);
+                showStatus(`❌ 加载关系数据失败: ${error.message}`, 'error');
+                document.getElementById('dataInfo').innerHTML = '';
+                document.getElementById('relationsTable').innerHTML = '';
+            }
+        }
+
+        function clearDisplay() {
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('dataInfo').innerHTML = '';
+            document.getElementById('relationsTable').innerHTML = '';
+        }
+
+        // 页面加载时自动加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('页面已加载，点击"加载并显示关系数据"开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

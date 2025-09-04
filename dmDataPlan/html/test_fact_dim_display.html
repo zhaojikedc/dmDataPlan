@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事实维度关系显示测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .fact-relation { background-color: #fff3cd; }
+        .dimension-relation { background-color: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <h1>事实维度关系显示测试</h1>
+    
+    <div class="status info">
+        <strong>测试说明:</strong> 测试"是否事实维度关系"列是否正确显示
+    </div>
+    
+    <button class="btn" onclick="loadAndTestFactDim()">加载并测试事实维度关系</button>
+    <button class="btn" onclick="clearResults()">清空结果</button>
+    
+    <div id="results"></div>
+    <div id="relationsTable"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function loadAndTestFactDim() {
+            try {
+                showResult('正在加载关系数据...', 'info');
+                
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const relations = data.erModels || [];
+                
+                showResult(`✅ 成功加载 ${relations.length} 条关系数据`, 'success');
+                
+                // 检查isFactDim字段
+                let factCount = 0;
+                let dimensionCount = 0;
+                let missingCount = 0;
+                
+                relations.forEach(relation => {
+                    if (relation.isFactDim === 'fact') {
+                        factCount++;
+                    } else if (relation.isFactDim === 'dimension') {
+                        dimensionCount++;
+                    } else {
+                        missingCount++;
+                    }
+                });
+                
+                showResult(`📊 事实关系: ${factCount} 条`, 'success');
+                showResult(`📊 维度关系: ${dimensionCount} 条`, 'success');
+                if (missingCount > 0) {
+                    showResult(`⚠️ 缺少isFactDim字段: ${missingCount} 条`, 'error');
+                }
+                
+                // 显示关系表格
+                if (relations.length > 0) {
+                    let tableHTML = `
+                        <h3>关系数据表格（包含事实维度关系）</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>关系名称</th>
+                                    <th>源表</th>
+                                    <th>目标表</th>
+                                    <th>关系类型</th>
+                                    <th>是否事实维度关系</th>
+                                    <th>isFactDim值</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    relations.forEach(relation => {
+                        const factDimClass = relation.isFactDim === 'fact' ? 'fact-relation' : 
+                                           relation.isFactDim === 'dimension' ? 'dimension-relation' : '';
+                        const factDimText = relation.isFactDim === 'fact' ? '事实关系' : 
+                                          relation.isFactDim === 'dimension' ? '维度关系' : '未设置';
+                        
+                        tableHTML += `
+                            <tr class="${factDimClass}">
+                                <td>${relation.id || '-'}</td>
+                                <td>${relation.name || '-'}</td>
+                                <td>${relation.sourceTable || '-'}</td>
+                                <td>${relation.targetTable || '-'}</td>
+                                <td>${relation.relationType || '-'}</td>
+                                <td>${factDimText}</td>
+                                <td>${relation.isFactDim || 'undefined'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += '</tbody></table>';
+                    document.getElementById('relationsTable').innerHTML = tableHTML;
+                    
+                    showResult(`✅ 成功显示 ${relations.length} 条关系数据`, 'success');
+                } else {
+                    document.getElementById('relationsTable').innerHTML = '<p>没有关系数据</p>';
+                    showResult('⚠️ 文件中没有关系数据', 'info');
+                }
+                
+            } catch (error) {
+                console.error('加载关系数据失败:', error);
+                showResult(`❌ 加载关系数据失败: ${error.message}`, 'error');
+                document.getElementById('relationsTable').innerHTML = '';
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('relationsTable').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('页面已加载，点击"加载并测试事实维度关系"开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

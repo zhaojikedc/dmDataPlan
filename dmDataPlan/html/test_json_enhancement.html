@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON数据增强功能测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .data-display {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .status.error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #1890ff;
+        }
+        .feature-item h4 {
+            margin: 0 0 10px 0;
+            color: #1890ff;
+        }
+        .feature-item p {
+            margin: 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSON数据增强功能测试页面</h1>
+        <p>此页面用于测试JSON数据增强功能，包括动态数据库下拉列表、表下拉列表、表选择JSON生成和关系JSON查看功能。</p>
+        
+        <div class="section">
+            <h3>新增功能说明</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>1. 动态数据库下拉列表</h4>
+                    <p>从表元数据JSON文件中自动提取数据库信息，动态生成数据库下拉列表选项</p>
+                </div>
+                <div class="feature-item">
+                    <h4>2. 动态表下拉列表</h4>
+                    <p>根据选择的数据库，从表元数据中过滤并显示对应的表列表</p>
+                </div>
+                <div class="feature-item">
+                    <h4>3. 表选择JSON生成</h4>
+                    <p>通过表选择功能，生成包含选中表完整结构信息的JSON文件</p>
+                </div>
+                <div class="feature-item">
+                    <h4>4. 关系JSON查看</h4>
+                    <p>提供查看当前表关系JSON数据的功能，支持在新窗口中预览</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>1. 测试表元数据加载</h3>
+            <button onclick="loadTableMetadata()">加载表元数据</button>
+            <button onclick="displayDatabaseInfo()">显示数据库信息</button>
+            <button onclick="displayTableInfo()">显示表信息</button>
+            <div id="metadataInfo" class="data-display">点击"加载表元数据"查看</div>
+        </div>
+        
+        <div class="section">
+            <h3>2. 测试表选择JSON生成</h3>
+            <button onclick="simulateTableSelection()">模拟表选择</button>
+            <button onclick="generateTableSelectionJSON()">生成表选择JSON</button>
+            <div id="tableSelectionInfo" class="data-display">点击"模拟表选择"查看</div>
+        </div>
+        
+        <div class="section">
+            <h3>3. 测试关系JSON功能</h3>
+            <button onclick="simulateRelations()">模拟关系数据</button>
+            <button onclick="viewRelationsJSON()">查看关系JSON</button>
+            <button onclick="generateRelationsJSON()">生成关系JSON</button>
+            <div id="relationsInfo" class="data-display">点击"模拟关系数据"查看</div>
+        </div>
+        
+        <div class="section">
+            <h3>4. 页面跳转测试</h3>
+            <button onclick="openRelationPage()">打开关系创建页面</button>
+            <button onclick="openERPage()">打开ER关系图页面</button>
+            <button onclick="openTestFlowPage()">打开JSON流程测试页面</button>
+        </div>
+        
+        <div class="section">
+            <h3>5. 操作状态</h3>
+            <div id="status" class="status">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        let tableMetadata = null;
+        let selectedTables = [];
+        let relations = [];
+        
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        async function loadTableMetadata() {
+            try {
+                const response = await fetch('../config/table_metadata.json');
+                if (!response.ok) {
+                    throw new Error('无法加载表元数据文件');
+                }
+                
+                tableMetadata = await response.json();
+                
+                // 显示数据库统计
+                const dbStats = {};
+                tableMetadata.tables.forEach(table => {
+                    dbStats[table.database] = (dbStats[table.database] || 0) + 1;
+                });
+                
+                const statsText = Object.entries(dbStats)
+                    .map(([db, count]) => `${db}: ${count}个表`)
+                    .join(', ');
+                
+                showStatus(`表元数据加载成功！包含 ${tableMetadata.tables.length} 个表 (${statsText})`);
+                
+            } catch (error) {
+                showStatus('加载表元数据失败: ' + error.message, 'error');
+            }
+        }
+        
+        function displayDatabaseInfo() {
+            if (!tableMetadata) {
+                showStatus('请先加载表元数据', 'error');
+                return;
+            }
+            
+            const databases = [...new Set(tableMetadata.tables.map(t => t.database))];
+            const dbInfo = databases.map(db => {
+                const tables = tableMetadata.tables.filter(t => t.database === db);
+                return {
+                    database: db,
+                    tableCount: tables.length,
+                    tables: tables.map(t => ({
+                        name: t.name,
+                        type: t.type,
+                        fieldCount: t.fields.length
+                    }))
+                };
+            });
+            
+            document.getElementById('metadataInfo').textContent = JSON.stringify(dbInfo, null, 2);
+            showStatus('数据库信息显示完成');
+        }
+        
+        function displayTableInfo() {
+            if (!tableMetadata) {
+                showStatus('请先加载表元数据', 'error');
+                return;
+            }
+            
+            const tableInfo = tableMetadata.tables.map(table => ({
+                name: table.name,
+                database: table.database,
+                type: table.type,
+                description: table.description,
+                fieldCount: table.fields.length,
+                pkFields: table.fields.filter(f => f.pk).length,
+                fkFields: table.fields.filter(f => f.fk).length
+            }));
+            
+            document.getElementById('metadataInfo').textContent = JSON.stringify(tableInfo, null, 2);
+            showStatus('表信息显示完成');
+        }
+        
+        function simulateTableSelection() {
+            if (!tableMetadata) {
+                showStatus('请先加载表元数据', 'error');
+                return;
+            }
+            
+            // 模拟选择一些表
+            selectedTables = [
+                'dim.dim_tp_air_full_cargo_di',
+                'dm_tp.dm_tp_air_flow_weight_sum_di',
+                'dm_tp.dm_tp_air_full_flow_sum_di'
+            ];
+            
+            const selectedTableInfo = tableMetadata.tables.filter(table => 
+                selectedTables.includes(table.name)
+            );
+            
+            const selectionData = {
+                selectedTables: selectedTables,
+                selectedTableInfo: selectedTableInfo.map(table => ({
+                    name: table.name,
+                    database: table.database,
+                    type: table.type,
+                    description: table.description,
+                    fieldCount: table.fields.length
+                }))
+            };
+            
+            document.getElementById('tableSelectionInfo').textContent = JSON.stringify(selectionData, null, 2);
+            showStatus(`模拟表选择完成！选择了 ${selectedTables.length} 个表`);
+        }
+        
+        function generateTableSelectionJSON() {
+            if (!tableMetadata || selectedTables.length === 0) {
+                showStatus('请先模拟表选择', 'error');
+                return;
+            }
+            
+            try {
+                const selectedTableInfo = tableMetadata.tables.filter(table => 
+                    selectedTables.includes(table.name)
+                );
+                
+                const tableInfoData = {
+                    title: "O线数据表信息",
+                    description: "基于关系创建页面选择的表信息",
+                    tables: selectedTableInfo,
+                    selectedTables: selectedTables,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 下载JSON文件
+                const dataStr = JSON.stringify(tableInfoData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `test_table_selection_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showStatus(`表选择JSON文件生成成功！包含 ${selectedTables.length} 个表`);
+                
+            } catch (error) {
+                showStatus('生成表选择JSON失败: ' + error.message, 'error');
+            }
+        }
+        
+        function simulateRelations() {
+            if (selectedTables.length === 0) {
+                showStatus('请先模拟表选择', 'error');
+                return;
+            }
+            
+            // 模拟创建关系
+            relations = [
+                {
+                    sourceTable: 'dm_tp.dm_tp_air_flow_weight_sum_di',
+                    targetTable: 'dim.dim_tp_air_full_cargo_di',
+                    sourceField: 'flight_no',
+                    targetField: 'cpct_name',
+                    relationType: 'one-to-one',
+                    isFactDim: '是',
+                    createTime: new Date().toLocaleString('zh-CN')
+                },
+                {
+                    sourceTable: 'dm_tp.dm_tp_air_full_flow_sum_di',
+                    targetTable: 'dim.dim_tp_air_full_cargo_di',
+                    sourceField: 'flight_no',
+                    targetField: 'cpct_name',
+                    relationType: 'one-to-many',
+                    isFactDim: '是',
+                    createTime: new Date().toLocaleString('zh-CN')
+                }
+            ];
+            
+            const relationsData = {
+                relations: relations,
+                relationCount: relations.length,
+                timestamp: new Date().toISOString()
+            };
+            
+            document.getElementById('relationsInfo').textContent = JSON.stringify(relationsData, null, 2);
+            showStatus(`模拟关系数据完成！创建了 ${relations.length} 个关系`);
+        }
+        
+        function viewRelationsJSON() {
+            if (relations.length === 0) {
+                showStatus('请先模拟关系数据', 'error');
+                return;
+            }
+            
+            try {
+                const relationInfoData = {
+                    title: "O线数据关系信息",
+                    description: "基于关系创建页面创建的表关系信息",
+                    relations: relations,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 在新窗口中显示JSON数据
+                const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+                newWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>表关系JSON数据</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+                            .header { margin-bottom: 20px; }
+                            .stats { background: #e6f7ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>表关系JSON数据</h1>
+                            <div class="stats">
+                                <strong>统计信息：</strong>
+                                关系数量: ${relations.length} 个<br>
+                                生成时间: ${new Date().toLocaleString('zh-CN')}
+                            </div>
+                        </div>
+                        <pre>${JSON.stringify(relationInfoData, null, 2)}</pre>
+                    </body>
+                    </html>
+                `);
+                newWindow.document.close();
+                
+                showStatus('关系JSON数据已在新窗口中显示');
+                
+            } catch (error) {
+                showStatus('查看关系JSON失败: ' + error.message, 'error');
+            }
+        }
+        
+        function generateRelationsJSON() {
+            if (relations.length === 0) {
+                showStatus('请先模拟关系数据', 'error');
+                return;
+            }
+            
+            try {
+                const relationInfoData = {
+                    title: "O线数据关系信息",
+                    description: "基于关系创建页面创建的表关系信息",
+                    relations: relations,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 下载JSON文件
+                const dataStr = JSON.stringify(relationInfoData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `test_relations_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showStatus(`关系JSON文件生成成功！包含 ${relations.length} 个关系`);
+                
+            } catch (error) {
+                showStatus('生成关系JSON失败: ' + error.message, 'error');
+            }
+        }
+        
+        function openRelationPage() {
+            window.open('o_line_management.html', '_blank');
+        }
+        
+        function openERPage() {
+            window.open('o_erGenHtml.html', '_blank');
+        }
+        
+        function openTestFlowPage() {
+            window.open('test_json_flow.html', '_blank');
+        }
+        
+        // 页面加载时自动加载表元数据
+        window.addEventListener('load', () => {
+            loadTableMetadata();
+        });
+    </script>
+</body>
+</html>

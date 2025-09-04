@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>路径测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>路径测试页面</h1>
+        <p>此页面用于测试表元数据JSON文件的路径是否正确。</p>
+        
+        <button onclick="testPath()">测试路径</button>
+        <button onclick="testMetadata()">测试表元数据</button>
+        <button onclick="clearResult()">清空结果</button>
+        
+        <div id="result" class="result">点击"测试路径"开始测试</div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'success') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+        
+        async function testPath() {
+            try {
+                showResult('正在测试路径...', 'success');
+                
+                const response = await fetch('../config/table_metadata.json');
+                
+                if (response.ok) {
+                    showResult(`✅ 路径测试成功！\n状态码: ${response.status}\n状态文本: ${response.statusText}\n内容类型: ${response.headers.get('content-type')}`, 'success');
+                } else {
+                    showResult(`❌ 路径测试失败！\n状态码: ${response.status}\n状态文本: ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 路径测试失败！\n错误信息: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testMetadata() {
+            try {
+                showResult('正在加载表元数据...', 'success');
+                
+                const response = await fetch('../config/table_metadata.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const metadata = await response.json();
+                
+                // 显示基本信息
+                const info = {
+                    title: metadata.title,
+                    description: metadata.description,
+                    tableCount: metadata.tables ? metadata.tables.length : 0,
+                    databases: metadata.tables ? [...new Set(metadata.tables.map(t => t.database))] : []
+                };
+                
+                showResult(`✅ 表元数据加载成功！\n\n基本信息:\n${JSON.stringify(info, null, 2)}`, 'success');
+                
+            } catch (error) {
+                showResult(`❌ 表元数据加载失败！\n错误信息: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearResult() {
+            showResult('点击"测试路径"开始测试', 'success');
+        }
+        
+        // 页面加载时自动测试路径
+        window.addEventListener('load', () => {
+            testPath();
+        });
+    </script>
+</body>
+</html>

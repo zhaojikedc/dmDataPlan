@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导入数据调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .json-textarea { width: 100%; height: 300px; font-family: monospace; font-size: 12px; }
+        .test-container { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .debug-info { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .data-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>导入数据调试</h1>
+    
+    <div class="status info">
+        <strong>调试说明:</strong> 检查导入的JSON数据结构和内容
+    </div>
+    
+    <div class="test-container">
+        <h3>测试JSON数据</h3>
+        <textarea id="testJson" class="json-textarea" placeholder="粘贴您的JSON数据..."></textarea>
+        
+        <button class="btn" onclick="debugImportData()">调试导入数据</button>
+        <button class="btn" onclick="clearResults()">清空结果</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function showDebugInfo(title, data) {
+            const resultsDiv = document.getElementById('results');
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'debug-info';
+            debugDiv.innerHTML = `<strong>${title}:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            resultsDiv.appendChild(debugDiv);
+        }
+
+        function debugImportData() {
+            try {
+                showResult('开始调试导入数据...', 'info');
+                
+                const jsonInput = document.getElementById('testJson').value.trim();
+                
+                if (!jsonInput) {
+                    showResult('❌ 请输入JSON数据！', 'error');
+                    return;
+                }
+                
+                // 解析JSON
+                const importData = JSON.parse(jsonInput);
+                showResult('✅ JSON解析成功', 'success');
+                
+                // 显示原始数据结构
+                showDebugInfo('原始数据结构', {
+                    title: importData.title,
+                    description: importData.description,
+                    tablesCount: importData.tables ? importData.tables.length : 0,
+                    relationsCount: importData.relations ? importData.relations.length : 0,
+                    hasTables: !!importData.tables,
+                    hasRelations: !!importData.relations
+                });
+                
+                // 检查表格数据
+                if (importData.tables && Array.isArray(importData.tables)) {
+                    showResult(`✅ 找到 ${importData.tables.length} 个表格`, 'success');
+                    
+                    importData.tables.forEach((table, index) => {
+                        showDebugInfo(`表格 ${index + 1}: ${table.name}`, {
+                            name: table.name,
+                            type: table.type,
+                            fieldsCount: table.fields ? table.fields.length : 0,
+                            fields: table.fields ? table.fields.slice(0, 3) : [] // 只显示前3个字段
+                        });
+                    });
+                } else {
+                    showResult('❌ 没有找到表格数据或格式不正确', 'error');
+                }
+                
+                // 检查关系数据
+                if (importData.relations && Array.isArray(importData.relations)) {
+                    showResult(`✅ 找到 ${importData.relations.length} 个关系`, 'success');
+                    
+                    if (importData.relations.length > 0) {
+                        importData.relations.forEach((relation, index) => {
+                            showDebugInfo(`关系 ${index + 1}`, {
+                                source: relation.source,
+                                target: relation.target,
+                                type: relation.type,
+                                sourceField: relation.sourceField,
+                                targetField: relation.targetField,
+                                isFactDim: relation.isFactDim
+                            });
+                        });
+                    } else {
+                        showResult('⚠️ 关系数组为空', 'error');
+                    }
+                } else {
+                    showResult('❌ 没有找到关系数据或格式不正确', 'error');
+                }
+                
+                // 转换数据格式
+                const convertedData = convertDataFormat(importData);
+                showResult('✅ 数据格式转换成功', 'success');
+                
+                showDebugInfo('转换后的数据', {
+                    tablesCount: Object.keys(convertedData.tables).length,
+                    customRelationsCount: convertedData.customRelations.length,
+                    factDimRelationsCount: Object.keys(convertedData.factDimRelations).length
+                });
+                
+                // 显示转换后的关系数据
+                if (convertedData.customRelations.length > 0) {
+                    showResult(`✅ 转换后有 ${convertedData.customRelations.length} 个关系`, 'success');
+                    showDebugInfo('转换后的关系数据', convertedData.customRelations);
+                } else {
+                    showResult('❌ 转换后没有关系数据', 'error');
+                }
+                
+                showResult('✅ 导入数据调试完成！', 'success');
+                
+            } catch (error) {
+                showResult(`❌ 导入数据调试失败: ${error.message}`, 'error');
+                console.error('导入数据调试失败:', error);
+            }
+        }
+
+        // 模拟convertDataFormat函数
+        function convertDataFormat(data) {
+            const tables = {};
+            const factDimRelations = {};
+            
+            // 转换表格数据
+            data.tables.forEach(table => {
+                // 转换字段格式：支持两种格式
+                let convertedFields;
+                if (table.fields && table.fields.length > 0) {
+                    // 检查字段格式
+                    const firstField = table.fields[0];
+                    if (firstField.key) {
+                        // 新格式：{key, type, pk, fk, cn}
+                        convertedFields = table.fields.map(field => ({
+                            name: field.key,
+                            type: field.type,
+                            primary: field.pk || false,
+                            foreign: field.fk || false,
+                            comment: field.cn || ''
+                        }));
+                    } else if (firstField.name) {
+                        // 旧格式：{name, type, primary}
+                        convertedFields = table.fields;
+                    } else {
+                        // 兼容其他格式
+                        convertedFields = table.fields;
+                    }
+                } else {
+                    convertedFields = [];
+                }
+                
+                tables[table.name] = convertedFields;
+                
+                // 构建事实表-维度表关系
+                if (table.type === 'fact') {
+                    factDimRelations[table.name] = [];
+                    // 查找所有与此事实表相关的维度表
+                    data.relations.forEach(rel => {
+                        if (rel.target === table.name && rel.isFactDim) {
+                            const dimTable = data.tables.find(t => t.name === rel.source);
+                            if (dimTable && dimTable.type === 'dim') {
+                                factDimRelations[table.name].push(rel.source);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // 转换关系数据
+            const customRelations = data.relations.map(rel => ({
+                source: rel.source,
+                target: rel.target,
+                label: rel.type,
+                description: rel.isFactDim ? '维度-事实' : 
+                             rel.type === '1-1' || rel.type === '1:1' ? '一对一' :
+                             rel.type === '1-N' || rel.type === '1:N' ? '一对多' :
+                             rel.type === 'N-N' || rel.type === 'N:N' ? '多对多' :
+                             rel.type === 'self' ? '自关联' : '关系',
+                sourceField: rel.sourceField,
+                targetField: rel.targetField,
+                relationType: rel.isFactDim ? 'fact-dim' : 'normal'
+            }));
+            
+            return { tables, customRelations, factDimRelations };
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('导入数据调试页面已加载', 'info');
+        });
+    </script>
+</body>
+</html>

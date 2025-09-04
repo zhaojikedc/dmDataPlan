@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试事实维度关系</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .debug-info { background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>调试事实维度关系</h1>
+    
+    <button class="btn" onclick="debugFactDim()">调试事实维度关系</button>
+    <button class="btn" onclick="clearDebug()">清空调试信息</button>
+    
+    <div id="debugResults"></div>
+
+    <script>
+        function showDebug(message, type = 'info') {
+            const debugDiv = document.getElementById('debugResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            debugDiv.appendChild(resultDiv);
+        }
+
+        function showDebugInfo(title, data) {
+            const debugDiv = document.getElementById('debugResults');
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'debug-info';
+            infoDiv.innerHTML = `<strong>${title}:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            debugDiv.appendChild(infoDiv);
+        }
+
+        async function debugFactDim() {
+            try {
+                showDebug('开始调试事实维度关系...', 'info');
+                
+                // 1. 测试JSON文件加载
+                showDebug('1. 测试JSON文件加载...', 'info');
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                showDebug('✅ JSON文件加载成功', 'success');
+                showDebugInfo('原始JSON数据', data);
+                
+                // 2. 检查erModels数组
+                showDebug('2. 检查erModels数组...', 'info');
+                if (!data.erModels) {
+                    showDebug('❌ 没有erModels数组', 'error');
+                    return;
+                }
+                
+                if (!Array.isArray(data.erModels)) {
+                    showDebug('❌ erModels不是数组', 'error');
+                    return;
+                }
+                
+                showDebug(`✅ erModels是数组，长度: ${data.erModels.length}`, 'success');
+                
+                // 3. 检查每个关系的isFactDim字段
+                showDebug('3. 检查isFactDim字段...', 'info');
+                let factCount = 0;
+                let dimensionCount = 0;
+                let missingCount = 0;
+                
+                data.erModels.forEach((relation, index) => {
+                    if (relation.isFactDim === 'fact') {
+                        factCount++;
+                    } else if (relation.isFactDim === 'dimension') {
+                        dimensionCount++;
+                    } else {
+                        missingCount++;
+                        showDebug(`⚠️ 关系 ${index + 1} (${relation.id}) 缺少isFactDim字段`, 'error');
+                    }
+                });
+                
+                showDebug(`📊 事实关系: ${factCount} 条`, 'success');
+                showDebug(`📊 维度关系: ${dimensionCount} 条`, 'success');
+                if (missingCount > 0) {
+                    showDebug(`⚠️ 缺少isFactDim字段: ${missingCount} 条`, 'error');
+                } else {
+                    showDebug('✅ 所有关系都有isFactDim字段', 'success');
+                }
+                
+                // 4. 显示前3个关系的详细信息
+                showDebug('4. 前3个关系的详细信息...', 'info');
+                data.erModels.slice(0, 3).forEach((relation, index) => {
+                    showDebugInfo(`关系 ${index + 1}: ${relation.id}`, {
+                        id: relation.id,
+                        name: relation.name,
+                        isFactDim: relation.isFactDim,
+                        sourceTable: relation.sourceTable,
+                        targetTable: relation.targetTable
+                    });
+                });
+                
+                // 5. 测试渲染逻辑
+                showDebug('5. 测试渲染逻辑...', 'info');
+                data.erModels.slice(0, 3).forEach((relation, index) => {
+                    const factDimText = relation.isFactDim === 'fact' ? '事实关系' : 
+                                      relation.isFactDim === 'dimension' ? '维度关系' : '-';
+                    showDebug(`关系 ${index + 1}: isFactDim="${relation.isFactDim}" -> 显示="${factDimText}"`, 'info');
+                });
+                
+            } catch (error) {
+                console.error('调试失败:', error);
+                showDebug(`❌ 调试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function clearDebug() {
+            document.getElementById('debugResults').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showDebug('页面已加载，点击"调试事实维度关系"开始调试', 'info');
+        });
+    </script>
+</body>
+</html>

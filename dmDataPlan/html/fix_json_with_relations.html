@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复JSON并添加关系</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .json-textarea { width: 100%; height: 300px; font-family: monospace; font-size: 12px; }
+        .test-container { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .result-textarea { width: 100%; height: 400px; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>修复JSON并添加关系</h1>
+    
+    <div class="status info">
+        <strong>功能说明:</strong> 为您的JSON数据添加关系数据，生成完整的ER图数据
+    </div>
+    
+    <div class="test-container">
+        <h3>原始JSON数据</h3>
+        <textarea id="originalJson" class="json-textarea" placeholder="粘贴您的JSON数据..."></textarea>
+        
+        <button class="btn" onclick="addRelationsToJson()">添加关系数据</button>
+        <button class="btn" onclick="clearAll()">清空所有</button>
+    </div>
+    
+    <div class="test-container">
+        <h3>修复后的JSON数据（包含关系）</h3>
+        <textarea id="resultJson" class="result-textarea" placeholder="修复后的JSON数据将显示在这里..."></textarea>
+        
+        <button class="btn" onclick="copyResult()">复制结果</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function addRelationsToJson() {
+            try {
+                showResult('开始添加关系数据...', 'info');
+                
+                const originalJson = document.getElementById('originalJson').value.trim();
+                
+                if (!originalJson) {
+                    showResult('❌ 请输入原始JSON数据！', 'error');
+                    return;
+                }
+                
+                // 解析原始JSON
+                const originalData = JSON.parse(originalJson);
+                showResult('✅ 原始JSON解析成功', 'success');
+                
+                // 检查表格数据
+                if (!originalData.tables || !Array.isArray(originalData.tables)) {
+                    showResult('❌ 原始数据中没有表格数据', 'error');
+                    return;
+                }
+                
+                showResult(`找到 ${originalData.tables.length} 个表格`, 'success');
+                
+                // 生成关系数据
+                const relations = generateRelations(originalData.tables);
+                showResult(`生成了 ${relations.length} 个关系`, 'success');
+                
+                // 创建修复后的数据
+                const fixedData = {
+                    ...originalData,
+                    relations: relations
+                };
+                
+                // 显示结果
+                const resultJson = JSON.stringify(fixedData, null, 2);
+                document.getElementById('resultJson').value = resultJson;
+                
+                showResult('✅ JSON数据修复完成！现在可以导入到ER图页面了', 'success');
+                
+            } catch (error) {
+                showResult(`❌ 修复失败: ${error.message}`, 'error');
+                console.error('修复失败:', error);
+            }
+        }
+
+        function generateRelations(tables) {
+            const relations = [];
+            const tableNames = tables.map(t => t.name);
+            
+            // 策略1: 为每对相邻的表格创建关系
+            for (let i = 0; i < tableNames.length - 1; i++) {
+                const source = tableNames[i];
+                const target = tableNames[i + 1];
+                
+                relations.push({
+                    source: source,
+                    target: target,
+                    type: '1:N',
+                    sourceField: 'id',
+                    targetField: `${source}_id`,
+                    isFactDim: false
+                });
+            }
+            
+            // 策略2: 为事实表和维度表创建关系
+            const factTables = tables.filter(t => t.type === 'fact');
+            const dimTables = tables.filter(t => t.type === 'dim');
+            
+            factTables.forEach(factTable => {
+                dimTables.forEach(dimTable => {
+                    relations.push({
+                        source: dimTable.name,
+                        target: factTable.name,
+                        type: '1:N',
+                        sourceField: 'id',
+                        targetField: `${dimTable.name}_id`,
+                        isFactDim: true
+                    });
+                });
+            });
+            
+            // 策略3: 为有共同字段的表格创建关系
+            tables.forEach(sourceTable => {
+                tables.forEach(targetTable => {
+                    if (sourceTable.name !== targetTable.name) {
+                        const sourceFields = sourceTable.fields || [];
+                        const targetFields = targetTable.fields || [];
+                        
+                        // 查找共同字段
+                        const commonFields = sourceFields.filter(sf => 
+                            targetFields.some(tf => 
+                                (sf.key || sf.name) === (tf.key || tf.name)
+                            )
+                        );
+                        
+                        if (commonFields.length > 0) {
+                            const commonField = commonFields[0];
+                            relations.push({
+                                source: sourceTable.name,
+                                target: targetTable.name,
+                                type: '1:N',
+                                sourceField: commonField.key || commonField.name,
+                                targetField: commonField.key || commonField.name,
+                                isFactDim: false
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // 去重
+            const uniqueRelations = [];
+            const seen = new Set();
+            
+            relations.forEach(rel => {
+                const key = `${rel.source}-${rel.target}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueRelations.push(rel);
+                }
+            });
+            
+            return uniqueRelations;
+        }
+
+        function copyResult() {
+            const resultTextarea = document.getElementById('resultJson');
+            resultTextarea.select();
+            document.execCommand('copy');
+            showResult('✅ 结果已复制到剪贴板', 'success');
+        }
+
+        function clearAll() {
+            document.getElementById('originalJson').value = '';
+            document.getElementById('resultJson').value = '';
+            document.getElementById('results').innerHTML = '';
+            showResult('已清空所有内容', 'info');
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('JSON修复页面已加载', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "relations": [
+    {
+      "id": "rel_1756972195074_7esj9hroi",
+      "source": "dim.dim_tp_air_full_cargo_di",
+      "target": "dm_pass_atp.tm_air_flow_config_wide",
+      "sourceField": "deprt_city_code",
+      "targetField": "src_city_code",
+      "type": "one-to-many",
+      "isFactDim": false,
+      "createdTime": "2025-09-04T07:49:55.074Z",
+      "created_at": "2025-09-04T15:49:55.376647",
+      "updatedTime": "2025-09-04T09:29:09.057Z",
+      "updated_at": "2025-09-04T17:29:09.373149"
+    },
+    {
+      "id": "rel_1756972215827_iyjxofqzv",
+      "source": "dim.dim_tp_air_full_cargo_di",
+      "target": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "sourceField": "deprt_city_code",
+      "targetField": "flight_no",
+      "type": "one-to-many",
+      "isFactDim": false,
+      "createdTime": "2025-09-04T07:50:15.827Z",
+      "created_at": "2025-09-04T15:50:15.828311",
+      "updatedTime": "2025-09-04T09:59:52.848Z",
+      "updated_at": "2025-09-04T17:59:53.153742"
+    },
+    {
+      "id": "rel_1756972234573_r4bv7v1h0",
+      "source": "dim.dim_tp_air_full_cargo_di",
+      "target": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "sourceField": "deprt_city_code",
+      "targetField": "arrive_city_code",
+      "type": "one-to-many",
+      "isFactDim": false,
+      "createdTime": "2025-09-04T07:50:34.573Z",
+      "created_at": "2025-09-04T15:50:34.577407",
+      "updatedTime": "2025-09-04T09:32:17.474Z",
+      "updated_at": "2025-09-04T17:32:17.477718"
+    },
+    {
+      "id": "rel_1756972265405_l2d5hmj4w",
+      "source": "dim.dim_tp_air_full_cargo_di",
+      "target": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "sourceField": "deprt_city_code",
+      "targetField": "src_city_code",
+      "type": "one-to-many",
+      "isFactDim": false,
+      "createdTime": "2025-09-04T07:51:05.405Z",
+      "created_at": "2025-09-04T15:51:05.407309",
+      "updatedTime": "2025-09-04T09:32:34.934Z",
+      "updated_at": "2025-09-04T17:32:34.937431"
+    },
+    {
+      "id": "rel_1756972278171_ivrfe4gbo",
+      "source": "dim.dim_tp_air_full_cargo_di",
+      "target": "dm_tp.dm_tp_air_full_flow_sum_di",
+      "sourceField": "deprt_city_code",
+      "targetField": "flight_flow",
+      "type": "one-to-many",
+      "isFactDim": false,
+      "createdTime": "2025-09-04T07:51:18.171Z",
+      "created_at": "2025-09-04T15:51:18.174457",
+      "updatedTime": "2025-09-04T09:52:08.508Z",
+      "updated_at": "2025-09-04T17:52:08.813850"
+    }
+  ],
+  "last_updated": "2025-09-04T17:59:53.153742"
+}

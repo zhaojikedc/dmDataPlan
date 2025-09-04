@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关系数据展示测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #1890ff;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success { background-color: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .status.error { background-color: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+        .status.info { background-color: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .relations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .relations-table th,
+        .relations-table td {
+            border: 1px solid #d9d9d9;
+            padding: 12px;
+            text-align: left;
+        }
+        .relations-table th {
+            background-color: #fafafa;
+            font-weight: bold;
+        }
+        .relations-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        .relations-table tr:hover {
+            background-color: #e6f7ff;
+        }
+        .btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #1890ff; color: white; }
+        .btn-success { background-color: #52c41a; color: white; }
+        .btn-danger { background-color: #ff4d4f; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .data-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .json-display {
+            background-color: #f8f8f8;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>关系数据展示测试页面</h1>
+            <p>测试从 o_line_er_models.json 加载和显示关系数据</p>
+        </div>
+
+        <div class="data-info">
+            <h3>测试操作</h3>
+            <button class="btn btn-primary" onclick="loadRelationsData()">加载关系数据</button>
+            <button class="btn btn-success" onclick="displayRelationsTable()">显示关系表格</button>
+            <button class="btn btn-danger" onclick="clearData()">清空数据</button>
+        </div>
+
+        <div id="statusMessages"></div>
+
+        <div class="data-info">
+            <h3>数据信息</h3>
+            <div id="dataInfo">
+                <p>点击"加载关系数据"开始测试</p>
+            </div>
+        </div>
+
+        <div class="data-info">
+            <h3>原始JSON数据</h3>
+            <div id="jsonDisplay" class="json-display">
+                暂无数据
+            </div>
+        </div>
+
+        <div class="data-info">
+            <h3>关系数据表格</h3>
+            <table class="relations-table" id="relationsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>关系名称</th>
+                        <th>源表</th>
+                        <th>目标表</th>
+                        <th>源字段</th>
+                        <th>目标字段</th>
+                        <th>关系类型</th>
+                        <th>关系描述</th>
+                        <th>创建时间</th>
+                    </tr>
+                </thead>
+                <tbody id="relationsTableBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #999;">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let relationsData = null;
+        let erModels = [];
+
+        // 显示状态消息
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            document.getElementById('statusMessages').appendChild(statusDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 3000);
+        }
+
+        // 加载关系数据
+        async function loadRelationsData() {
+            try {
+                showStatus('正在加载关系数据...', 'info');
+                
+                const response = await fetch('../config/o_line_er_models.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                relationsData = await response.json();
+                erModels = relationsData.erModels || [];
+                
+                // 显示数据信息
+                document.getElementById('dataInfo').innerHTML = `
+                    <p><strong>文件加载状态:</strong> 成功</p>
+                    <p><strong>总关系数量:</strong> ${erModels.length}</p>
+                    <p><strong>数据更新时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+                
+                // 显示原始JSON数据
+                document.getElementById('jsonDisplay').textContent = JSON.stringify(relationsData, null, 2);
+                
+                showStatus(`✅ 成功加载 ${erModels.length} 条关系数据`, 'success');
+                
+            } catch (error) {
+                console.error('加载关系数据失败:', error);
+                showStatus(`❌ 加载关系数据失败: ${error.message}`, 'error');
+                
+                document.getElementById('dataInfo').innerHTML = `
+                    <p><strong>文件加载状态:</strong> 失败</p>
+                    <p><strong>错误信息:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        // 显示关系表格
+        function displayRelationsTable() {
+            if (!erModels || erModels.length === 0) {
+                showStatus('❌ 没有关系数据可显示，请先加载数据', 'error');
+                return;
+            }
+
+            const tableBody = document.getElementById('relationsTableBody');
+            tableBody.innerHTML = '';
+
+            erModels.forEach(relation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${relation.id || '-'}</td>
+                    <td>${relation.name || '-'}</td>
+                    <td>${relation.sourceTable || '-'}</td>
+                    <td>${relation.targetTable || '-'}</td>
+                    <td>${relation.sourceField || '-'}</td>
+                    <td>${relation.targetField || '-'}</td>
+                    <td>${relation.relationType || '-'}</td>
+                    <td>${relation.relationDesc || relation.description || '-'}</td>
+                    <td>${relation.createdTime || '-'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            showStatus(`✅ 成功显示 ${erModels.length} 条关系数据`, 'success');
+        }
+
+        // 清空数据
+        function clearData() {
+            relationsData = null;
+            erModels = [];
+            
+            document.getElementById('dataInfo').innerHTML = '<p>数据已清空</p>';
+            document.getElementById('jsonDisplay').textContent = '暂无数据';
+            document.getElementById('relationsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; color: #999;">暂无数据</td>
+                </tr>
+            `;
+            
+            showStatus('数据已清空', 'info');
+        }
+
+        // 页面加载时自动加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('页面已加载，点击"加载关系数据"开始测试', 'info');
+        });
+    </script>
+</body>
+</html>

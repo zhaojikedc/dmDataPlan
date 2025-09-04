@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闪退测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; cursor: pointer; }
+        #log { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; height: 400px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>闪退测试页面</h1>
+    
+    <button onclick="testERPage()">测试ER页面</button>
+    <button onclick="testDataLoad()">测试数据载入</button>
+    <button onclick="clearLog()">清空日志</button>
+    
+    <div id="log"></div>
+
+    <script>
+        // 重写console.log来捕获日志
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addLog(message, type = 'log') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? 'red' : type === 'warn' ? 'orange' : 'black';
+            logEntry.textContent = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog(args.join(' '), 'warn');
+        };
+        
+        // 全局错误处理
+        window.addEventListener('error', function(event) {
+            console.error('全局错误:', event.error);
+            console.error('错误位置:', event.filename, ':', event.lineno);
+            addLog(`全局错误: ${event.error.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未处理的Promise拒绝:', event.reason);
+            addLog(`Promise错误: ${event.reason}`, 'error');
+        });
+        
+        function testERPage() {
+            console.log('打开ER页面...');
+            const newWindow = window.open('/html/o_erGenHtml.html', '_blank');
+            
+            // 监听新窗口的错误
+            if (newWindow) {
+                newWindow.addEventListener('error', function(event) {
+                    console.error('ER页面错误:', event.error);
+                    addLog(`ER页面错误: ${event.error.message}`, 'error');
+                });
+            }
+        }
+        
+        async function testDataLoad() {
+            try {
+                console.log('开始测试数据载入...');
+                const response = await fetch('/api/merge-er-data');
+                
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('数据载入成功:', data);
+                addLog(`数据载入成功: 表${data.data.tables.length}个, 关系${data.data.relations.length}个`, 'log');
+                
+            } catch (error) {
+                console.error('数据载入失败:', error);
+                addLog(`数据载入失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // 页面加载完成
+        console.log('闪退测试页面加载完成');
+    </script>
+</body>
+</html>

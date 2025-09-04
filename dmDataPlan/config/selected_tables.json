@@ -1,0 +1,1505 @@
+{
+  "title": "已选表信息",
+  "description": "用户在模型关系创建页面选择的表信息",
+  "tables": [
+    {
+      "name": "dim.dim_tp_air_full_cargo_di",
+      "database": "dim",
+      "type": "dim",
+      "description": "航空全货机维度表",
+      "fields": [
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "schedule",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "星期几"
+        },
+        {
+          "key": "cpct_name",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "运力名称"
+        },
+        {
+          "key": "deprt_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发地城市code"
+        },
+        {
+          "key": "arrive_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的地城市code"
+        },
+        {
+          "key": "deprt_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地机场三字码"
+        },
+        {
+          "key": "arrive_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地机场三字码"
+        },
+        {
+          "key": "send_blng_net_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "发货归属网点代码"
+        },
+        {
+          "key": "get_blng_net_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "提货归属网点代码"
+        },
+        {
+          "key": "deprt_sta_types",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发货站分类"
+        },
+        {
+          "key": "deprt_sta_names",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发货站"
+        },
+        {
+          "key": "arrive_sta_types",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的货站分类"
+        },
+        {
+          "key": "arrive_sta_names",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的货站"
+        },
+        {
+          "key": "is_stop",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "经停标志:0 否(直飞)1 是(经停)"
+        },
+        {
+          "key": "sch_flight_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "时效性航班类型1早航班2午航班3晚航班"
+        },
+        {
+          "key": "cpct_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "运力类型:1 全货机 2 散航班"
+        },
+        {
+          "key": "flight_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型:1 国内2 国际3 港澳台"
+        },
+        {
+          "key": "dist",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "航班里程"
+        },
+        {
+          "key": "dist_type",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航距类型 1远程航线2中程航线3近程航线"
+        },
+        {
+          "key": "air_airln_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司代码"
+        },
+        {
+          "key": "cpct_state",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "航班状态:1.起飞2.取消3.备降4.返航5.到达6.延误7.计划，-1.空"
+        },
+        {
+          "key": "plan_sch_days",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "班期"
+        },
+        {
+          "key": "plan_plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划机型"
+        },
+        {
+          "key": "plan_cargo_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "计划机型业载(kg)"
+        },
+        {
+          "key": "plan_mktbl_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "计划可销售业载(kg)"
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型"
+        },
+        {
+          "key": "cargo_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型业载(kg)"
+        },
+        {
+          "key": "mktbl_load",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "实际执飞机型可销售业载(kg)"
+        },
+        {
+          "key": "valid_total",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "有效可获取舱位量(kg)"
+        },
+        {
+          "key": "prtcl_weight",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "协议量"
+        },
+        {
+          "key": "cross_day",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "跨越天数"
+        },
+        {
+          "key": "plan_deprt_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划起飞时间"
+        },
+        {
+          "key": "plan_arrive_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划到达时间"
+        },
+        {
+          "key": "actual_deprt_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际起飞时间"
+        },
+        {
+          "key": "actual_arrive_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际到达时间"
+        },
+        {
+          "key": "trans_time",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "货站最晚截载时长(min)"
+        },
+        {
+          "key": "prod_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "静态时效标签"
+        },
+        {
+          "key": "apply_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "动态时效标签"
+        },
+        {
+          "key": "is_delete",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "是否删除 0否 1是"
+        },
+        {
+          "key": "load_time",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "写入bdp时间"
+        }
+      ]
+    },
+    {
+      "name": "dm_pass_atp.tm_air_flow_config_wide",
+      "database": "dm_pass_atp",
+      "type": "dim",
+      "description": "航空流向配置宽表",
+      "fields": [
+        {
+          "key": "id",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "ID"
+        },
+        {
+          "key": "city_flow",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "城市流向"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件城市代码"
+        },
+        {
+          "key": "src_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件城市名称"
+        },
+        {
+          "key": "src_province_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "寄件省名称"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "派件城市代码"
+        },
+        {
+          "key": "dest_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "派件城市名称"
+        },
+        {
+          "key": "dest_province_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "派件省名称"
+        },
+        {
+          "key": "distance",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "城市距离"
+        },
+        {
+          "key": "distance_range",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "距离归段"
+        },
+        {
+          "key": "city_rel",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "城市关系.1-同城,2-省内,3-邻省,4-经济圈,5-省外,6-港澳台"
+        },
+        {
+          "key": "is_express_config",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "是否特快排布.1-是,0-否"
+        },
+        {
+          "key": "is_3600_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "3600流向.1-是,0-否"
+        },
+        {
+          "key": "is_2686_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "2686流向.1-是,0-否"
+        },
+        {
+          "key": "is_7a_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "7A流向.1-是,0-否"
+        },
+        {
+          "key": "is_air_flow",
+          "type": "int",
+          "pk": false,
+          "fk": false,
+          "cn": "空网流向标识.1-是,0-否"
+        },
+        {
+          "key": "effective_dt",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "生效日期"
+        },
+        {
+          "key": "expiry_dt",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "失效日期"
+        },
+        {
+          "key": "creator",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "创建人"
+        },
+        {
+          "key": "created_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "创建时间"
+        },
+        {
+          "key": "modifier",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "修改人"
+        },
+        {
+          "key": "modified_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "修改时间"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_flow_weight_sum_di",
+      "database": "dm_tp",
+      "type": "fact",
+      "description": "航空流向重量汇总事实表",
+      "fields": [
+        {
+          "key": "flight_task_id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "飞行任务ID"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班号"
+        },
+        {
+          "key": "plane_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机号"
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机型"
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司"
+        },
+        {
+          "key": "transport_status",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "运力状态1、未执行，2、执行中，3、已执行"
+        },
+        {
+          "key": "flight_attribute",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型 1-大陆 2-国际 3-港台"
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班类型 1:自有 2:包机 3:国际 4:其他"
+        },
+        {
+          "key": "carrier_attr",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运属性(1-大陆，2-国际，3-港澳台)"
+        },
+        {
+          "key": "is_main_flight_segment",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主备用航段"
+        },
+        {
+          "key": "is_pivotal_flight_segment",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否枢纽航段"
+        },
+        {
+          "key": "planning_nature",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "规划性质"
+        },
+        {
+          "key": "adjust_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "调整类型:新增/机型调整/时刻调整"
+        },
+        {
+          "key": "src_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发归属网点"
+        },
+        {
+          "key": "src_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地代码"
+        },
+        {
+          "key": "src_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地三字码"
+        },
+        {
+          "key": "dest_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的归属网点"
+        },
+        {
+          "key": "dest_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地代码"
+        },
+        {
+          "key": "dest_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地三字码"
+        },
+        {
+          "key": "plan_start_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划起飞"
+        },
+        {
+          "key": "plan_end_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计划到达"
+        },
+        {
+          "key": "actual_start_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际起飞"
+        },
+        {
+          "key": "actual_end_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际到达"
+        },
+        {
+          "key": "start_delay",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "起飞延误时长"
+        },
+        {
+          "key": "end_delay",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "落地延误时长"
+        },
+        {
+          "key": "flight_load",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "航班业载"
+        },
+        {
+          "key": "actual_space",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际舱位量"
+        },
+        {
+          "key": "plan_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划发货量"
+        },
+        {
+          "key": "actual_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际发货量"
+        },
+        {
+          "key": "plan_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划装载率"
+        },
+        {
+          "key": "actual_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际装载率"
+        },
+        {
+          "key": "box_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "板重装载率"
+        },
+        {
+          "key": "load_poll",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "装车票数"
+        },
+        {
+          "key": "carno",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "车标"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_full_flow_sum_di",
+      "database": "dm_tp",
+      "type": "fact",
+      "description": "航空全流向汇总事实表",
+      "fields": [
+        {
+          "key": "send_flight_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "发送航班任务ID"
+        },
+        {
+          "key": "get_flight_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "获取航班任务ID"
+        },
+        {
+          "key": "send_task_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "发送任务ID"
+        },
+        {
+          "key": "log_tm",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日志日期"
+        },
+        {
+          "key": "flight_date",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班日期"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "航班号"
+        },
+        {
+          "key": "flight_flow",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班流向"
+        },
+        {
+          "key": "plane_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机号"
+        },
+        {
+          "key": "plane_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "机型"
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司"
+        },
+        {
+          "key": "transport_status",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "运力状态"
+        },
+        {
+          "key": "flight_attribute",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型"
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班类型"
+        },
+        {
+          "key": "src_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发归属网点"
+        },
+        {
+          "key": "src_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地"
+        },
+        {
+          "key": "start_area",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发区域"
+        },
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地代码"
+        },
+        {
+          "key": "src_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地三字码"
+        },
+        {
+          "key": "dest_zone_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的归属网点"
+        },
+        {
+          "key": "dest_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地"
+        },
+        {
+          "key": "dest_area",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的区域"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地代码"
+        },
+        {
+          "key": "dest_airport",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地三字码"
+        },
+        {
+          "key": "flight_load",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "航班业载"
+        },
+        {
+          "key": "actual_space",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际舱位量"
+        },
+        {
+          "key": "plan_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划发货量"
+        },
+        {
+          "key": "actual_send_weight",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际发货量"
+        },
+        {
+          "key": "plan_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "计划装载率"
+        },
+        {
+          "key": "actual_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "实际装载率"
+        },
+        {
+          "key": "box_load_rate",
+          "type": "double",
+          "pk": false,
+          "fk": false,
+          "cn": "板重装载率"
+        },
+        {
+          "key": "load_poll",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "装车票数"
+        },
+        {
+          "key": "pattern_number",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "模式编号"
+        },
+        {
+          "key": "actual_pattern_number",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "实际模式编号"
+        },
+        {
+          "key": "carno",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "车标"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+      "database": "dm_tp",
+      "type": "fact",
+      "description": "航空全时效达成汇总事实表",
+      "fields": [
+        {
+          "key": "src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发城市代码"
+        },
+        {
+          "key": "src_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "始发城市名称"
+        },
+        {
+          "key": "dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的城市代码"
+        },
+        {
+          "key": "dest_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "目的城市名称"
+        },
+        {
+          "key": "cvy_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "运力类型:1-全货机,2-散航班"
+        },
+        {
+          "key": "airline_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航线类型:1-国内,2-国际,3-港澳台"
+        },
+        {
+          "key": "airline_type_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航线类型名称"
+        },
+        {
+          "key": "air_dist",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航距"
+        },
+        {
+          "key": "tml_type",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "时效类型"
+        },
+        {
+          "key": "tml_type_name",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "时效类型名称"
+        },
+        {
+          "key": "flight_flow",
+          "type": "string",
+          "pk": false,
+          "fk": true,
+          "cn": "航班流向"
+        },
+        {
+          "key": "last_cvy_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "最后运力名称"
+        },
+        {
+          "key": "last_cvy_src_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "最后运力始发城市代码"
+        },
+        {
+          "key": "last_cvy_src_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "最后运力始发区域代码"
+        },
+        {
+          "key": "last_cvy_dest_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "最后运力目的城市代码"
+        },
+        {
+          "key": "last_cvy_dest_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "最后运力目的区域名称"
+        },
+        {
+          "key": "product_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "产品代码"
+        },
+        {
+          "key": "route_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "路由代码"
+        },
+        {
+          "key": "is_arrive_city",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否到达城市"
+        },
+        {
+          "key": "dest_belong_county_label",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的归属县标签"
+        },
+        {
+          "key": "is_02d_distr",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否02D配送"
+        },
+        {
+          "key": "total_qty",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "总数量"
+        },
+        {
+          "key": "qty_2d12",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "2D12数量"
+        },
+        {
+          "key": "qty_2d18",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "2D18数量"
+        },
+        {
+          "key": "qty_2d",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "2D数量"
+        },
+        {
+          "key": "qty_cvy_2d12",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "运力2D12数量"
+        },
+        {
+          "key": "qty_cvy_2d18",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "运力2D18数量"
+        },
+        {
+          "key": "qty_cvy_2d",
+          "type": "bigint",
+          "pk": false,
+          "fk": false,
+          "cn": "运力2D数量"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    },
+    {
+      "name": "dm_tp.dm_tp_air_get_price_dtl_di",
+      "database": "dm_tp",
+      "type": "fact",
+      "description": "航空获取价格明细事实表",
+      "fields": [
+        {
+          "key": "carrier_id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "主承运商id"
+        },
+        {
+          "key": "carrier_code",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "主承运商编码"
+        },
+        {
+          "key": "carrier_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主承运商名称"
+        },
+        {
+          "key": "carrier_id2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商id2"
+        },
+        {
+          "key": "carrier_code2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商编码2"
+        },
+        {
+          "key": "carrier_name2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商名称2"
+        },
+        {
+          "key": "carrier_id3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商id3"
+        },
+        {
+          "key": "carrier_code3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商编码3"
+        },
+        {
+          "key": "carrier_name3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "承运商名称3"
+        },
+        {
+          "key": "contract_id",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "合同id"
+        },
+        {
+          "key": "air_company",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航司"
+        },
+        {
+          "key": "flight_no",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航班"
+        },
+        {
+          "key": "goods_stowage_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "提货货物类型"
+        },
+        {
+          "key": "effective_date",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "生效日期"
+        },
+        {
+          "key": "expiration_date",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "失效日期"
+        },
+        {
+          "key": "dept_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "网点代码"
+        },
+        {
+          "key": "depart_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发机场三字码"
+        },
+        {
+          "key": "arrive_thr_letter_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的机场三字码"
+        },
+        {
+          "key": "depart_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地城市名称"
+        },
+        {
+          "key": "depart_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地城市代码"
+        },
+        {
+          "key": "depart_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地区代码"
+        },
+        {
+          "key": "depart_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "始发地区名称"
+        },
+        {
+          "key": "arrive_city_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地城市代码"
+        },
+        {
+          "key": "arrive_city_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地城市名称"
+        },
+        {
+          "key": "arrive_area_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地区代码"
+        },
+        {
+          "key": "arrive_area_name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "目的地区名称"
+        },
+        {
+          "key": "supplier_low_charge",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "主供应商总最低收费"
+        },
+        {
+          "key": "supplier_low_charge_2",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "供应商2总最低收费"
+        },
+        {
+          "key": "supplier_low_charge_3",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "供应商3总最低收费"
+        },
+        {
+          "key": "flight_type",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "航线类型:1国内2国际3港澳台"
+        },
+        {
+          "key": "serve_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "费用项代码"
+        },
+        {
+          "key": "unit_code",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "计量单位编码"
+        },
+        {
+          "key": "is_range",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "是否按重量区间:0否1是"
+        },
+        {
+          "key": "start_value",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "起始时间"
+        },
+        {
+          "key": "end_value",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "结束时间"
+        },
+        {
+          "key": "price",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "单价"
+        },
+        {
+          "key": "sum_price",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "总单价"
+        },
+        {
+          "key": "low_charge",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "费用项最低收费"
+        },
+        {
+          "key": "settlement_org",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "服务组织小件-1大件-2"
+        },
+        {
+          "key": "inc_day",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "日期"
+        }
+      ]
+    }
+  ],
+  "selectedTableNames": [
+    "dim.dim_tp_air_full_cargo_di",
+    "dm_pass_atp.tm_air_flow_config_wide",
+    "dm_tp.dm_tp_air_flow_weight_sum_di",
+    "dm_tp.dm_tp_air_get_price_dtl_di",
+    "dm_tp.dm_tp_air_full_time_achieve_sum_di",
+    "dm_tp.dm_tp_air_full_flow_sum_di"
+  ],
+  "last_updated": "2025-09-04T07:47:01.857Z"
+}

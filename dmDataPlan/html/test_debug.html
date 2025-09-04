@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试测试页面</title>
+    <script src="js/data-api.js"></script>
+</head>
+<body>
+    <h1>调试测试页面</h1>
+    <div id="status">正在加载...</div>
+    
+    <script>
+        const api = new DataAPI('http://localhost:8080');
+        
+        async function testAPI() {
+            try {
+                console.log('测试API连接...');
+                
+                // 测试表元数据加载
+                const tableInfo = await api.getData('table_metadata.json');
+                console.log('表元数据:', tableInfo);
+                
+                // 测试关系数据加载
+                const relationsData = await api.getData('o_line_relations.json');
+                console.log('关系数据:', relationsData);
+                
+                document.getElementById('status').innerHTML = `
+                    <p>✅ API连接成功</p>
+                    <p>表数量: ${tableInfo?.tables?.length || 0}</p>
+                    <p>关系数量: ${relationsData?.relations?.length || 0}</p>
+                `;
+                
+            } catch (error) {
+                console.error('API测试失败:', error);
+                document.getElementById('status').innerHTML = `❌ API测试失败: ${error.message}`;
+            }
+        }
+        
+        // 页面加载完成后测试
+        document.addEventListener('DOMContentLoaded', testAPI);
+    </script>
+</body>
+</html>

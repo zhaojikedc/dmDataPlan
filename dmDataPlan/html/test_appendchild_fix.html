@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>appendChild错误修复测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .btn { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .json-textarea { width: 100%; height: 200px; font-family: monospace; font-size: 12px; }
+        .test-container { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>appendChild错误修复测试</h1>
+    
+    <div class="status info">
+        <strong>测试说明:</strong> 测试O线ER关系说明页面的appendChild错误修复
+    </div>
+    
+    <div class="test-container">
+        <h3>测试JSON数据</h3>
+        <textarea id="testJson" class="json-textarea" placeholder="粘贴JSON数据...">{
+  "title": "测试ER图",
+  "description": "这是一个测试ER图",
+  "tables": [
+    {
+      "name": "test_table1",
+      "type": "fact",
+      "fields": [
+        {
+          "key": "id",
+          "type": "string",
+          "pk": true,
+          "fk": false,
+          "cn": "ID"
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "pk": false,
+          "fk": false,
+          "cn": "名称"
+        }
+      ]
+    }
+  ],
+  "relations": []
+}</textarea>
+        
+        <button class="btn" onclick="testAppendChildFix()">测试appendChild修复</button>
+        <button class="btn" onclick="clearResults()">清空结果</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testAppendChildFix() {
+            try {
+                showResult('开始测试appendChild修复...', 'info');
+                
+                const jsonInput = document.getElementById('testJson').value.trim();
+                
+                if (!jsonInput) {
+                    showResult('❌ 请输入JSON数据！', 'error');
+                    return;
+                }
+                
+                // 解析JSON
+                const importData = JSON.parse(jsonInput);
+                showResult('✅ JSON解析成功', 'success');
+                
+                // 验证数据结构
+                if (!importData.tables || !Array.isArray(importData.tables)) {
+                    throw new Error('无效的数据结构：tables必须是数组');
+                }
+                
+                showResult('✅ 数据结构验证通过', 'success');
+                
+                // 模拟convertDataFormat函数
+                const convertedData = convertDataFormat(importData);
+                showResult('✅ 数据格式转换成功', 'success');
+                
+                // 检查转换后的数据结构
+                if (convertedData.tables) {
+                    showResult(`📊 转换后表格数量: ${Object.keys(convertedData.tables).length}`, 'info');
+                }
+                if (convertedData.customRelations) {
+                    showResult(`📊 转换后关系数量: ${convertedData.customRelations.length}`, 'info');
+                }
+                
+                // 测试元素检查
+                testElementChecks();
+                
+                showResult('✅ appendChild修复测试完成！', 'success');
+                
+            } catch (error) {
+                showResult(`❌ appendChild修复测试失败: ${error.message}`, 'error');
+                console.error('appendChild修复测试失败:', error);
+            }
+        }
+
+        function testElementChecks() {
+            showResult('检查关键元素...', 'info');
+            
+            const elements = [
+                'titleInput',
+                'descriptionInput', 
+                'tables-container',
+                'svg-container',
+                'text-container'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    showResult(`✅ 找到元素: ${id}`, 'success');
+                } else {
+                    showResult(`❌ 缺少元素: ${id}`, 'error');
+                }
+            });
+        }
+
+        // 模拟convertDataFormat函数
+        function convertDataFormat(data) {
+            const tables = {};
+            const factDimRelations = {};
+            
+            // 转换表格数据
+            data.tables.forEach(table => {
+                // 转换字段格式：支持两种格式
+                let convertedFields;
+                if (table.fields && table.fields.length > 0) {
+                    // 检查字段格式
+                    const firstField = table.fields[0];
+                    if (firstField.key) {
+                        // 新格式：{key, type, pk, fk, cn}
+                        convertedFields = table.fields.map(field => ({
+                            name: field.key,
+                            type: field.type,
+                            primary: field.pk || false,
+                            foreign: field.fk || false,
+                            comment: field.cn || ''
+                        }));
+                    } else if (firstField.name) {
+                        // 旧格式：{name, type, primary}
+                        convertedFields = table.fields;
+                    } else {
+                        // 兼容其他格式
+                        convertedFields = table.fields;
+                    }
+                } else {
+                    convertedFields = [];
+                }
+                
+                tables[table.name] = convertedFields;
+                
+                // 构建事实表-维度表关系
+                if (table.type === 'fact') {
+                    factDimRelations[table.name] = [];
+                    // 查找所有与此事实表相关的维度表
+                    data.relations.forEach(rel => {
+                        if (rel.target === table.name && rel.isFactDim) {
+                            const dimTable = data.tables.find(t => t.name === rel.source);
+                            if (dimTable && dimTable.type === 'dim') {
+                                factDimRelations[table.name].push(rel.source);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // 转换关系数据
+            const customRelations = data.relations.map(rel => ({
+                source: rel.source,
+                target: rel.target,
+                label: rel.type,
+                description: rel.isFactDim ? '维度-事实' : 
+                             rel.type === '1-1' || rel.type === '1:1' ? '一对一' :
+                             rel.type === '1-N' || rel.type === '1:N' ? '一对多' :
+                             rel.type === 'N-N' || rel.type === 'N:N' ? '多对多' :
+                             rel.type === 'self' ? '自关联' : '关系',
+                sourceField: rel.sourceField,
+                targetField: rel.targetField,
+                relationType: rel.isFactDim ? 'fact-dim' : 'normal'
+            }));
+            
+            return { tables, customRelations, factDimRelations };
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 页面加载时显示说明
+        document.addEventListener('DOMContentLoaded', function() {
+            showResult('appendChild修复测试页面已加载', 'info');
+            testElementChecks();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器配置测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>服务器配置测试页面</h1>
+        <p>此页面用于测试服务器是否正确配置了config目录的静态文件服务。</p>
+        
+        <button onclick="testConfigAccess()">测试Config目录访问</button>
+        <button onclick="testMetadataFile()">测试表元数据文件</button>
+        <button onclick="testAllPaths()">测试所有路径</button>
+        
+        <div id="result" class="result">点击按钮开始测试</div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'info') {
+            const element = document.getElementById('result');
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+        
+        async function testConfigAccess() {
+            try {
+                showResult('正在测试config目录访问...', 'info');
+                
+                const response = await fetch('/config/table_metadata.json');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ Config目录访问成功！\n\n文件信息:\n- 标题: ${data.title}\n- 描述: ${data.description}\n- 表数量: ${data.tables ? data.tables.length : 0}\n- 数据库: ${data.tables ? [...new Set(data.tables.map(t => t.database))].join(', ') : '无'}`, 'success');
+                } else {
+                    showResult(`❌ Config目录访问失败！\n状态码: ${response.status}\n状态文本: ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Config目录访问失败！\n错误信息: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testMetadataFile() {
+            try {
+                showResult('正在测试表元数据文件...', 'info');
+                
+                const response = await fetch('/config/table_metadata.json');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 显示详细的表信息
+                    const tableInfo = data.tables ? data.tables.map(table => ({
+                        name: table.name,
+                        database: table.database,
+                        type: table.type,
+                        fieldCount: table.fields ? table.fields.length : 0
+                    })) : [];
+                    
+                    showResult(`✅ 表元数据文件加载成功！\n\n详细信息:\n${JSON.stringify(tableInfo, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 表元数据文件加载失败！\n状态码: ${response.status}\n状态文本: ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ 表元数据文件加载失败！\n错误信息: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAllPaths() {
+            try {
+                showResult('正在测试所有路径...', 'info');
+                
+                const testPaths = [
+                    '/config/table_metadata.json',
+                    '/html/o_line_management.html',
+                    '/html/test_path.html',
+                    '/html/debug_metadata.html'
+                ];
+                
+                const results = [];
+                
+                for (const path of testPaths) {
+                    try {
+                        const response = await fetch(path);
+                        results.push({
+                            path: path,
+                            status: response.status,
+                            statusText: response.statusText,
+                            ok: response.ok,
+                            contentType: response.headers.get('content-type')
+                        });
+                    } catch (error) {
+                        results.push({
+                            path: path,
+                            error: error.message
+                        });
+                    }
+                }
+                
+                showResult(`所有路径测试结果:\n${JSON.stringify(results, null, 2)}`, 'info');
+                
+            } catch (error) {
+                showResult(`所有路径测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 页面加载时自动测试config目录访问
+        window.addEventListener('load', () => {
+            testConfigAccess();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元数据加载诊断页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        .result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+        }
+        .info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+        .path-test {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .path-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>元数据加载诊断页面</h1>
+        <p>此页面用于诊断表元数据JSON文件加载问题。</p>
+        
+        <div class="section">
+            <h3>1. 环境信息</h3>
+            <button onclick="showEnvironmentInfo()">显示环境信息</button>
+            <div id="envInfo" class="result">点击按钮查看环境信息</div>
+        </div>
+        
+        <div class="section">
+            <h3>2. 路径测试</h3>
+            <div class="path-test">
+                <div class="path-item">
+                    <button onclick="testPath1()">测试路径1: ../config/table_metadata.json</button>
+                </div>
+                <div class="path-item">
+                    <button onclick="testPath2()">测试路径2: config/table_metadata.json</button>
+                </div>
+                <div class="path-item">
+                    <button onclick="testPath3()">测试路径3: /config/table_metadata.json</button>
+                </div>
+                <div class="path-item">
+                    <button onclick="testPath4()">测试路径4: ./config/table_metadata.json</button>
+                </div>
+            </div>
+            <div id="pathResult" class="result">点击按钮测试不同路径</div>
+        </div>
+        
+        <div class="section">
+            <h3>3. 服务器状态检查</h3>
+            <button onclick="checkServerStatus()">检查服务器状态</button>
+            <div id="serverStatus" class="result">点击按钮检查服务器状态</div>
+        </div>
+        
+        <div class="section">
+            <h3>4. 详细错误信息</h3>
+            <button onclick="detailedTest()">详细测试</button>
+            <div id="detailedResult" class="result">点击按钮进行详细测试</div>
+        </div>
+        
+        <div class="section">
+            <h3>5. 网络请求监控</h3>
+            <button onclick="monitorRequests()">开始监控</button>
+            <div id="monitorResult" class="result">点击按钮开始监控网络请求</div>
+        </div>
+    </div>
+
+    <script>
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+        
+        function showEnvironmentInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                currentURL: window.location.href,
+                protocol: window.location.protocol,
+                host: window.location.host,
+                pathname: window.location.pathname,
+                timestamp: new Date().toISOString(),
+                fetchSupported: typeof fetch !== 'undefined',
+                localStorageSupported: typeof localStorage !== 'undefined'
+            };
+            
+            showResult('envInfo', `环境信息:\n${JSON.stringify(info, null, 2)}`, 'info');
+        }
+        
+        async function testPath1() {
+            await testPath('../config/table_metadata.json', 'pathResult');
+        }
+        
+        async function testPath2() {
+            await testPath('config/table_metadata.json', 'pathResult');
+        }
+        
+        async function testPath3() {
+            await testPath('/config/table_metadata.json', 'pathResult');
+        }
+        
+        async function testPath4() {
+            await testPath('./config/table_metadata.json', 'pathResult');
+        }
+        
+        async function testPath(path, resultId) {
+            try {
+                showResult(resultId, `正在测试路径: ${path}...`, 'info');
+                
+                const startTime = Date.now();
+                const response = await fetch(path);
+                const endTime = Date.now();
+                
+                const result = {
+                    path: path,
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    responseTime: `${endTime - startTime}ms`,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (response.ok) {
+                    try {
+                        const data = await response.json();
+                        result.dataSize = JSON.stringify(data).length;
+                        result.tableCount = data.tables ? data.tables.length : 0;
+                        result.databases = data.tables ? [...new Set(data.tables.map(t => t.database))] : [];
+                    } catch (jsonError) {
+                        result.jsonError = jsonError.message;
+                    }
+                }
+                
+                showResult(resultId, `路径测试结果 (${path}):\n${JSON.stringify(result, null, 2)}`, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                const errorResult = {
+                    path: path,
+                    error: error.message,
+                    errorType: error.name,
+                    stack: error.stack,
+                    timestamp: new Date().toISOString()
+                };
+                
+                showResult(resultId, `路径测试失败 (${path}):\n${JSON.stringify(errorResult, null, 2)}`, 'error');
+            }
+        }
+        
+        async function checkServerStatus() {
+            try {
+                showResult('serverStatus', '正在检查服务器状态...', 'info');
+                
+                const testPaths = [
+                    '/',
+                    '/html/',
+                    '/config/',
+                    '/config/table_metadata.json'
+                ];
+                
+                const results = [];
+                
+                for (const path of testPaths) {
+                    try {
+                        const response = await fetch(path);
+                        results.push({
+                            path: path,
+                            status: response.status,
+                            statusText: response.statusText,
+                            ok: response.ok,
+                            contentType: response.headers.get('content-type')
+                        });
+                    } catch (error) {
+                        results.push({
+                            path: path,
+                            error: error.message
+                        });
+                    }
+                }
+                
+                showResult('serverStatus', `服务器状态检查结果:\n${JSON.stringify(results, null, 2)}`, 'info');
+                
+            } catch (error) {
+                showResult('serverStatus', `服务器状态检查失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function detailedTest() {
+            try {
+                showResult('detailedResult', '正在进行详细测试...', 'info');
+                
+                const testResults = [];
+                
+                // 测试1: 基本fetch
+                try {
+                    const response = await fetch('../config/table_metadata.json');
+                    testResults.push({
+                        test: '基本fetch测试',
+                        status: response.status,
+                        ok: response.ok,
+                        headers: Object.fromEntries(response.headers.entries())
+                    });
+                    
+                    if (response.ok) {
+                        // 测试2: JSON解析
+                        try {
+                            const data = await response.clone().json();
+                            testResults.push({
+                                test: 'JSON解析测试',
+                                success: true,
+                                tableCount: data.tables ? data.tables.length : 0,
+                                dataSize: JSON.stringify(data).length
+                            });
+                        } catch (jsonError) {
+                            testResults.push({
+                                test: 'JSON解析测试',
+                                success: false,
+                                error: jsonError.message
+                            });
+                        }
+                        
+                        // 测试3: 文本内容
+                        try {
+                            const text = await response.text();
+                            testResults.push({
+                                test: '文本内容测试',
+                                success: true,
+                                textLength: text.length,
+                                firstChars: text.substring(0, 100)
+                            });
+                        } catch (textError) {
+                            testResults.push({
+                                test: '文本内容测试',
+                                success: false,
+                                error: textError.message
+                            });
+                        }
+                    }
+                    
+                } catch (fetchError) {
+                    testResults.push({
+                        test: '基本fetch测试',
+                        success: false,
+                        error: fetchError.message,
+                        errorType: fetchError.name
+                    });
+                }
+                
+                showResult('detailedResult', `详细测试结果:\n${JSON.stringify(testResults, null, 2)}`, 'info');
+                
+            } catch (error) {
+                showResult('detailedResult', `详细测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function monitorRequests() {
+            showResult('monitorResult', '网络请求监控已启动。请打开浏览器开发者工具(F12)的Network标签页，然后尝试加载页面。\n\n监控信息:\n- 当前URL: ' + window.location.href + '\n- 建议测试的URL: http://localhost:8080/config/table_metadata.json\n- 建议测试的URL: http://localhost:8080/html/o_line_management.html', 'info');
+        }
+        
+        // 页面加载时自动显示环境信息
+        window.addEventListener('load', () => {
+            showEnvironmentInfo();
+        });
+    </script>
+</body>
+</html>
