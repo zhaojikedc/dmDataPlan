@@ -4,9 +4,11 @@ from pydantic import BaseModel
 import uvicorn
 import os
 import json
+import subprocess
+import sys
 from typing import Dict, Any, List
 
-CONFIG_DIR = "/workspace/config"
+CONFIG_DIR = "/workspace/dmDataPlan/config"
 
 app = FastAPI(title="Config JSON CRUD API")
 
@@ -101,6 +103,77 @@ def delete_config(name: str) -> Dict[str, Any]:
 		raise HTTPException(status_code=404, detail="Config not found")
 	os.remove(path)
 	return {"ok": True}
+
+# Merge ER data API endpoint
+@app.get("/api/merge-er-data")
+def merge_er_data() -> Dict[str, Any]:
+	"""合并selected_tables.json和o_line_relations.json数据"""
+	try:
+		# 定义文件路径
+		selected_tables_path = os.path.join(CONFIG_DIR, 'selected_tables.json')
+		relations_path = os.path.join(CONFIG_DIR, 'o_line_relations.json')
+		table_metadata_path = os.path.join(CONFIG_DIR, 'table_metadata.json')
+		output_path = os.path.join(CONFIG_DIR, 'merged_er_data.json')
+		
+		# 检查必需文件是否存在
+		if not os.path.exists(selected_tables_path):
+			raise HTTPException(status_code=404, detail="selected_tables.json not found")
+		if not os.path.exists(relations_path):
+			raise HTTPException(status_code=404, detail="o_line_relations.json not found")
+		if not os.path.exists(table_metadata_path):
+			raise HTTPException(status_code=404, detail="table_metadata.json not found")
+		
+		# 执行合并脚本
+		merge_script_path = "/workspace/dmDataPlan/python/merge_er_data.py"
+		if not os.path.exists(merge_script_path):
+			raise HTTPException(status_code=404, detail="merge script not found")
+		
+		# 运行Python脚本
+		result = subprocess.run([
+			sys.executable, merge_script_path
+		], capture_output=True, text=True, cwd="/workspace")
+		
+		if result.returncode != 0:
+			print(f"Merge script error: {result.stderr}")
+			raise HTTPException(status_code=500, detail=f"Merge failed: {result.stderr}")
+		
+		# 读取合并后的数据
+		if not os.path.exists(output_path):
+			raise HTTPException(status_code=500, detail="Merged data file not created")
+		
+		merged_data = read_json_file(output_path)
+		if merged_data is None:
+			raise HTTPException(status_code=500, detail="Failed to read merged data")
+		
+		return {
+			"success": True,
+			"message": "数据合并成功",
+			"data": merged_data
+		}
+		
+	except HTTPException:
+		raise
+	except Exception as e:
+		print(f"Merge ER data error: {e}")
+		raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# Data file API endpoint
+@app.get("/api/data")
+def get_data_file(file: str = "merged_er_data.json") -> Dict[str, Any]:
+	"""获取指定的数据文件"""
+	try:
+		if not file.endswith(".json"):
+			file = f"{file}.json"
+		path = os.path.join(CONFIG_DIR, file)
+		data = read_json_file(path)
+		if data is None:
+			raise HTTPException(status_code=404, detail="Data file not found")
+		return data
+	except HTTPException:
+		raise
+	except Exception as e:
+		print(f"Get data file error: {e}")
+		raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
 	uvicorn.run(app, host="0.0.0.0", port=8000)

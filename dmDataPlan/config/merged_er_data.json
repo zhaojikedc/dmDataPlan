@@ -1570,13 +1570,13 @@
     "dm_tp.dm_tp_air_full_flow_sum_di": true
   },
   "metadata": {
-    "mergeTime": "2025-09-04T19:16:25.861800",
+    "mergeTime": "2025-09-04T16:26:00.485299",
     "selectedTablesCount": 6,
     "relationsCount": 5,
     "sourceFiles": {
-      "selectedTables": "c:\\Users\\yangli\\Desktop\\cursor\\dmDataPlan\\config\\selected_tables.json",
-      "relations": "c:\\Users\\yangli\\Desktop\\cursor\\dmDataPlan\\config\\o_line_relations.json",
-      "tableMetadata": "c:\\Users\\yangli\\Desktop\\cursor\\dmDataPlan\\config\\table_metadata.json"
+      "selectedTables": "/workspace/dmDataPlan/config/selected_tables.json",
+      "relations": "/workspace/dmDataPlan/config/o_line_relations.json",
+      "tableMetadata": "/workspace/dmDataPlan/config/table_metadata.json"
     }
   }
 }

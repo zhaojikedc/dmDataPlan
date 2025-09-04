@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试数据载入</title>
+</head>
+<body>
+    <h1>测试O线ER关系数据载入</h1>
+    <button id="testLoadData">测试数据载入</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLoadERData() {
+            try {
+                console.log('开始测试数据载入...');
+                
+                // 调用合并数据API
+                const mergeResponse = await fetch('http://localhost:8000/api/merge-er-data');
+                
+                if (!mergeResponse.ok) {
+                    throw new Error(`数据载入失败: ${mergeResponse.status}`);
+                }
+                
+                const mergeResult = await mergeResponse.json();
+                
+                if (!mergeResult.success) {
+                    throw new Error(mergeResult.message || '数据载入失败');
+                }
+                
+                const mergedData = mergeResult.data;
+                console.log('载入的ER数据:', mergedData);
+                
+                // 显示结果
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2>数据载入成功！</h2>
+                    <p>表数量: ${mergedData.tables.length}</p>
+                    <p>关系数量: ${mergedData.relations.length}</p>
+                    <p>标题: ${mergedData.title}</p>
+                    <h3>表列表:</h3>
+                    <ul>
+                        ${mergedData.tables.map(table => `<li>${table.name} (${table.type}) - ${table.fields.length} fields</li>`).join('')}
+                    </ul>
+                    <h3>关系列表:</h3>
+                    <ul>
+                        ${mergedData.relations.map(rel => `<li>${rel.source} → ${rel.target} (${rel.sourceField} → ${rel.targetField})</li>`).join('')}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                console.error('载入ER数据失败:', error);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<h2 style="color: red;">数据载入失败: ${error.message}</h2>`;
+            }
+        }
+
+        document.getElementById('testLoadData').addEventListener('click', testLoadERData);
+    </script>
+</body>
+</html>

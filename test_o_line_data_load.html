@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试O线ER关系数据载入</title>
+</head>
+<body>
+    <h1>测试O线ER关系数据载入功能</h1>
+    <button id="testLoadData">测试数据载入</button>
+    <div id="result"></div>
+
+    <script>
+        // 模拟O线页面的loadERData函数
+        async function loadERData() {
+            try {
+                console.log('开始载入ER数据...');
+                
+                // 调用合并数据API
+                const mergeResponse = await fetch('http://localhost:8000/api/merge-er-data');
+                
+                if (!mergeResponse.ok) {
+                    throw new Error(`数据载入失败: ${mergeResponse.status}`);
+                }
+                
+                const mergeResult = await mergeResponse.json();
+                
+                if (!mergeResult.success) {
+                    throw new Error(mergeResult.message || '数据载入失败');
+                }
+                
+                const mergedData = mergeResult.data;
+                console.log('载入的ER数据:', mergedData);
+                
+                // 显示结果
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2 style="color: green;">✅ 数据载入成功！</h2>
+                    <p><strong>表数量:</strong> ${mergedData.tables.length}</p>
+                    <p><strong>关系数量:</strong> ${mergedData.relations.length}</p>
+                    <p><strong>标题:</strong> ${mergedData.title}</p>
+                    <p><strong>描述:</strong> ${mergedData.description}</p>
+                    
+                    <h3>表信息验证:</h3>
+                    <ul>
+                        ${mergedData.tables.map(table => `
+                            <li>
+                                <strong>${table.name}</strong> (${table.type}) 
+                                - ${table.fields ? table.fields.length : 0} 字段
+                                ${table.fields && table.fields.length > 0 ? 
+                                    `<br><small>示例字段: ${table.fields.slice(0, 3).map(f => f.key).join(', ')}</small>` : ''
+                                }
+                            </li>
+                        `).join('')}
+                    </ul>
+                    
+                    <h3>关系信息验证:</h3>
+                    <ul>
+                        ${mergedData.relations.map(rel => `
+                            <li>
+                                <strong>${rel.source}</strong> → <strong>${rel.target}</strong>
+                                <br><small>${rel.sourceField} → ${rel.targetField} (${rel.type})</small>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                
+                return true;
+                
+            } catch (error) {
+                console.error('载入ER数据失败:', error);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2 style="color: red;">❌ 数据载入失败</h2>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <p>请检查:</p>
+                    <ul>
+                        <li>API服务器是否在8000端口运行</li>
+                        <li>数据文件是否存在</li>
+                        <li>网络连接是否正常</li>
+                    </ul>
+                `;
+                return false;
+            }
+        }
+
+        document.getElementById('testLoadData').addEventListener('click', loadERData);
+        
+        // 页面加载完成后自动测试
+        window.addEventListener('load', () => {
+            console.log('页面加载完成，开始自动测试...');
+            loadERData();
+        });
+    </script>
+</body>
+</html>
