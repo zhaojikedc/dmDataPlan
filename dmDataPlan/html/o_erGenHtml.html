@@ -3920,7 +3920,7 @@ async function loadERData() {
     console.log('开始载入ER数据...');
     
     // 调用合并数据API
-    const mergeResponse = await fetch('/api/merge-er-data');
+    const mergeResponse = await fetch('http://localhost:8000/api/merge-er-data');
     
     if (!mergeResponse.ok) {
       throw new Error(`数据载入失败: ${mergeResponse.status}`);
@@ -4895,7 +4895,7 @@ async function autoLoadData() {
     console.log('使用数据文件:', dataFile);
     
     // 直接加载指定的数据文件
-    const response = await fetch(`/api/data?file=${dataFile}`);
+    const response = await fetch(`http://localhost:8000/api/data?file=${dataFile}`);
     if (!response.ok) {
       throw new Error(`数据加载失败: ${response.status}`);
     }
